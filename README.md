@@ -7,7 +7,7 @@ This library includes:-
 * **pfodDwgs**, classes for sending dwg commands to create interactive GUI's  
 
 # How-To
-See [pfodParser Documentation](https://www.forward.com.au/pfod/ArduinoProgramming/SafeString/docs/html/index.html)  
+See pfodParser Documentation -- to be done see  
 See [pfodParser Examples](https://www.forward.com.au/pfod/index.html)  
 See [pfodDwgs Examples](https://www.forward.com.au/pfod/pfodControls/index.html)  
 
