@@ -14,6 +14,7 @@ readInput KEYWORD2
 setDebugStream	KEYWORD2
 bytesToBeSent	KEYWORD2
 isRefresh	KEYWORD2
+cmdEquals	KEYWORD2
 ignoreSeqNum	KEYWORD2
 getVersion	KEYWORD2
 markWrite	KEYWORD2
@@ -36,6 +37,7 @@ parseLong	KEYWORD2
 strncpy_safe	KEYWORD2
 getProgStr	KEYWORD2
 getDwgCmd	KEYWORD2
+dwgCmdEquals	KEYWORD2
 parseDwgCmd	KEYWORD2
 isClickOrPress	KEYWORD2
 isClick	KEYWORD2

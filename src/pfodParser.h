@@ -63,6 +63,8 @@ class pfodParser: public Print {
     byte* getNextArg(byte *start);
     byte getArgsCount();
     byte* parseLong(byte* idxPtr, long *result);
+    bool cmdEquals(const char* cmdStr); // returns true if parser cmd, as returned by getCmd() == cmdStr 
+    bool cmdEquals(const char cmdChar); // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
     /**
        pfodWaitingForStart if outside msg
        pfodMsgStarted if just seen opening {

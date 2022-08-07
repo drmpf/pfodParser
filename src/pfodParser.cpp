@@ -144,6 +144,22 @@ byte* pfodParser::getCmd() {
   return cmdStart;
 }
 
+// returns true if parser cmd, as returned by getCmd() == cmdStr
+bool pfodParser::cmdEquals(const char* cmdStr) {
+  if ((!cmdStr) || (*cmdStart == '\0')) {
+    return 0; // false
+  }
+  return !strcmp(cmdStr, (const char*)cmdStart);
+}
+	 
+// returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
+bool pfodParser::cmdEquals(const char cmdChar) {
+  if ((!cmdChar) || (*cmdStart == '\0')) {
+    return 0; // false
+  }
+  return (cmdStart[0] == cmdChar) && (cmdStart[1] == '\0');
+}
+
 /**
    msg starts with {: the : is dropped from the cmd
 */

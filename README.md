@@ -19,6 +19,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.56 added cmdEquals
 Version 3.55 added pfodAutoIdx  
 Version 3.54 added xRadius, yRadius as an alterative to arc().start(..).angle(0)  
 Version 3.53 minor edit to remove code warning  
