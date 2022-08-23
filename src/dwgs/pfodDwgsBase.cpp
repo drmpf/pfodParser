@@ -21,7 +21,7 @@ void pfodDwgsBase::initValues(struct VALUES* _valuesPtr) {
   valuesPtr->startAngle = 0;
   valuesPtr->arcAngle = 180;
   valuesPtr->text = NULL;  // also used for prompt for touchActionInput
-  valuesPtr->textF = F("");
+  valuesPtr->textF = NULL;
   valuesPtr->units = NULL;
   valuesPtr->unitsF = NULL;
   valuesPtr->reading = 0.0f;
