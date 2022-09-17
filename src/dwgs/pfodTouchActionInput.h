@@ -13,9 +13,10 @@
 
 class pfodTouchActionInput : public pfodDwgsBase {
   public:
-    pfodTouchActionInput();
+    pfodTouchActionInput(); // always left() aligned
     pfodTouchActionInput &cmd(const char _cmd); // default ' ' not set
     pfodTouchActionInput &cmd(const char* _cmdStr); // for multi char cmds
+    pfodTouchActionInput &cmd(pfodAutoCmd &a_Cmd);
     pfodTouchActionInput &encode(); // replace restricted chars in prompt
     pfodTouchActionInput &prompt(const char* txt);
     pfodTouchActionInput &prompt(const __FlashStringHelper *txtF);
@@ -27,11 +28,8 @@ class pfodTouchActionInput : public pfodDwgsBase {
     pfodTouchActionInput &bold(); 
     pfodTouchActionInput &italic(); 
     pfodTouchActionInput &underline();
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
   private:
-  	pfodDwgsBase *actionPtr;
-	char actionCmd;
-	const char* actionCmdStr;
 };
 #endif // pfodTouchActionInput_h

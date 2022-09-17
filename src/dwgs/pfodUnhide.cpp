@@ -10,8 +10,9 @@
 pfodUnhide::pfodUnhide()  {
 }
 
-void pfodUnhide::init(Print *_out, struct VALUES* _values) {
+void pfodUnhide::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -33,6 +34,15 @@ pfodUnhide &pfodUnhide::cmd(const char _cmd) {
   valuesPtr->loadCmdStr = NULL;
   return *this;
 }
+
+pfodUnhide &pfodUnhide::cmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->cmdStr = a_Cmd.cmd;
+  valuesPtr->cmd = ' ';
+  valuesPtr->loadCmd = ' ';
+  valuesPtr->loadCmdStr = NULL;
+  return *this;
+}
+
 pfodUnhide &pfodUnhide::cmd(const char* _cmdStr) {
   valuesPtr->cmdStr = _cmdStr;
   valuesPtr->cmd = ' ';
@@ -49,6 +59,14 @@ pfodUnhide &pfodUnhide::loadCmd(const char _loadCmd) {
   return *this;
 }
 
+pfodUnhide &pfodUnhide::loadCmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->loadCmd = ' ';
+  valuesPtr->loadCmdStr = a_Cmd.cmd;
+  valuesPtr->cmd = ' ';
+  valuesPtr->cmdStr = NULL;
+  return *this;
+}
+
 pfodUnhide &pfodUnhide::loadCmd(const char* _loadCmdStr) {
   valuesPtr->loadCmd = ' ';
   valuesPtr->loadCmdStr = _loadCmdStr;
@@ -60,7 +78,7 @@ pfodUnhide &pfodUnhide::loadCmd(const char* _loadCmdStr) {
 // if loadCmd( ) then send 'uhd' cmd else send 'uh'
 void pfodUnhide::send(char _startChar) {
   out->print(_startChar);
-  if ((valuesPtr->loadCmd != ' ') || (valuesPtr->loadCmdStr)) {  	  
+  if ((valuesPtr->loadCmd != ' ') || ((valuesPtr->loadCmdStr) && (*valuesPtr->loadCmdStr))) {  	  
   	out->print("uhd");
     out->print('~');
     if (valuesPtr->loadCmdStr) {
@@ -74,7 +92,7 @@ void pfodUnhide::send(char _startChar) {
       printIdx();
     } else {
       out->print('~');
-      if (valuesPtr->cmdStr) {
+      if ((valuesPtr->cmdStr) && (*valuesPtr->cmdStr)) {
         out->print(valuesPtr->cmdStr);
       } else {
         out->print(valuesPtr->cmd);

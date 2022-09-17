@@ -10,8 +10,9 @@
 pfodCircle::pfodCircle()  {
 }
 
-void pfodCircle::init(Print *_out, struct VALUES* _values) {
+void pfodCircle::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -58,7 +59,7 @@ void pfodCircle::send(char _startChar) {
   printIdx();
   printColor();
   printFloat(valuesPtr->radius);
-  colRowOffset();
+  sendColRowOffset();
  // valuesPtr->lastDwg = NULL; // sending now
 }
 

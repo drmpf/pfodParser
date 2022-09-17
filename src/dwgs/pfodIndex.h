@@ -17,7 +17,7 @@ class pfodIndex : public pfodDwgsBase {
     pfodIndex &idx(uint16_t _idx); // default 0 i.e. not set
     pfodIndex &idx(pfodAutoIdx &a_idx); // reserve new idx if 0
 //    pfodIndex &cmd(const char cmd); // default ' ' i.e. not set
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodIndex_h

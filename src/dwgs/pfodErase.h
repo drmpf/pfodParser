@@ -18,9 +18,11 @@ class pfodErase : public pfodDwgsBase {
     pfodErase &idx(pfodAutoIdx &a_idx); 
     pfodErase &cmd(const char _cmd); // for touchZones default ' ' i.e. not set
     pfodErase &cmd(const char* _cmdStr);
+    pfodErase &cmd(pfodAutoCmd &a_Cmd);
     pfodErase &loadCmd(const char _loadCmd); // for insertDwgs default ' ' i.e. not set
     pfodErase &loadCmd(const char* _loadCmdStr);
-    void init(Print *out, struct VALUES* _values);
+    pfodErase &loadCmd(pfodAutoCmd &a_Cmd);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodErase_h

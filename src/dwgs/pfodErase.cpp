@@ -10,8 +10,9 @@
 pfodErase::pfodErase()  {
 }
 
-void pfodErase::init(Print *_out, struct VALUES* _values) {
+void pfodErase::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -34,6 +35,14 @@ pfodErase &pfodErase::cmd(const char _cmd) {
   return *this;
 }
 
+pfodErase &pfodErase::cmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->cmdStr = a_Cmd.cmd;
+  valuesPtr->cmd = ' ';
+  valuesPtr->loadCmd = ' ';
+  valuesPtr->loadCmdStr = NULL;
+  return *this;
+}
+
 pfodErase &pfodErase::cmd(const char* _cmdStr) {
   valuesPtr->cmdStr = _cmdStr;
   valuesPtr->cmd = ' ';
@@ -51,6 +60,14 @@ pfodErase &pfodErase::loadCmd(const char _loadCmd) {
   return *this;
 }
 
+pfodErase &pfodErase::loadCmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->loadCmd = ' ';
+  valuesPtr->loadCmdStr = a_Cmd.cmd;
+  valuesPtr->cmd = ' ';
+  valuesPtr->cmdStr = NULL;
+  return *this;
+}
+
 pfodErase &pfodErase::loadCmd(const char* _loadCmdStr) {
   valuesPtr->loadCmd = ' ';
   valuesPtr->loadCmdStr = _loadCmdStr;
@@ -62,7 +79,7 @@ pfodErase &pfodErase::loadCmd(const char* _loadCmdStr) {
 // if loadCmd( ) then send 'ed' cmd else send 'e'
 void pfodErase::send(char _startChar) {
   out->print(_startChar);
-  if ((valuesPtr->loadCmd != ' ') || (valuesPtr->loadCmdStr)) {  	  
+  if ((valuesPtr->loadCmd != ' ') || ((valuesPtr->loadCmdStr) && (*valuesPtr->loadCmdStr))) {  	  
   	out->print("ed");
     out->print('~');
     if (valuesPtr->loadCmdStr) {
@@ -76,7 +93,7 @@ void pfodErase::send(char _startChar) {
       printIdx();
     } else {
       out->print('~');
-      if (valuesPtr->cmdStr) {
+      if ((valuesPtr->cmdStr) && (*valuesPtr->cmdStr)) {
         out->print(valuesPtr->cmdStr);
       } else {
         out->print(valuesPtr->cmd);

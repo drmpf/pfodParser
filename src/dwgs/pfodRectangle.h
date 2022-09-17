@@ -22,7 +22,7 @@ class pfodRectangle : public pfodDwgsBase {
     pfodRectangle &rounded(); // default not rounded
     pfodRectangle &centered(); // default not not centered
     pfodRectangle &offset(float _colOffset, float _rowOffset); // default 0,0
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodRectangle_h

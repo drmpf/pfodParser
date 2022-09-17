@@ -10,8 +10,9 @@
 pfodRectangle::pfodRectangle()  {
 }
 
-void pfodRectangle::init(Print *_out, struct VALUES* _values) {
+void pfodRectangle::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -79,8 +80,8 @@ void pfodRectangle::send(char _startChar) {
   }
   printIdx();
   printColor();
-  colWidthHeight();
-  colRowOffset();
+  sendWidthHeight();
+  sendColRowOffset();
   //valuesPtr->lastDwg = NULL; // sent now
 }
 

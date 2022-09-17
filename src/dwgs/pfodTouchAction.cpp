@@ -11,32 +11,39 @@
 pfodTouchAction::pfodTouchAction()  {
 }
 
-void pfodTouchAction::init(Print *_out, struct VALUES* _values) {
+void pfodTouchAction::init(Print *_out, struct pfodDwgVALUES* _values) {
  // initValues(_values);
   out = _out;
-  actionCmd = ' ';
-  actionCmdStr = NULL;
  // don't do this here else action(pfodDwgsBase &_action)  will force send
  // valuesPtr->lastDwg = this; 
  valuesPtr = _values;
+ // Only this class clears and uses these variables
+ valuesPtr->actionPtr = NULL; // for linking touchAction to action  NOTE: not cleared by other classes init()
+ valuesPtr->touchCmd = ' '; // for linking touchActions to touchZone  NOTE: not cleared by other classes init()
+ valuesPtr->touchCmdStr = NULL; // for linking touchActions to touchZone NOTE: not cleared by other classes init()
 }
 
 
 pfodTouchAction &pfodTouchAction::cmd(const char _cmd) {
-  actionCmd = _cmd;
-  actionCmdStr = NULL;
+  valuesPtr->touchCmd = _cmd;
+  valuesPtr->touchCmdStr = NULL;
   return *this;
 }
 
 pfodTouchAction &pfodTouchAction::cmd(const char* _cmdStr) {
-  actionCmd = ' ';
-  actionCmdStr = _cmdStr;
+  valuesPtr->touchCmd = ' ';
+  valuesPtr->touchCmdStr = _cmdStr;
   return *this;
 }
 
+pfodTouchAction &pfodTouchAction::cmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->touchCmd = ' ';
+  valuesPtr->touchCmdStr = a_Cmd.cmd;
+  return *this;
+}
 
 pfodTouchAction &pfodTouchAction::action(pfodDwgsBase &_action) {
-  actionPtr = &_action;
+  valuesPtr->actionPtr = &_action;
   return *this;
 }
 
@@ -44,13 +51,14 @@ void pfodTouchAction::send(char _startChar) {
   out->print(_startChar);
   out->print('X');
   out->print('~');
-  if (actionCmdStr) {
-    out->print(actionCmdStr);
+
+  if ((valuesPtr->touchCmdStr) && (*valuesPtr->touchCmdStr)) {
+    out->print(valuesPtr->touchCmdStr);
   } else {
-    out->print(actionCmd);
+    out->print(valuesPtr->touchCmd);
   }
-  if (actionPtr != NULL) {
-  	  actionPtr->send('~');
+  if (valuesPtr->actionPtr != NULL) {
+  	  valuesPtr->actionPtr->send('~');
   }
  // valuesPtr->lastDwg = NULL; // sent now
 }

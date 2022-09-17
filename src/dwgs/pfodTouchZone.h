@@ -17,12 +17,13 @@ class pfodTouchZone : public pfodDwgsBase {
     pfodTouchZone &size(float width, float height); // default 1x1
     pfodTouchZone &cmd(const char _cmd); // default ' ' not set
     pfodTouchZone &cmd(const char* _cmdStr); 
+    pfodTouchZone &cmd(pfodAutoCmd &a_Cmd);    
     pfodTouchZone &idx(uint16_t _idx); // default 0 i.e. not set
     pfodTouchZone &idx(pfodAutoIdx &a_idx); // reserve new idx if 0
     pfodTouchZone &offset(float _colOffset, float _rowOffset); // default 0,0
     pfodTouchZone &centered(); // default not centered
     pfodTouchZone &filter(uint16_t _filter); // default 0 TOUCH
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodTouchZone_h

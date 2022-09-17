@@ -43,7 +43,8 @@ isClickOrPress	KEYWORD2
 isClick	KEYWORD2
 isPress	KEYWORD2
 isDrag	KEYWORD2
-isRelease	KEYWORD2
+isDown	KEYWORD2
+isUp	KEYWORD2
 getTouchType	KEYWORD2
 getTouchedCol	KEYWORD2
 getTouchedRow	KEYWORD2
@@ -78,6 +79,8 @@ touchZone	KEYWORD2
 touchAction	KEYWORD2
 touchActionInput	KEYWORD2
 textIdx	KEYWORD2
+pfodAutoIdx	KEYWORD2
+pfodAutoCmd	KEYWORD2
 backgroundColor	KEYWORD2
 filled	KEYWORD2
 centered	KEYWORD2
@@ -95,11 +98,12 @@ cmd	KEYWORD2
 action	KEYWORD2
 text	KEYWORD2
 floatReading	KEYWORD2
+value	KEYWORD2
 intValue	KEYWORD2
 maxValue	KEYWORD2
 minValue	KEYWORD2
 displayMax	KEYWORD2
-dispalyMin	KEYWORD2
+displayMin	KEYWORD2
 decimals	KEYWORD2
 units	KEYWORD2
 filter	KEYWORD2

@@ -10,8 +10,9 @@
 pfodIndex::pfodIndex()  {
 }
 
-void pfodIndex::init(Print *_out, struct VALUES* _values) {
+void pfodIndex::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }

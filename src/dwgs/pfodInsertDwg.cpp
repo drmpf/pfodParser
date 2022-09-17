@@ -10,8 +10,9 @@
 pfodInsertDwg::pfodInsertDwg()  {
 }
 
-void pfodInsertDwg::init(Print *_out, struct VALUES* _values) {
+void pfodInsertDwg::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -59,7 +60,7 @@ void pfodInsertDwg::send(char _startChar) {
   } // error no cmd set  
   out->print('~');
   out->print(""); // no cmd prefix for now
-  colRowOffset();
- // colWidthHeight();
+  sendColRowOffset();
+ // sendWidthHeight();
 }
 

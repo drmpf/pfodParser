@@ -65,6 +65,7 @@ class pfodParser: public Print {
     byte* parseLong(byte* idxPtr, long *result);
     bool cmdEquals(const char* cmdStr); // returns true if parser cmd, as returned by getCmd() == cmdStr 
     bool cmdEquals(const char cmdChar); // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
+
     /**
        pfodWaitingForStart if outside msg
        pfodMsgStarted if just seen opening {
@@ -97,6 +98,7 @@ class pfodParser: public Print {
     const byte* getDwgCmd(); // valid only after parseDwgCmd() called on image cmd
     // returns true if dwgCmd string == cmdStr, uses strcmp( ) internally
     bool dwgCmdEquals(const char* dwgCmdStr); // valid only after parseDwgCmd() called on image cmd
+    bool dwgCmdEquals(pfodAutoCmd &a_Cmd); // valid only after parseDwgCmd() called on image cmd
     bool dwgCmdEquals(const char dwgCmd); // valid only after parseDwgCmd() called on image cmd
     bool isTouch(); // default TOUCH even if not parsed
     bool isClick();

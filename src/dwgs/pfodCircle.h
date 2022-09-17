@@ -20,7 +20,7 @@ class pfodCircle : public pfodDwgsBase {
     pfodCircle &idx(pfodAutoIdx &a_idx); // reserve new idx if 0
     pfodCircle &filled(); // default not filled
     pfodCircle &offset(float _colOffset, float _rowOffset); // default 0,0
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodCircle_h

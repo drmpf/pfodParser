@@ -10,8 +10,9 @@
 pfodLine::pfodLine()  {
 }
 
-void pfodLine::init(Print *_out, struct VALUES* _values) {
+void pfodLine::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -49,8 +50,8 @@ void pfodLine::send(char _startChar) {
   out->print('l');
   printIdx();
   printColor();
-  colWidthHeight();
-  colRowOffset();
+  sendWidthHeight();
+  sendColRowOffset();
   //valuesPtr->lastDwg = NULL; // sent now
 }
 

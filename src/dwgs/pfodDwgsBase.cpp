@@ -15,13 +15,26 @@ void pfodDwgsBase::send(char _startChar) {
   (void)(_startChar);
 }
 
-void pfodDwgsBase::initValues(struct VALUES* _valuesPtr) {
+void pfodDwgsBase::init(Print *_out, struct pfodDwgVALUES* _values) {
+  initValues(_values);
+  valuesPtr = _values;
+  out = _out;
+}
+
+struct pfodDwgVALUES *pfodDwgsBase::getValuesPtr() {
+	return valuesPtr;
+}
+void pfodDwgsBase::setValuesPtr(struct pfodDwgVALUES *_valuesPtr) {
   valuesPtr = _valuesPtr;
+}
+
+void pfodDwgsBase::initValues(struct pfodDwgVALUES* _valuesPtr) {
+  struct pfodDwgVALUES* valuesPtr = _valuesPtr;
   // valuesPtr->action = NULL;
   valuesPtr->startAngle = 0;
   valuesPtr->arcAngle = 180;
   valuesPtr->text = NULL;  // also used for prompt for touchActionInput
-  valuesPtr->textF = NULL;
+  valuesPtr->textF = NULL; ;
   valuesPtr->units = NULL;
   valuesPtr->unitsF = NULL;
   valuesPtr->reading = 0.0f;
@@ -95,7 +108,7 @@ void pfodDwgsBase::printTextFormatsWithBkgndColor() {
 }
 
 void pfodDwgsBase::printTextFormats() {
-  struct VALUES* valPtr = valuesPtr;
+  struct pfodDwgVALUES* valPtr = valuesPtr;
   if (valPtr->fontSize != 0) {
     out->print('<');
     if (valPtr->fontSize >= 0) {
@@ -147,6 +160,9 @@ void pfodDwgsBase::encodeText(Print* out, uint8_t encodeOutput, const char *cPtr
 }
 
 void pfodDwgsBase::encodeChar(Print* out, uint8_t encodeOutput, char c) {
+  if (!out) {
+    return;
+  }
   if (!encodeOutput) { // just skip outputting ` ~ { }
     if ((c == '`') || (c == '~') || (c == '{') || (c == '}')) {
       return; // skip this restricted char
@@ -185,7 +201,10 @@ void pfodDwgsBase::printFloat(float f) {
 }
 
 // prints just number rounded to decPlaces, -ve decPlaces round to left of decimal point
-void pfodDwgsBase::printFloatDecimals(float f, int decPlaces) {
+void pfodDwgsBase::printFloatDecimals(Print* out, float f, int decPlaces) {
+  if (!out) {
+    return;
+  }
   if (f < 0) {
     f = -f;
     out->print('-');
@@ -200,12 +219,15 @@ void pfodDwgsBase::printFloatDecimals(float f, int decPlaces) {
       out->print(iValue);
     } else {
       // < 0
-      int divider = 1;
-      for (int i = 0; i < (-decPlaces); i++) {
+      // limit divider to be < number so always get something
+      unsigned long divider = 1;
+      for (int i = 0; i < (-decPlaces) && (divider < iValue); i++) {
         divider = divider * 10;
       }
-      iValue = iValue / divider;
-      int idValue = iValue * divider;
+      if (divider > iValue) {
+      	  divider = divider/10;
+      }
+      int idValue = (iValue/ divider) * divider;
       if ((idValue - iValue) != 0) {
         // need to round
         iValue = iValue + (divider / 2);
@@ -287,7 +309,7 @@ void pfodDwgsBase::printFloatNumber(float f) {
 }
 
 // pfodApp defaults these to 0 if missing
-void pfodDwgsBase::colRowOffset() {
+void pfodDwgsBase::sendColRowOffset() {
   float colOffset = valuesPtr->colOffset;
   float rowOffset = valuesPtr->rowOffset;
   if (colOffset == 0) {
@@ -302,7 +324,7 @@ void pfodDwgsBase::colRowOffset() {
   }
 }
 
-void pfodDwgsBase::colWidthHeight() {
+void pfodDwgsBase::sendWidthHeight() {
   sendColRowVars(valuesPtr->width);
   sendColRowVars(valuesPtr->height);
 }

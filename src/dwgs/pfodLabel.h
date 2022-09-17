@@ -18,7 +18,7 @@ class pfodLabel : public pfodDwgsBase {
     pfodLabel &text(const __FlashStringHelper *txtF);
     pfodLabel &units(const char *txt); // default ""
     pfodLabel &units(const __FlashStringHelper *txtF);
-    pfodLabel &floatReading(float value);
+    pfodLabel &value(float _value);
     pfodLabel &intValue(int32_t _value); 
     pfodLabel &displayMax(float _displayMax);  // default 1  
     pfodLabel &displayMin(float _displayMin);  // default 0
@@ -37,8 +37,9 @@ class pfodLabel : public pfodDwgsBase {
     pfodLabel &idx(uint16_t _idx); // default 0 i.e. not set
     pfodLabel &idx(pfodAutoIdx &a_idx); // reserve new idx if 0
     pfodLabel &offset(float _colOffset, float _rowOffset); // default 0,0
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
+    pfodLabel &floatReading(float value);  // use value(float) instead
   private:
     void sendValue(int32_t val);
 };

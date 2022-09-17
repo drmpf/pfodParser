@@ -18,9 +18,11 @@ class pfodUnhide : public pfodDwgsBase {
     pfodUnhide &idx(pfodAutoIdx &_idx); // reserve if idx 0 else just use idx if not 0
     pfodUnhide &cmd(const char _cmd); // default ' ' i.e. not set
     pfodUnhide &cmd(const char* _cmdStr); 
+    pfodUnhide &cmd(pfodAutoCmd &a_Cmd);
     pfodUnhide &loadCmd(const char _loadCmd); // for insertDwgs default ' ' i.e. not set
     pfodUnhide &loadCmd(const char* _loadCmdStr); 
-    void init(Print *out, struct VALUES* _values);
+    pfodUnhide &loadCmd(pfodAutoCmd &a_Cmd);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodUnhide_h

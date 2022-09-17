@@ -18,9 +18,11 @@ class pfodHide : public pfodDwgsBase {
     pfodHide &idx(pfodAutoIdx &a_idx);
     pfodHide &cmd(const char _cmd); // default ' ' i.e. not set
     pfodHide &cmd(const char* _cmdStr); 
+    pfodHide &cmd(pfodAutoCmd &a_Cmd);
     pfodHide &loadCmd(const char _loadCmd); // for insertDwgs default ' ' i.e. not set
     pfodHide &loadCmd(const char* _loadCmdStr); 
-    void init(Print *out, struct VALUES* _values);
+    pfodHide &loadCmd(pfodAutoCmd &a_Cmd);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodHide_h

@@ -10,8 +10,9 @@
 pfodLabel::pfodLabel()  {
 }
 
-void pfodLabel::init(Print *_out, struct VALUES* _values) {
+void pfodLabel::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -93,6 +94,10 @@ pfodLabel &pfodLabel::units(const __FlashStringHelper *_unitsF) {
 }
 
 pfodLabel &pfodLabel::floatReading(float _value) {
+  return value(_value);
+}
+
+pfodLabel &pfodLabel::value(float _value) {
   valuesPtr->reading = _value;
   valuesPtr->haveReading = 1;
   return *this;
@@ -167,14 +172,14 @@ void pfodLabel::send(char _startChar) {
       out->print('-');
       f = -f;
     }
-    printFloatDecimals(f,valuesPtr->decPlaces);
+    printFloatDecimals(out,f,valuesPtr->decPlaces);
     if (valuesPtr->unitsF != NULL) {
   	  encodeText(out,valuesPtr->encodeOutput,valuesPtr->unitsF);
     } else if (valuesPtr->units != NULL) {
     	encodeText(out,valuesPtr->encodeOutput,valuesPtr->units);
     }
   }
-  colRowOffset();
+  sendColRowOffset();
   // cannot have both haveValue and haveReading
   if (valuesPtr->haveValue != 0) {
     sendValue(valuesPtr->value);

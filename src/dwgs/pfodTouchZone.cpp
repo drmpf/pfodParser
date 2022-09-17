@@ -10,8 +10,9 @@
 pfodTouchZone::pfodTouchZone()  {
 }
 
-void pfodTouchZone::init(Print *_out, struct VALUES* _values) {
+void pfodTouchZone::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   valuesPtr->width = 0;
   valuesPtr->height = 0; // default 0x0 for touchzones
   out = _out;
@@ -53,6 +54,11 @@ pfodTouchZone &pfodTouchZone::cmd(const char* _cmdStr) {
   return *this;
 }
 
+pfodTouchZone &pfodTouchZone::cmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->cmd = ' ';
+  valuesPtr->cmdStr = a_Cmd.cmd;
+  return *this;
+}
 
 pfodTouchZone &pfodTouchZone::filter(uint16_t _filter) {
   valuesPtr->filter = _filter;
@@ -72,13 +78,13 @@ void pfodTouchZone::send(char _startChar) {
   }
   printIdx();
   out->print('~');
-  if (valuesPtr->cmdStr) {
+   if ((valuesPtr->cmdStr) && (*valuesPtr->cmdStr)) {
     out->print(valuesPtr->cmdStr);
   } else {
     out->print(valuesPtr->cmd);
   }
-  colWidthHeight();
-  colRowOffset();
+  sendWidthHeight();
+  sendColRowOffset();
   if (valuesPtr->filter != 0) {
     out->print('`');
     out->print(valuesPtr->filter);

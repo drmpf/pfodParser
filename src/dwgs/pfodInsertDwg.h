@@ -15,10 +15,11 @@ class pfodInsertDwg : public pfodDwgsBase {
   public:
     pfodInsertDwg();
     pfodInsertDwg &loadCmd(char _loadCmd); 
-    pfodInsertDwg &loadCmd(const char* _loadCmdStr); 
+    pfodInsertDwg &loadCmd(const char* _loadCmdStr);
+    pfodInsertDwg &loadCmd(pfodAutoCmd &a_Cmd);
     pfodInsertDwg &offset(float _colOffset, float _rowOffset); // default 0,0
 //    pfodInsertDwg &size(float _width, float _height); // default 
-    void init(Print *out, struct VALUES* _values);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };
 #endif // pfodInsertDwg_h

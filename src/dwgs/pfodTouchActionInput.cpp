@@ -11,28 +11,36 @@
 pfodTouchActionInput::pfodTouchActionInput()  {
 }
 
-void pfodTouchActionInput::init(Print *_out, struct VALUES* _values) {
+void pfodTouchActionInput::init(Print *_out, struct pfodDwgVALUES* _values) {
  // initValues(_values);
   out = _out;
-  actionCmd = ' ';
-  actionCmdStr = NULL;
  // don't do this here else action(pfodDwgsBase &_action)  will force send
  // valuesPtr->lastDwg = this; 
  valuesPtr = _values;
+ valuesPtr->actionPtr = NULL; // for linking touchAction to action  NOTE: not cleared by other classes init()
+ valuesPtr->touchCmd = ' '; // for linking touchActions to touchZone  NOTE: not cleared by other classes init()
+ valuesPtr->touchCmdStr = NULL; // for linking touchActions to touchZone NOTE: not cleared by other classes init()
+ valuesPtr->align = 'L'; // always
 }
 
-
 pfodTouchActionInput &pfodTouchActionInput::cmd(const char _cmd) {
-  actionCmd = _cmd;
-  actionCmdStr = NULL;
+  valuesPtr->touchCmd = _cmd;
+  valuesPtr->touchCmdStr = NULL;
   return *this;
 }
 
 pfodTouchActionInput &pfodTouchActionInput::cmd(const char* _cmdStr) {
-  actionCmd = ' ';
-  actionCmdStr = _cmdStr;
+  valuesPtr->touchCmd = ' ';
+  valuesPtr->touchCmdStr = _cmdStr;
   return *this;
 }
+
+pfodTouchActionInput &pfodTouchActionInput::cmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->touchCmd = ' ';
+  valuesPtr->touchCmdStr = a_Cmd.cmd;
+  return *this;
+}
+
 
 pfodTouchActionInput &pfodTouchActionInput::textIdx(uint16_t _idx) {
   valuesPtr->idx = _idx;
@@ -95,10 +103,10 @@ void pfodTouchActionInput::send(char _startChar) {
   out->print(_startChar);
   out->print("XI");
   out->print('~');
-  if (actionCmdStr) {
-    out->print(actionCmdStr);
+  if ((valuesPtr->touchCmdStr) && (*valuesPtr->touchCmdStr)) {
+    out->print(valuesPtr->touchCmdStr);
   } else {
-    out->print(actionCmd);
+    out->print(valuesPtr->touchCmd);
   }
   printTextFormatsWithBkgndColor(); // prints leading ~ for text
   if (valuesPtr->textF != NULL) {

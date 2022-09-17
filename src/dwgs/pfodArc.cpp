@@ -10,8 +10,9 @@
 pfodArc::pfodArc()  {
 }
 
-void pfodArc::init(Print *_out, struct VALUES* _values) {
+void pfodArc::init(Print *_out, struct pfodDwgVALUES* _values) {
   initValues(_values);
+  valuesPtr = _values;
   out = _out;
   //valuesPtr->lastDwg = this;
 }
@@ -70,7 +71,7 @@ void pfodArc::send(char _startChar) {
   printFloat(valuesPtr->arcAngle);
   printFloat(valuesPtr->startAngle);
   printFloat(valuesPtr->radius);
-  colRowOffset();
+  sendColRowOffset();
  // valuesPtr->lastDwg = NULL; // sending now
 }
 

@@ -17,11 +17,10 @@ class pfodTouchAction : public pfodDwgsBase {
     pfodTouchAction &action(pfodDwgsBase &_action); 
     pfodTouchAction &cmd(const char _cmd); // default ' ' not set
     pfodTouchAction &cmd(const char* _cmdStr);
-    void init(Print *out, struct VALUES* _values);
+    pfodTouchAction &cmd(pfodAutoCmd &a_Cmd);
+    void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
   private:
-  	pfodDwgsBase *actionPtr;
-	char actionCmd;
-	const char* actionCmdStr;
+
 };
 #endif // pfodTouchAction_h
