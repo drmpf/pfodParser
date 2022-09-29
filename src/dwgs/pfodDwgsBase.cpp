@@ -65,6 +65,8 @@ void pfodDwgsBase::initValues(struct pfodDwgVALUES* _valuesPtr) {
   valuesPtr->cmdStr = NULL;
   valuesPtr->loadCmd = ' '; // for loading and erase of insertDwgs
   valuesPtr->loadCmdStr = NULL; // for loading and erase of insertDwgs
+//  valuesPtr->touchCmd = ' '; // do NOT initialize these here as it breaks the link
+//  valuesPtr->touchCmdStr = NULL; // do NOT initialize these here  as it breaks the link
   valuesPtr->filter = 0;
   valuesPtr->centered = 0;
   valuesPtr->align = 'C'; // nothing defaults to centered

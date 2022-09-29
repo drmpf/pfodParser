@@ -25,10 +25,16 @@ pfodInsertDwg &pfodInsertDwg::offset(float _colOffset, float _rowOffset) {
 }
 
 // crop to this size
-// not yet
+// not implemented yet
 //pfodInsertDwg &pfodInsertDwg::size(float _width, float _height) {
 //  valuesPtr->width = _width;
 //  valuesPtr->height = _height;
+//  return *this;
+//}
+
+// not implemented yet
+//pfodInsertDwg &pfodInsertDwg::centered() {
+//  valuesPtr->centered = 1;
 //  return *this;
 //}
 
@@ -42,6 +48,12 @@ pfodInsertDwg &pfodInsertDwg::loadCmd(const char _loadCmd) {
 pfodInsertDwg &pfodInsertDwg::loadCmd(const char* _loadCmdStr) {
   valuesPtr->loadCmd = ' ';
   valuesPtr->loadCmdStr = _loadCmdStr;
+  return *this;
+}
+
+pfodInsertDwg &pfodInsertDwg::loadCmd(pfodAutoCmd &a_Cmd) {
+  valuesPtr->loadCmd = ' ';
+  valuesPtr->loadCmdStr = a_Cmd.cmd;
   return *this;
 }
 

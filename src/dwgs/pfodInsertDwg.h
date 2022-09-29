@@ -18,7 +18,8 @@ class pfodInsertDwg : public pfodDwgsBase {
     pfodInsertDwg &loadCmd(const char* _loadCmdStr);
     pfodInsertDwg &loadCmd(pfodAutoCmd &a_Cmd);
     pfodInsertDwg &offset(float _colOffset, float _rowOffset); // default 0,0
-//    pfodInsertDwg &size(float _width, float _height); // default 
+//    pfodInsertDwg &centered(); // default not centered, not implemented yet
+//    pfodInsertDwg &size(float _width, float _height); // not implemented yet 
     void init(Print *out, struct pfodDwgVALUES* _values);
     void send(char _startChar = '|');
 };

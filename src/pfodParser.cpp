@@ -41,6 +41,8 @@
 pfodParser::pfodParser() {
   constructInit();
 }
+
+
 void pfodParser::constructInit() {
   io = NULL;
   init();
@@ -143,6 +145,14 @@ void pfodParser::setCmd(byte cmd) {
 byte* pfodParser::getCmd() {
   return cmdStart;
 }
+
+bool pfodParser::cmdEquals(pfodAutoCmd &a_Cmd) { // for load dwg cmds
+  if ((*a_Cmd.cmd == '\0') || (*cmdStart == '\0')) {
+    return 0; // false
+  }
+  return !strcmp(a_Cmd.cmd, (const char*)cmdStart);
+}
+
 
 // returns true if parser cmd, as returned by getCmd() == cmdStr
 bool pfodParser::cmdEquals(const char* cmdStr) {
@@ -416,6 +426,12 @@ byte pfodParser::getParserState() {
   return pfodInMsg;
 }
 
+void pfodParser::addDwg(pfodDrawing *dwgPtr) {
+	listOfDrawings.add(dwgPtr); 
+	// pfodLinkedList expects its data to be cleaned up by caller if necessary 
+}
+	
+	
 byte pfodParser::parse() {
   byte rtn = 0;
   if (!io) {
@@ -428,6 +444,19 @@ byte pfodParser::parse() {
       // found msg
       if (rtn == '!') {
         closeConnection();
+      } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
+        pfodDrawing *dwgPtr = listOfDrawings.getFirst();
+      	while (dwgPtr) {
+      	  if (dwgPtr->sendDwg()) {
+      	    rtn = 0; // this msg has been replied to
+      	    break;
+          } else if (dwgPtr->processDwgCmds()) {
+      	    rtn = 0; // this msg has been replied to
+      	    break; // leave rtn unchanged so main code 
+      	    //can detect touch on menu item and pick up changes if necessary
+      	  }
+      	  dwgPtr = listOfDrawings.getNext();
+        }
       }
       return rtn;
     }

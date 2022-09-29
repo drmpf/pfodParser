@@ -36,6 +36,10 @@
 #include "pfodDelay.h"
 #include "pfodDwgs.h"
 #include "pfodControl.h"
+#include "pfodDrawing.h" 
+#include "pfodLinkedList.h"
+
+class pfodDrawing;
 
 // used to suppress warning
 #define pfod_MAYBE_UNUSED(x) (void)(x)
@@ -50,7 +54,7 @@ class pfodParser: public Print {
     pfodParser();
     void connect(Stream* ioPtr);
     void closeConnection();
-
+    void addDwg(pfodDrawing *dwgPtr); // add a pfodDrawing to the list of drawings to be automatically processed by parse()
     byte parse();
     bool isRefresh(); // starts with {version: and the version matches this parser's version
     const char *getVersionRequested(); // the version asked for in the command i.e. {versionRequested:...}
@@ -65,6 +69,8 @@ class pfodParser: public Print {
     byte* parseLong(byte* idxPtr, long *result);
     bool cmdEquals(const char* cmdStr); // returns true if parser cmd, as returned by getCmd() == cmdStr 
     bool cmdEquals(const char cmdChar); // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
+    bool cmdEquals(pfodAutoCmd &a_Cmd); // for load dwg cmds
+
 
     /**
        pfodWaitingForStart if outside msg
@@ -135,6 +141,7 @@ class pfodParser: public Print {
     void replace(const char* findStr, const char *replacePtr, char* buffer);
     //static const byte DisconnectNow = '!';
     Stream* io;
+    pfodLinkedList<pfodDrawing> listOfDrawings;
     char emptyVersion[1];
     byte emptyBytes[1];
     byte missingEditedText[1];

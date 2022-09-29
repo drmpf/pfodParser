@@ -8,6 +8,7 @@ pfodBLEBufferedSerial	KEYWORD1
 pfodRingBuffer	KEYWORD1
 pfodBufferedStream	KEYWORD1
 pfodNonBlockingInput	KEYWORD1
+pfodDrawing	KEYWORD1
 setInput KEYWORD2
 clearInput KEYWORD2
 readInput KEYWORD2
