@@ -81,10 +81,6 @@ pfodInsertDwg& pfodDwgs::insertDwg() {
   return d;
 }
 
-pfodDwgs::pfodDwgs(Print &_out) {
-  out = &_out;
-}
-
 pfodDwgs::pfodDwgs(Print *_outPtr) {
   out = _outPtr;
 }

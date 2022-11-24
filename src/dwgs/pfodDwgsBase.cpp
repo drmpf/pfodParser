@@ -60,7 +60,7 @@ void pfodDwgsBase::initValues(struct pfodDwgVALUES* _valuesPtr) {
   valuesPtr->radius = 1;
   valuesPtr->filled = 0;
   valuesPtr->rounded = 0;
-  valuesPtr->encodeOutput = 0;
+  valuesPtr->encodeOutput = 1;
   valuesPtr->cmd = ' ';
   valuesPtr->cmdStr = NULL;
   valuesPtr->loadCmd = ' '; // for loading and erase of insertDwgs
@@ -132,15 +132,17 @@ void pfodDwgsBase::printTextFormats() {
 
 // replace resticted char if encode non-zero
 // i.e. reverse these replacements
-//  replace("&lt;","<", (char*)editedText);
 //  replace("&#123;","{", (char*)editedText);
 //  replace("&#125;","}", (char*)editedText);
 //  replace("&#124;","|", (char*)editedText);
 //  replace("&#126;","~", (char*)editedText);
 //  replace("&#96;","`", (char*)editedText);
-//  replace("&amp;","&", (char*)editedText);
+//  else just remove (don't send) { } ` ~ |
+// these char < &  \ are not automatically replaced when encoded text is enabled (the default)
+// you need to do them manually if needed.
+//  replace("&lt;","<", (char*)editedText);
 //  replace("&#92;","\\", (char*)editedText);
-//  else just remove (don't send) { } ` ~
+//  replace("&amp;","&", (char*)editedText);
 
 void pfodDwgsBase::encodeText(Print* out, uint8_t encodeOutput, const __FlashStringHelper *ifsh) {
   PGM_P p = reinterpret_cast<PGM_P>(ifsh);
@@ -166,16 +168,14 @@ void pfodDwgsBase::encodeChar(Print* out, uint8_t encodeOutput, char c) {
     return;
   }
   if (!encodeOutput) { // just skip outputting ` ~ { }
-    if ((c == '`') || (c == '~') || (c == '{') || (c == '}')) {
+    if ((c == '`') || (c == '~') || (c == '{') || (c == '}') || (c == '|') ) {
       return; // skip this restricted char
     } // else
     out->print(c);
     return;
   }
 
-  if (c == '<') {
-    out->print("&lt;");
-  } else if (c == '{') {
+  if (c == '{') {
     out->print("&#123;");
   } else if (c == '}') {
     out->print("&#125;");
@@ -185,10 +185,6 @@ void pfodDwgsBase::encodeChar(Print* out, uint8_t encodeOutput, char c) {
     out->print("&#126;");
   } else if (c == '`') {
     out->print("&#96;");
-  } else if (c == '&') {
-    out->print("&amp;");
-  } else if (c == '\\') {
-    out->print("&#92;");
   } else {
     out->print(c);
   }

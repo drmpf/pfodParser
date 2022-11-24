@@ -55,7 +55,7 @@
 //#define DEBUG_RAWIO
 //#define DEBUG_AUTHORIZATION
 //#define DEBUG_EEPROM_KEY_UPDATE
-#define DEBUG_TIMER
+//#define DEBUG_TIMER
 //#define DEBUG_PARSER
 //#define DEBUG_ECHO_INPUT
 // WARNING do not uncomment this define when connect to the network
@@ -76,7 +76,7 @@ pfodSecurity::pfodSecurity() {
   pfodSecurity("");
 }
 
-pfodSecurity::pfodSecurity(const char *_version) : parser(_version) {
+pfodSecurity::pfodSecurity(const char *_version) : pfodParser(_version) {
   debugOut = NULL;
   pfod_Base_set = NULL;
   doFlush = false; // set to true for SMS only, otherwise false
@@ -85,7 +85,7 @@ pfodSecurity::pfodSecurity(const char *_version) : parser(_version) {
   setIdleTimeoutCalled = false;
   closeConnection();
   timeSinceLastConnection = 0;
-  parser.ignoreSeqNum();
+  pfodParser::ignoreSeqNum();
   timerDebug_ms = millis();
 }
 
@@ -125,7 +125,7 @@ void pfodSecurity::setIdleTimeout(unsigned long timeout_in_seconds) {
 // true if no new cmd within idle timeout
 bool pfodSecurity::isIdleTimeout() {
   if (connectionTimer == 0) {
-  	  return false;
+    return false;
   }
 
 #ifdef DEBUG_TIMER
@@ -133,7 +133,7 @@ bool pfodSecurity::isIdleTimeout() {
     if (((millis() - timerDebug_ms) > 1000) && (connectionTimer != 0)) {
       timerDebug_ms = millis();
       debugOut->print(F("Connection Timer:"));
-      debugOut->println(timerDebug_ms-connectionTimerStart);
+      debugOut->println(timerDebug_ms - connectionTimerStart);
     }
   }
 #endif
@@ -148,7 +148,7 @@ bool pfodSecurity::isIdleTimeout() {
     return true;
   } // else {
   return false;
-} 
+}
 
 int pfodSecurity::read() {
 #ifdef PFOD_RAW_CMD_PARSER
@@ -189,6 +189,13 @@ byte* pfodSecurity::getRawCmd() {
 void pfodSecurity::setDebugStream(Print* out) {
   debugOut = out;
   mac.setDebugStream(debugOut);
+  pfodParser::setDebugStream(out);
+}
+
+void pfodSecurity::addDwg(pfodDrawing *dwgPtr) {
+	listOfDrawings.add(dwgPtr); // uses pfodSecurity list not pfodParser
+	// so that cmds not processed until they pass the hash check
+	// pfodLinkedList expects its data to be cleaned up by caller if necessary 
 }
 
 /**
@@ -280,9 +287,9 @@ void pfodSecurity::connect(Stream * io_arg, Print * raw_io_arg, const __FlashStr
 
   if (!lastConnectionClosed) { // if close_pfodSecurityConnection called this is skipped
 #ifdef DEBUG_AUTHORIZATION
-  if (debugOut != NULL) {
-    debugOut->println(F(" !lastConnectionClosed call closeConnection() "));
-  }
+    if (debugOut != NULL) {
+      debugOut->println(F(" !lastConnectionClosed call closeConnection() "));
+    }
 #endif
     closeConnection(); // start with connection closed also calls init()
   }
@@ -290,9 +297,9 @@ void pfodSecurity::connect(Stream * io_arg, Print * raw_io_arg, const __FlashStr
   init();
   //raw_io = raw_io_arg; // set raw_io AFTER init() set after hand shake on first cmd
   lastConnectionClosed = false;
-  
+
   setAuthorizeState(AUTHORIZING_START);
-  parser.connect(io); // clear disconnect not cmd
+  pfodParser::connect(io); // clear disconnect not cmd
 #ifdef DEBUG_PARSER
   if (debugOut != NULL) {
     debugOut->println(F(" pfodSecurity::connect() parsing true"));
@@ -430,10 +437,10 @@ void pfodSecurity::connect(Stream * io_arg, Print * raw_io_arg, const __FlashStr
 void pfodSecurity::init() {
   setAuthorizeState(NOT_AUTHORIZING);
   raw_io = NULL;
-  parser.init();
-#ifdef PFOD_RAW_CMD_PARSER  
+  pfodParser::init();
+#ifdef PFOD_RAW_CMD_PARSER
   rawCmdParser.init();
-#endif  
+#endif
 #ifdef DEBUG_PARSER
   if (debugOut != NULL) {
     debugOut->println(F(" pfodSecurity::init() parsing true"));
@@ -471,12 +478,12 @@ void pfodSecurity::closeConnection() {
   if (pfod_Base_set) {
     pfod_Base_set->_closeCurrentConnection(); // just times it out
   }
-  parser.closeConnection(); // clears io but that is not a problem
+  pfodParser::closeConnection(); // clears io but that is not a problem
   // also clears out cmd so need to add back ! if needed
-#ifdef PFOD_RAW_CMD_PARSER  
+#ifdef PFOD_RAW_CMD_PARSER
   rawCmdParser.closeConnection();
-#endif  
-//  io = NULL;
+#endif
+  //  io = NULL;
 }
 
 /**
@@ -494,12 +501,12 @@ void pfodSecurity::close_pfodSecurityConnection() {
   //  if (pfod_Base_set) {
   //    pfod_Base_set->_closeCurrentConnection(); // just times it out
   //  }
-  parser.closeConnection(); // clears io but that is not a problem
+  pfodParser::closeConnection(); // clears io but that is not a problem
   // also clears out cmd so need to add back ! if needed
-#ifdef PFOD_RAW_CMD_PARSER  
+#ifdef PFOD_RAW_CMD_PARSER
   rawCmdParser.closeConnection();
-#endif  
-//  io = NULL;
+#endif
+  //  io = NULL;
 }
 
 void pfodSecurity::startIdleTimeoutTimer() {
@@ -507,33 +514,6 @@ void pfodSecurity::startIdleTimeoutTimer() {
   connectionTimerStart = millis();
 }
 
-/**
-   if msg starts with {: the : is dropped from the cmd
-   else if msg starts with {vers:  vers is check against current parser version
-*/
-bool pfodSecurity::isRefresh() {
-  return parser.isRefresh();
-}
-
-const char* pfodSecurity::getVersionRequested() {
-  return parser.getVersionRequested();
-}
-
-const char* pfodSecurity::getVersion() {
-  return parser.getVersion();
-}
-
-void pfodSecurity::sendVersion() {
-  print('~');
-  print(getVersion());
-}
-
-// send `refresh_mS ~ version to parser.print
-void pfodSecurity::sendRefreshAndVersion(unsigned long refresh_mS) {
-  print('`');
-  print(refresh_mS);
-  sendVersion();
-}
 
 // static
 int pfodSecurity::getBytesFromPassword(char *hexKey, int hexKeyLen, byte *keyBytes, int keyMaxLen) {
@@ -624,41 +604,6 @@ size_t pfodSecurity::write(const uint8_t *buffer, size_t size) {
 }
 
 
-/**
-   Return pointer to start of args[]
-*/
-byte* pfodSecurity::getCmd() {
-  return parser.getCmd();
-}
-
-/**
-   Return pointer to first arg (or pointer to null if no args)
-
-   Start at args[0] and scan for first null
-   if argsCount > 0 increment to point to  start of first arg
-   else if argsCount == 0 leave pointing to null
-*/
-byte* pfodSecurity::getFirstArg() {
-  return parser.getFirstArg();
-}
-
-/**
-   Return pointer to next arg or pointer to null if end of args
-   Need to call getFirstArg() first
-   Start at current pointer and scan for first null
-   if scanned over a non empty arg then skip terminating null and return
-   pointer to next arg, else return start if start points to null already
-*/
-byte* pfodSecurity::getNextArg(byte * start) {
-  return parser.getNextArg(start);
-}
-
-/**
-   Return number of args in last parsed msg
-*/
-byte pfodSecurity::getArgsCount() {
-  return parser.getArgsCount();
-}
 
 /**
    parse
@@ -771,9 +716,9 @@ size_t pfodSecurity::writeToPfodApp(uint8_t b) {
       // write the { that started this response
       //int rtn_tmp = 0;
       //while (!rtn_tmp) {
-        // loop here until write succeeds
-        //rtn_tmp = io->write(pfodParser::pfodMsgStarted); // response
-        io->write(pfodParser::pfodMsgStarted); // response
+      // loop here until write succeeds
+      //rtn_tmp = io->write(pfodParser::pfodMsgStarted); // response
+      io->write(pfodParser::pfodMsgStarted); // response
       //}
       outputParserState = pfodParser::pfodInMsg; // in msg
     } else {
@@ -793,9 +738,9 @@ size_t pfodSecurity::writeToPfodApp(uint8_t b) {
         //            connectionTimerStart = millis();
         //       }
         //while (!rtn_tmp) {
-          // loop here until write succeeds
-          //rtn_tmp = raw_io->write(pfodParser::pfodMsgStarted); // raw data
-          raw_io->write(pfodParser::pfodMsgStarted); // raw data
+        // loop here until write succeeds
+        //rtn_tmp = raw_io->write(pfodParser::pfodMsgStarted); // raw data
+        raw_io->write(pfodParser::pfodMsgStarted); // raw data
         //}
       } else {
 #ifdef DEBUG_RAWIO
@@ -828,9 +773,9 @@ size_t pfodSecurity::writeToPfodApp(uint8_t b) {
 
   if (outputParserState == pfodParser::pfodInMsg) {
     //while (!rtn) {
-      // loop here until write succeeds
-      //rtn = io->write(b); // response
-      io->write(b); // response
+    // loop here until write succeeds
+    //rtn = io->write(b); // response
+    io->write(b); // response
     //}
     if (!noPassword) {
       // add it to the hash
@@ -893,9 +838,9 @@ size_t pfodSecurity::writeToPfodApp(uint8_t b) {
       //            connectionTimerStart = millis();
       //      }
       //while (!rtn) {
-        // loop here until write succeeds
-        //rtn = raw_io->write(b); // response
-        raw_io->write(b); // response
+      // loop here until write succeeds
+      //rtn = raw_io->write(b); // response
+      raw_io->write(b); // response
       //}
     } else {
 #ifdef DEBUG_RAWIO
@@ -909,71 +854,6 @@ size_t pfodSecurity::writeToPfodApp(uint8_t b) {
   return 1; //rtn;
 }
 
-/**
-   parseLong
-   will parse between  -2,147,483,648 to 2,147,483,647
-   No error checking done.
-   will return 0 for empty string, i.e. first byte == null
-
-   Inputs:
-    idxPtr - byte* pointer to start of bytes to parse
-    result - long* pointer to where to store result
-   return
-     byte* updated pointer to bytes after skipping terminator
-
-*/
-byte* pfodSecurity::parseLong(byte * idxPtr, long * result) {
-  return parser.parseLong(idxPtr, result);
-}
-byte pfodSecurity::parseDwgCmd() {
-  return parser.parseDwgCmd();
-}
-const byte* pfodSecurity::getDwgCmd() {
-  return parser.getDwgCmd();
-}
-
-uint8_t pfodSecurity::getTouchType() {
-  return parser.getTouchType();
-}
-
-bool pfodSecurity::isTouch() {
-  return parser.isTouch();
-}
-bool pfodSecurity::isPress() {
-  return parser.isPress();
-}
-bool pfodSecurity::isClick() {
-  return parser.isClick();
-}
-bool pfodSecurity::isDown() {
-  return parser.isDown();
-}
-bool pfodSecurity::isDrag() {
-  return parser.isDrag();
-}
-bool pfodSecurity::isUp() {
-  return parser.isUp();
-}
-//bool pfodSecurity::isEntry() {
-//	return parser.isEntry();
-//}
-//bool pfodSecurity::isExit() {
-//	return parser.isExit();
-//}
-
-int pfodSecurity::getTouchedCol() {
-  return parser.getTouchedCol();
-}
-
-int pfodSecurity::getTouchedRow() {
-  return parser.getTouchedRow();
-}
-//uint8_t pfodSecurity::getRawTouchCol() {
-//	return parser.getRawTouchCol();
-//}
-//uint8_t pfodSecurity::getRawTouchRow() {
-//	return parser.getRawTouchRow();
-//}
 
 byte pfodSecurity::parse() {
   const byte DisconnectNow = '!';
@@ -998,9 +878,9 @@ byte pfodSecurity::parse() {
 
   if (!io) {
 #ifdef DEBUG_ECHO_INPUT
-      if (debugOut != NULL) {
-        debugOut->println(F("io null return."));
-      }
+    if (debugOut != NULL) {
+      debugOut->println(F("io null return."));
+    }
 #endif
     return 0; // no stream to read
   }
@@ -1025,14 +905,14 @@ byte pfodSecurity::parse() {
 #endif
     cmd = DisconnectNow;
   } else {  // parsing && mac.isValid()
-  	if (isIdleTimeout()) {
+    if (isIdleTimeout()) {
 #ifdef DEBUG_TIMER
-        if (debugOut != NULL) {
-          debugOut->println(F(" timer timed out, return DisconnectNow, ! "));
-        }
+      if (debugOut != NULL) {
+        debugOut->println(F(" timer timed out, return DisconnectNow, ! "));
+      }
 #endif
-        cmd = DisconnectNow;
-    }  		
+      cmd = DisconnectNow;
+    }
     // parsing
     if (cmd != DisconnectNow) {
 #ifdef DEBUG_ECHO_INPUT
@@ -1087,7 +967,7 @@ byte pfodSecurity::parse() {
                 debugOut->println((char)in);
               }
 #endif
-              cmd = *parser.getCmd(); // reset cmd from parser
+              cmd = *pfodParser::getCmd(); // reset cmd from parser
               inMsgCount++;
             } else {
 #if defined( DEBUG_ECHO_INPUT ) || defined( DEBUG_DISPLAY_RESPONSE )
@@ -1124,14 +1004,14 @@ byte pfodSecurity::parse() {
             }
           }
 #endif
-          cmd = parser.parse(in);
-#ifdef PFOD_RAW_CMD_PARSER          
+          cmd = pfodParser::parse(in);
+#ifdef PFOD_RAW_CMD_PARSER
           rawCmdParser.parse(in);
-#endif          
+#endif
 #ifdef DEBUG_AUTHORIZATION
           if (debugOut != NULL) {
             if (cmd != 0) {
-              debugOut->print(F(" parser.parse(in) returned "));
+              debugOut->print(F(" pfodParser::parse(in) returned "));
               debugOut->println((char)cmd);
             }
           }
@@ -1146,7 +1026,7 @@ byte pfodSecurity::parse() {
           //#endif
           //          if (cmd == DisconnectNow) {
           //            cmd = 0;
-          //            parser.setCmd(0);
+          //            pfodParser::setCmd(0);
           //          }
 
           if (cmd == DisconnectNow) {
@@ -1165,7 +1045,7 @@ byte pfodSecurity::parse() {
                 debugOut->println(F(" with password"));
               }
 #endif
-              if (parser.getParserState() == parser.pfodMsgStarted) {
+              if (pfodParser::getParserState() == pfodParser::pfodMsgStarted) {
                 // initial hash
 #ifdef DEBUG_AUTHORIZATION
                 if (debugOut != NULL) {
@@ -1173,11 +1053,11 @@ byte pfodSecurity::parse() {
                 }
 #endif
                 mac.initHash();
-                mac.putByteToHash(parser.pfodMsgStarted);
-              } else if (parser.getParserState() == parser.pfodInMsg) {
+                mac.putByteToHash(pfodParser::pfodMsgStarted);
+              } else if (pfodParser::getParserState() == pfodParser::pfodInMsg) {
                 mac.putByteToHash(in);
-              } else if (parser.getParserState() == parser.pfodMsgEnd) {
-                if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) parser.getCmd()) == 1) && (parser.getArgsCount() == 0)) {
+              } else if (pfodParser::getParserState() == pfodParser::pfodMsgEnd) {
+                if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) pfodParser::getCmd()) == 1) && (pfodParser::getArgsCount() == 0)) {
                   if (authorizing == AUTHORIZING_SENT_CHALLENGE) {
                     // pfodApp trying to start a new connection but we think we are have already started one
                     // i.e. got {_} and send challenge and are waiting for response
@@ -1195,7 +1075,7 @@ byte pfodSecurity::parse() {
                     // else call disconnect /connect
                     close_pfodSecurityConnection();
                     connect(io, raw_io_connect_arg, hexKeyPgr, eepromAddress); // set authorizing to AUTHORIZING_START
-                    parser.setCmd(AUTHORIZING_START); // connect initializes parser
+                    pfodParser::setCmd(AUTHORIZING_START); // connect initializes parser
                     // Note NO hash for {_} msg
                   }
                 } else {
@@ -1249,7 +1129,7 @@ byte pfodSecurity::parse() {
 
   if ((cmd != DisconnectNow) && (cmd != 0)) {
     if (authorizing == AUTHORIZING_START) { // will not get this state if noPassword see setAuthorizeState()
-      if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) parser.getCmd()) == 1) && (parser.getArgsCount() == 0)) {
+      if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) pfodParser::getCmd()) == 1) && (pfodParser::getArgsCount() == 0)) {
         // send challenge
         setAuthorizeState(AUTHORIZING_SENT_CHALLENGE);
         connectionTimer = idleTimeout; // reset timer
@@ -1299,9 +1179,9 @@ byte pfodSecurity::parse() {
       }
     } else if (authorizing == AUTHORIZING_SENT_CHALLENGE) {
       // looking for = cmd
-      if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) parser.getCmd()) == 1) && (parser.getArgsCount() == 1)) {
+      if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) pfodParser::getCmd()) == 1) && (pfodParser::getArgsCount() == 1)) {
         // check response
-        if (mac.checkMsgHash((const byte*) parser.getFirstArg(), pfodMAC::challengeHashByteSize)) {
+        if (mac.checkMsgHash((const byte*) pfodParser::getFirstArg(), pfodMAC::challengeHashByteSize)) {
           cmd = 0; //
           setAuthorizeState(AUTHORIZING_SUCCESS);
           startIdleTimeoutTimer();
@@ -1337,7 +1217,7 @@ byte pfodSecurity::parse() {
       }
     } else if (authorizing == AUTHORIZING_SUCCESS) {
       // either no password OR finished auth
-      if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) parser.getCmd()) == 1) && (parser.getArgsCount() == 0)) {
+      if ((cmd == AUTHORIZING_CMD) && (strlen((const char*) pfodParser::getCmd()) == 1) && (pfodParser::getArgsCount() == 0)) {
         // got {_}
         if (noPassword) {
 #ifdef DEBUG_AUTHORIZATION
@@ -1351,10 +1231,10 @@ byte pfodSecurity::parse() {
             io->flush();
           }
           cmd = 0;
-          parser.init(); //setCmd(0);
-#ifdef PFOD_RAW_CMD_PARSER          
+          pfodParser::init(); //setCmd(0);
+#ifdef PFOD_RAW_CMD_PARSER
           rawCmdParser.init();
-#endif          
+#endif
         } else {
           // have password should not get this
 #ifdef DEBUG_AUTHORIZATION
@@ -1403,10 +1283,10 @@ byte pfodSecurity::parse() {
       debugOut->println(F(" because cmd set to DisconnectNow"));
     }
 #endif
-    parser.setCmd(DisconnectNow);
-#ifdef PFOD_RAW_CMD_PARSER    
+    pfodParser::setCmd(DisconnectNow);
+#ifdef PFOD_RAW_CMD_PARSER
     rawCmdParser.setDisconnect();
-#endif    
+#endif
   } else {
     if (cmd != 0) {
       if ((authorizing == AUTHORIZING_SUCCESS) && (cmd != 0)) {
@@ -1449,13 +1329,34 @@ byte pfodSecurity::parse() {
     if (debugOut != NULL) {
       debugOut->println(F("DisconnectNow"));
     }
-#endif    
+#endif
     closeConnection(); // close connection now
-    parser.setCmd(DisconnectNow);
-#ifdef PFOD_RAW_CMD_PARSER    
+    pfodParser::setCmd(DisconnectNow);
+#ifdef PFOD_RAW_CMD_PARSER
     rawCmdParser.setDisconnect();
-#endif    
+#endif
   }
+  if (cmd != 0) {
+    // found msg
+    if (cmd == '!') {
+      //closeConnection(); called above
+    } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
+      pfodDrawing *dwgPtr = listOfDrawings.getFirst();
+      while (dwgPtr) {
+        if (dwgPtr->sendDwg()) {
+          cmd = 0; // this msg has been replied to
+          break;
+        } else if (dwgPtr->processDwgCmds()) {
+          cmd = 0; // this msg has been replied to
+          break; // leave rtn unchanged so main code
+          //can detect touch on menu item and pick up changes if necessary
+        }
+        dwgPtr = listOfDrawings.getNext();
+      }
+    }
+    return cmd;
+  }
+  // else cmd == 0
   return cmd;
 }
 

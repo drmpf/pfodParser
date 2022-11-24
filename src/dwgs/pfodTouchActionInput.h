@@ -17,7 +17,8 @@ class pfodTouchActionInput : public pfodDwgsBase {
     pfodTouchActionInput &cmd(const char _cmd); // default ' ' not set
     pfodTouchActionInput &cmd(const char* _cmdStr); // for multi char cmds
     pfodTouchActionInput &cmd(pfodAutoCmd &a_Cmd);
-    pfodTouchActionInput &encode(); // replace restricted chars in prompt
+    pfodTouchActionInput &encode(); // replace restricted chars in prompt the default
+    pfodTouchActionInput &doNotEncode(); // disable replacement of restricted chars in prompt
     pfodTouchActionInput &prompt(const char* txt);
     pfodTouchActionInput &prompt(const __FlashStringHelper *txtF);
     pfodTouchActionInput &textIdx(uint16_t _idx); 

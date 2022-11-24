@@ -81,9 +81,14 @@ pfodTouchActionInput &pfodTouchActionInput::underline() {
   return *this;
 }
 
- // replace restricted chars in text and units
+ // replace restricted chars in text and units, the default
 pfodTouchActionInput &pfodTouchActionInput::encode() {
 	valuesPtr->encodeOutput = 1;
+  return *this;
+}
+
+pfodTouchActionInput &pfodTouchActionInput::doNotEncode() {
+	valuesPtr->encodeOutput = 0;
   return *this;
 }
 

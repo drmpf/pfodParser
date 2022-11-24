@@ -100,12 +100,14 @@ pfodLabel &pfodLabel::floatReading(float _value) {
 pfodLabel &pfodLabel::value(float _value) {
   valuesPtr->reading = _value;
   valuesPtr->haveReading = 1;
+  valuesPtr->haveValue = 0;
   return *this;
 }
 
 pfodLabel &pfodLabel::intValue(int32_t _value) {
   valuesPtr->value = _value;
   valuesPtr->haveValue = 1;
+  valuesPtr->haveReading = 0;
   return *this;
 }
 
@@ -145,11 +147,17 @@ pfodLabel &pfodLabel::color(int _color) {
   return *this;
 }
 
- // replace restricted chars in text and units
+ // replace restricted chars in text and units, the default
 pfodLabel &pfodLabel::encode() {
 	valuesPtr->encodeOutput = 1;
   return *this;
 }
+
+pfodLabel &pfodLabel::doNotEncode() {
+	valuesPtr->encodeOutput = 0;
+  return *this;
+}
+
 
 void pfodLabel::send(char _startChar) {
   // else
@@ -176,7 +184,7 @@ void pfodLabel::send(char _startChar) {
     if (valuesPtr->unitsF != NULL) {
   	  encodeText(out,valuesPtr->encodeOutput,valuesPtr->unitsF);
     } else if (valuesPtr->units != NULL) {
-    	encodeText(out,valuesPtr->encodeOutput,valuesPtr->units);
+      encodeText(out,valuesPtr->encodeOutput,valuesPtr->units);
     }
   }
   sendColRowOffset();
