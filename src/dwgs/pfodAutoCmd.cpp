@@ -5,7 +5,7 @@
 size_t pfodAutoCmd::_cmdInt = 1;
 
 pfodAutoCmd::pfodAutoCmd() {
-  String cmdString('_'); // released at the end of this method
+  String cmdString('c'); // cannot use _ as this interferes with security handshake
   cmdString += _cmdInt++;
   strncpy((char*)cmd,cmdString.c_str(),sizeof(cmd));
   ((char*)cmd)[(sizeof(cmd)-1)] = '\0'; // always terminate

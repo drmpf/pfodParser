@@ -9,10 +9,11 @@
 
 #include <pfodDrawing.h>
 
-pfodDrawing::pfodDrawing(pfodParser &parser, pfodDwgs& dwgs) {
-  parserPtr = &parser;
-  dwgsPtr = &dwgs;
-  parser.addDwg(this);
+
+pfodDrawing::pfodDrawing(pfodParser *_parserPtr, pfodDwgs* _dwgsPtr) {
+  parserPtr = _parserPtr;
+  dwgsPtr = _dwgsPtr;
+  parserPtr->addDwg(this);
 }
 
 bool pfodDrawing::sendDwg() { return false; } // returns is dwg sent else false i.e. not this dwg's loadCmd

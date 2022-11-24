@@ -19,8 +19,11 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
-Version 3.58 added pfodDrawing for pfodGUIdesigner  
-Version 3.57 added pfodAutoCmd, mods for pfodGUIdesigner  
+Version 3.61 added linked list for processing dwg cmds, added pfodESPBufferedClient, fixed label/touchActionInput encoding  
+Version 3.60 revised arguments to supports pfodSecurity  
+Version 3.59 added minor edit  
+Version 3.58 added pfodDrawing for pfodGUIdesigner
+Version 3.57 added pfodAutoCmd, mods for pfodGUIdesigner
 Version 3.56 added cmdEquals  
 Version 3.55 added pfodAutoIdx  
 Version 3.54 added xRadius, yRadius as an alterative to arc().start(..).angle(0)  

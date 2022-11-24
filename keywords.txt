@@ -9,10 +9,13 @@ pfodRingBuffer	KEYWORD1
 pfodBufferedStream	KEYWORD1
 pfodNonBlockingInput	KEYWORD1
 pfodDrawing	KEYWORD1
+addDwg KEYWORD2
 setInput KEYWORD2
 clearInput KEYWORD2
 readInput KEYWORD2
 setDebugStream	KEYWORD2
+setDebugOut	KEYWORD2
+setDebug	KEYWORD2
 bytesToBeSent	KEYWORD2
 isRefresh	KEYWORD2
 cmdEquals	KEYWORD2
@@ -69,6 +72,7 @@ rounded	KEYWORD2
 reserveIdx	KEYWORD2
 label	KEYWORD2
 encode	KEYWORD2
+doNotEncode	KEYWORD2
 center	KEYWORD2
 left	KEYWORD2
 right	KEYWORD2

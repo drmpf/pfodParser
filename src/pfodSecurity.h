@@ -52,11 +52,15 @@
 #endif
 #include "pfodMAC.h"
 #include "pfod_Base.h"
+#include "pfodDwgs.h"
+#include "pfodControl.h"
+#include "pfodDrawing.h" 
+#include "pfodLinkedList.h"
 
 // used to suppress warning
 #define pfod_MAYBE_UNUSED(x) (void)(x)
 
-class pfodSecurity : public Stream {
+class pfodSecurity : public pfodParser { //Stream {
   public:
     pfodSecurity();
     pfodSecurity(const char *_version);
@@ -122,32 +126,11 @@ class pfodSecurity : public Stream {
 
     byte parse(); // call this in loop() every loop, it will read bytes, if any, from the pfodAppStream and parse them
     // returns 0 if message not complete, else returns the first char of a completed and verified message
-    bool isRefresh(); // starts with {: the : is dropped from the cmd
-    const char *getVersionRequested(); // the version asked for in the command i.e. {versionRequested:...}
-    const char* getVersion();
-    void setVersion(const char* version); // no usually needed
-    void sendVersion(); // send ~ version to parser.print
-    void sendRefreshAndVersion(unsigned long refresh_mS); // send `refresh_mS ~ version to parser.print
-    byte* getCmd();  // pointer to current parsed command, points to /0 if no command, 0xff if DisconnectNow was returned from the parser
-    byte* getFirstArg(); // pointer to the first command argument, points to /0 if there are no arguments
-    byte* getNextArg(byte *start);
-    byte getArgsCount(); // number of arguments in the current command, 0 if none
-    byte* parseLong(byte* idxPtr, long *result); // parse the argument, pointed to by idxPtr, as a long
+    void addDwg(pfodDrawing *dwgPtr); // add a pfodDrawing to the list of drawings to be automatically processed by parse()
     void init();
-    byte parseDwgCmd();
-    const byte* getDwgCmd(); // valid only after parseDwgCmd() called on image cmd
-    bool isTouch(); // default TOUCH even if not parsed
-    bool isClick();
-    bool isDown();
-    bool isDrag();
-    bool isUp();
-    bool isPress();
     //    bool isEntry();
     //    bool isExit();
 
-    uint8_t getTouchType();
-    int getTouchedCol(); // default 0
-    int getTouchedRow(); // default 0
 
     static int getBytesFromPassword(char *hexKey, int hexKeyLen, byte *keyBytes, int keyMaxLen);
     static uint32_t decodePasswordBytes(byte* bytes, int idx, int bytesLen);
@@ -160,10 +143,11 @@ class pfodSecurity : public Stream {
     size_t writeToPfodApp(uint8_t* idxPtr);
     size_t writeToPfodApp(uint8_t b);
     Stream *io;
+    pfodLinkedList<pfodDrawing> listOfDrawings;
     Print *raw_io; // set to null on disconnect
     Print *raw_io_connect_arg; // save for later resuse
     Print *debugOut;
-    pfodParser parser;
+   // pfodParser parser;
     pfodMAC mac;
     boolean parsing; // true when parsing, after disconnected() called and before returning 0xff, false between returning 0xff and disconnected being called
     byte authorizing;

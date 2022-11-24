@@ -33,7 +33,8 @@ class pfodLabel : public pfodDwgsBase {
     pfodLabel &right(); 
     pfodLabel &italic(); 
     pfodLabel &underline();
-    pfodLabel &encode(); // replace restricted chars in text and units
+    pfodLabel &encode(); // replace restricted chars in text and units the default
+    pfodLabel &doNotEncode(); // disable replacement of restricted chars in text and units
     pfodLabel &idx(uint16_t _idx); // default 0 i.e. not set
     pfodLabel &idx(pfodAutoIdx &a_idx); // reserve new idx if 0
     pfodLabel &offset(float _colOffset, float _rowOffset); // default 0,0

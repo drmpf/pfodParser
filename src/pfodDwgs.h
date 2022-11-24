@@ -33,7 +33,6 @@ class pfodDwgs : public pfodDwgsBase {
     // returns the first index of the reserved ones
     static int reserveIdx(int numToReserve);
 
-    pfodDwgs(Print &out);
     pfodDwgs(Print *out);
     void start(int cols, int rows, int backgroundColor = WHITE, uint8_t moreData = 0);
     void startUpdate(uint8_t moreData = 0);

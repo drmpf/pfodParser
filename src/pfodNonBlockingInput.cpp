@@ -114,7 +114,7 @@ void pfodNonBlockingInput::checkClearInput() {
   }
 }
 
-// readFirstLine does not timeout or block
+// readInputLine does not timeout or block
 // returns -1 until the null terminated buffer contains length-1 chars or until read \r or \n. The \r or \n are not added to the buffer
 // then returns number of chars read.
 // an empty input line i.e. just \r or \n returns 0.

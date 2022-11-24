@@ -36,6 +36,9 @@
    Provide this copyright is maintained.
 */
 
+// uncomment this next line and call send chars written to the Serial  USUALLY NOT USED!!
+//#define DEBUG_MSG_TO_SERIAL
+
 #include "pfodParser.h"
 
 pfodParser::pfodParser() {
@@ -78,6 +81,12 @@ void pfodParser::init() {
   touchType = 0;
   col = 0;
   row = 0;
+  activeCmdStart = emptyBytes;
+  missingEditedText[0] = '\0';
+  row = 0; col = 0; touchType = 0;
+  editedText = missingEditedText;
+  encodingProcessed = 0;
+
   //  rawCol = 0;
   //  rawRow = 0;
 }
@@ -105,8 +114,26 @@ size_t pfodParser::write(uint8_t c) {
   if (!io) {
     return 1; // cannot write if io null but just pretend to
   }
+#ifdef DEBUG_MSG_TO_SERIAL  
+  if (c=='{') {
+  	  Serial.print("\n>>");
+  }
+  Serial.print((char)c);
+  if (c == '}') {
+  	  Serial.println();
+  }
+#endif  
   return io->write(c);
 }
+
+size_t pfodParser::write(const uint8_t *buffer, size_t size) {
+    size_t n = 0;
+    while(size--) {
+        n += write(*buffer++);
+    }
+    return n;
+}
+
 
 int pfodParser::available() {
   return 0;
@@ -147,27 +174,27 @@ byte* pfodParser::getCmd() {
 }
 
 bool pfodParser::cmdEquals(pfodAutoCmd &a_Cmd) { // for load dwg cmds
-  if ((*a_Cmd.cmd == '\0') || (*cmdStart == '\0')) {
+  if ((*a_Cmd.cmd == '\0') || (*getCmd() == '\0')) {
     return 0; // false
   }
-  return !strcmp(a_Cmd.cmd, (const char*)cmdStart);
+  return !strcmp(a_Cmd.cmd, (const char*)getCmd());
 }
 
 
 // returns true if parser cmd, as returned by getCmd() == cmdStr
 bool pfodParser::cmdEquals(const char* cmdStr) {
-  if ((!cmdStr) || (*cmdStart == '\0')) {
+  if ((!cmdStr) || (*getCmd() == '\0')) {
     return 0; // false
   }
-  return !strcmp(cmdStr, (const char*)cmdStart);
+  return !strcmp(cmdStr, (const char*)getCmd());
 }
 
 // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
 bool pfodParser::cmdEquals(const char cmdChar) {
-  if ((!cmdChar) || (*cmdStart == '\0')) {
+  if ((!cmdChar) || (*getCmd() == '\0')) {
     return 0; // false
   }
-  return (cmdStart[0] == cmdChar) && (cmdStart[1] == '\0');
+  return (getCmd()[0] == cmdChar) && (getCmd()[1] == '\0');
 }
 
 /**
@@ -250,11 +277,11 @@ byte pfodParser::getArgsCount() {
 
 // | <cmd> ~ areaCmd `col `row `type [~editedText]
 byte pfodParser::parseDwgCmd() {
-  emptyBytes[0] = '\0';
-  activeCmdStart = emptyBytes;
-  missingEditedText[0] = '\0';
-  row = 0; col = 0; touchType = 0;
-  editedText = missingEditedText;
+//  emptyBytes[0] = '\0';
+//  activeCmdStart = emptyBytes;
+//  missingEditedText[0] = '\0';
+//  row = 0; col = 0; touchType = 0;
+//  editedText = missingEditedText;
   if ((getArgsCount() != 4) && (getArgsCount() != 5)) {
     return '\0'; // not an image cmd
   }
@@ -279,6 +306,9 @@ byte pfodParser::parseDwgCmd() {
   if (getArgsCount() == 5) {
     argPtr = getNextArg(argPtr);
     editedText = argPtr;
+    getEditedText(); // process encoding this updates that arg!!
+    // Note: if we ever add another arg after this one the need to keep
+    // the location of the start of the next arg in case this one is shortened.
   }
   return *activeCmdStart;
 }
@@ -311,14 +341,17 @@ const byte* pfodParser::getDwgCmd() {
 
 // applies replacements automatically
 const byte *pfodParser::getEditedText() {
-  replace("&#92;", "\\", (char*)editedText);
-  replace("&lt;", "<", (char*)editedText);
-  replace("&#123;", "{", (char*)editedText);
-  replace("&#125;", "}", (char*)editedText);
-  replace("&#124;", "|", (char*)editedText);
-  replace("&#126;", "~", (char*)editedText);
-  replace("&#96;", "`", (char*)editedText);
-  replace("&amp;", "&", (char*)editedText); // do this last
+  if (encodingProcessed == 0) {
+    replace("&#92;", "\\", (char*)editedText);
+    replace("&lt;", "<", (char*)editedText);
+    replace("&#123;", "{", (char*)editedText);
+    replace("&#125;", "}", (char*)editedText);
+    replace("&#124;", "|", (char*)editedText);
+    replace("&#126;", "~", (char*)editedText);
+    replace("&#96;", "`", (char*)editedText);
+    replace("&amp;", "&", (char*)editedText); // do this last
+    encodingProcessed = 1; // only do this once
+  }
   return editedText;
 }
 
@@ -500,6 +533,13 @@ byte pfodParser::parse(byte in) {
     init(); // clean out last partial msg if any
     return 0;
   }
+#ifdef DEBUG_MSG_TO_SERIAL     
+  if ((parserState == pfodWaitingForStart) || (parserState == pfodMsgEnd)) {
+  	  Serial.print("\n<< ");
+  }
+  Serial.print((char)in);
+#endif
+
   if ((parserState == pfodWaitingForStart) || (parserState == pfodMsgEnd)) {
     parserState = pfodWaitingForStart;
     if (in == pfodMsgStarted) { // found {
@@ -526,7 +566,7 @@ byte pfodParser::parse(byte in) {
   if (parserState == pfodMsgStarted) {
     parserState = pfodInMsg;
     if (in == pfodRefresh) {
-      refresh = true;
+      //refresh = true;
       return 0; // skip this byte if get {:
     }
   }

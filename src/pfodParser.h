@@ -38,6 +38,7 @@
 #include "pfodControl.h"
 #include "pfodDrawing.h" 
 #include "pfodLinkedList.h"
+//#include "pfodSecurity.h"
 
 class pfodDrawing;
 
@@ -46,30 +47,40 @@ class pfodDrawing;
 
 class pfodParser: public Print {
   public:
+    pfodParser();
+    pfodParser(const char* version);
+    // methods required for Print
+	virtual size_t write(uint8_t c);
+    virtual size_t write(const uint8_t *buffer, size_t size);
+    virtual void flush();  // may do nothing calls io->flush()
+
+    // stream methods only useful to read the raw cmd
+    virtual int read();
+    virtual int peek();
+    virtual int available();
     // you can reduce this value if you are sending shorter commands.  Most pfod commands are very short <20 bytes, but depends on the pfod menu items you serve
     // but never increase it.
     static const byte pfodMaxMsgLen = 0xff; // == 255, if no closing } by now ignore msg
 
-    pfodParser(const char* version);
-    pfodParser();
-    void connect(Stream* ioPtr);
-    void closeConnection();
-    void addDwg(pfodDrawing *dwgPtr); // add a pfodDrawing to the list of drawings to be automatically processed by parse()
-    byte parse();
-    bool isRefresh(); // starts with {version: and the version matches this parser's version
-    const char *getVersionRequested(); // the version asked for in the command i.e. {versionRequested:...}
-    const char* getVersion();
-    void setVersion(const char* version); // no usually needed
-    void sendVersion(); // send ~ version to parser.print
-    void sendRefreshAndVersion(unsigned long refresh_mS); // send `refresh_mS ~ version to parser.print
-    byte* getCmd();
-    byte* getFirstArg();
-    byte* getNextArg(byte *start);
-    byte getArgsCount();
-    byte* parseLong(byte* idxPtr, long *result);
-    bool cmdEquals(const char* cmdStr); // returns true if parser cmd, as returned by getCmd() == cmdStr 
-    bool cmdEquals(const char cmdChar); // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
-    bool cmdEquals(pfodAutoCmd &a_Cmd); // for load dwg cmds
+    virtual void connect(Stream* ioPtr);
+    virtual void closeConnection();
+    virtual byte parse(); // call this in loop() every loop, it will read bytes, if any, from the pfodAppStream and parse them
+    // returns 0 if message not complete, else returns the first char of a completed and verified message
+    virtual bool isRefresh(); // starts with {version: and the version matches this parser's version
+    virtual const char *getVersionRequested(); // the version asked for in the command i.e. {versionRequested:...}
+    virtual const char* getVersion();
+    virtual void setVersion(const char* version); // no usually needed
+    virtual void sendVersion(); // send ~ version to parser.print
+    virtual void sendRefreshAndVersion(unsigned long refresh_mS); // send `refresh_mS ~ version to parser.print
+    virtual byte* getCmd();
+    virtual byte* getFirstArg();
+    virtual byte* getNextArg(byte *start);
+    virtual byte getArgsCount();
+    virtual byte* parseLong(byte* idxPtr, long *result);
+    virtual bool cmdEquals(const char* cmdStr); // returns true if parser cmd, as returned by getCmd() == cmdStr 
+    virtual bool cmdEquals(const char cmdChar); // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
+    virtual bool cmdEquals(pfodAutoCmd &a_Cmd); // for load dwg cmds
+    virtual void addDwg(pfodDrawing *dwgPtr); // add a pfodDrawing to the list of drawings to be automatically processed by parse()
 
 
     /**
@@ -78,50 +89,48 @@ class pfodParser: public Print {
        pfodInMsg in msg after {
        pfodMsgEnd if just seen closing }
     */
-    byte getParserState();
-    void setCmd(byte cmd);
+    virtual byte getParserState();
+    virtual void setCmd(byte cmd);
     static const byte pfodWaitingForStart = 0xff;
     static const byte pfodMsgStarted = '{';
     static const byte pfodRefresh = ':';
     static const byte pfodInMsg = 0;
     static const byte pfodMsgEnd = '}';
-    void setDebugStream(Print* debugOut); // does nothing
-    size_t write(uint8_t c);
-    int available();
-    int read();
-    int peek();
-    void flush();
-    void setIdleTimeout(unsigned long timeout); // does nothing in parser
-    Stream* getPfodAppStream(); // get the command response stream we are writing to
+    virtual void setDebugStream(Print* debugOut); // does nothing
+    virtual void setDebugOut(Print* out) { 	setDebugStream(out);}
+    virtual void setDebug(Print* out) {	setDebugStream(out);}
+
+    virtual void setIdleTimeout(unsigned long timeout); // does nothing in parser
+    virtual Stream* getPfodAppStream(); // get the command response stream we are writing to
     // for pfodParser this is also the rawData stream
 
     // this is returned if pfodDevice should drop the connection
     // only returned by pfodParser in read() returns -1
-    void init();  // for now
-    byte parse(byte in); // for now
-    void ignoreSeqNum(); // for pfodSecurity so hash does not accidently drop a command.
-    byte parseDwgCmd();  // returns the first byte of the dwgCmd str, often only one char long
-    const byte* getDwgCmd(); // valid only after parseDwgCmd() called on image cmd
+    void init();  // for now do NOT make this virtual!!
+    virtual byte parse(byte in); // for now
+    virtual void ignoreSeqNum(); // for pfodSecurity so hash does not accidently drop a command.
+    virtual byte parseDwgCmd();  // returns the first byte of the dwgCmd str, often only one char long
+    virtual const byte* getDwgCmd(); // valid only after parseDwgCmd() called on image cmd
     // returns true if dwgCmd string == cmdStr, uses strcmp( ) internally
-    bool dwgCmdEquals(const char* dwgCmdStr); // valid only after parseDwgCmd() called on image cmd
-    bool dwgCmdEquals(pfodAutoCmd &a_Cmd); // valid only after parseDwgCmd() called on image cmd
-    bool dwgCmdEquals(const char dwgCmd); // valid only after parseDwgCmd() called on image cmd
-    bool isTouch(); // default TOUCH even if not parsed
-    bool isClick();
-    bool isDown();
-    bool isDrag();
-    bool isUp();
-    bool isPress();
+    virtual bool dwgCmdEquals(const char* dwgCmdStr); // valid only after parseDwgCmd() called on image cmd
+    virtual bool dwgCmdEquals(pfodAutoCmd &a_Cmd); // valid only after parseDwgCmd() called on image cmd
+    virtual bool dwgCmdEquals(const char dwgCmd); // valid only after parseDwgCmd() called on image cmd
+    virtual bool isTouch(); // default TOUCH even if not parsed
+    virtual bool isClick();
+    virtual bool isDown();
+    virtual bool isDrag();
+    virtual bool isUp();
+    virtual bool isPress();
     //    bool isEntry();
     //    bool isExit();
-    const byte* getEditedText(); // [0] = '\0' if no editedText returned
+    virtual const byte* getEditedText(); // [0] = '\0' if no editedText returned
 
 
-    uint8_t getTouchType();
-    int getTouchedCol(); // default 0
-    int getTouchedRow(); // default 0
-    int getTouchedY(); // default 0
-    int getTouchedX(); // default 0
+    virtual uint8_t getTouchType();
+    virtual int getTouchedCol(); // default 0
+    virtual int getTouchedRow(); // default 0
+    virtual int getTouchedY(); // default 0
+    virtual int getTouchedX(); // default 0
     const static int TOUCH = 0;
     const static int DOWN = 1;
     const static int DRAG = 2;
@@ -151,7 +160,8 @@ class pfodParser: public Print {
     byte args[pfodMaxMsgLen + 1]; // allow for trailing null
     byte *versionStart;
     const byte *activeCmdStart;
-    const byte *editedText;
+    byte *editedText;
+    byte encodingProcessed;
     uint8_t seqNum; // 0 if not set else last char before leading {
     uint8_t lastSeqNum; // 0 if not set else last char before leading {
     byte ignoreCmdSeqNum; // != 0 if should ignore them
