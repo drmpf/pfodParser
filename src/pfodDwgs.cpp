@@ -7,6 +7,12 @@
  */
 #include "pfodDwgs.h"
 
+#include "dwgs/pfodDwgsBase.h"
+
+pfodDwgs::pfodDwgs() {
+   pfodDwgsBase::initValues(&values);
+}
+
 // the x position at the end of this radius at this angle (in degrees)
 float pfodDwgs::xRadius(float angle, float radius) {
 	return radius*cos(angle*DEG_TO_RAD);

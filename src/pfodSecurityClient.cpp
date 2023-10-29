@@ -77,6 +77,7 @@
 #define AUTHORIZING_CMD '_'
 
 
+
 pfodSecurityClient::pfodSecurityClient() {
   debugOut = NULL;
   pfod_Base_set = NULL;
@@ -99,8 +100,19 @@ pfodSecurityClient::pfodSecurityClient() {
   responseTimeoutValue = 10 * 1000; // 10 as per pfodApp
   responseTimeout = 0;
   waitingForResponse = false;
-  closeConnection(); // sets   connectionClosed = true;   connecting = false;
+  closeConnection(); // sets   connectionClosed = true;   connecting = false; calls init()
+  init();
   timerDebug_ms = millis();
+  responseTimer = 0;
+  responseTimeout = 0;
+  responseTimeoutValue = 0;
+  
+  challenge[0] = '\0'; // add one for hash identifier save this for calculating msg hash
+  waitingForResponse = false; // true once } sent to block further commands until response received or link closed
+  noPassword = true;
+  msgHashBytes[0] = '\0';
+  incomingHashBytes[0] = '\0';
+  hexKeyPgr = NULL;
   
 }
 
@@ -185,7 +197,6 @@ void pfodSecurityClient::connect(pfod_Base* _pfod_Base_set, const __FlashStringH
   pfod_Base_set = _pfod_Base_set;
   connect((Stream*)pfod_Base_set, hexKeyPgr);
 }
-
 
 void pfodSecurityClient::init() {
   setAuthorizeState(NOT_AUTHORIZING);

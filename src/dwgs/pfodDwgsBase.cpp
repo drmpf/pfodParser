@@ -9,6 +9,8 @@
 #include "pfodDwgs.h"
 
 pfodDwgsBase::pfodDwgsBase() {
+    out = NULL;
+    valuesPtr = NULL;
 }
 
 void pfodDwgsBase::send(char _startChar) {

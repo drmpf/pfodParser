@@ -30,6 +30,7 @@ pfodBufferedStream::pfodBufferedStream(const uint32_t _baudRate, uint8_t *_buf, 
   uS_perByte = ((unsigned long)(13000000.0 / (float)baudRate)) + 1; // 1sec / (baud/13) in uS  baud is in bits
   // => ~13bits/byte, i.e. start+8+parity+2stop+1  may be less if no parity and only 1 stop bit
   ringBuffer.init(_buf, _bufferSize);
+  sendTimerStart = 0;
 }
 
 uint32_t pfodBufferedStream::getBaudRate() {

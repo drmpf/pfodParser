@@ -49,6 +49,7 @@ protected:
     uint8_t* sendBuffer; // allow for terminating null
     Print* debugOut;
     unsigned long sendDelay_uS;
+    void init();
 
   private:
     static const unsigned long DEFAULT_BLE_SEND_DELAY_TIME = 200; // 200mS delay between 20byte msgs

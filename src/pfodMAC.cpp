@@ -18,6 +18,7 @@
 #include "SipHash_2_4.h"
 #include "pfodParserUtils.h"
 
+
 //#define DEBUG_BUILD_CHALLENGE
 //#define DEBUG_CHAP_EEPROM
 //#define DEBUG_HASH
@@ -68,10 +69,12 @@ union _ulongBytes {
 pfodMAC::pfodMAC() {
   debugOut = NULL;
   keyLen = 0;
+  key[0] = '\0';
   bigEndian = isBigEndian();
   connectionCounter = 0; //0 increment each connection
   powerCycles = 0;
   initCalled = false;
+  disableEEPROM = true;
   CHAP_EEPROM_Address = 0;
 }
 

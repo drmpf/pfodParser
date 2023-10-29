@@ -5,6 +5,7 @@
   Provide this copyright is maintained.
 */
 
+
 // uncomment this next line and call setDebugStream(&Serial); to enable debug out
 #define DEBUG
 
@@ -12,7 +13,7 @@ void pfodBTCBufferedStream::setDebugStream(Print* out) {
   debugOut = out;
 }
 
-pfodBTCBufferedStream::pfodBTCBufferedStream() {
+void pfodBTCBufferedStream::init() {
   stream = NULL;
   debugOut = NULL;
   //  size_t _bufferSize = PFOD_DEFAULT_BTC_SEND_BUFFER_SIZE;
@@ -20,6 +21,13 @@ pfodBTCBufferedStream::pfodBTCBufferedStream() {
   bufferSize = PFOD_DEFAULT_BTC_SEND_BUFFER_SIZE;
   sendDelayTime = DEFAULT_SEND_DELAY_TIME;
   connectCalled = false;
+  timerRunning = false;
+  sendTimerStart = 0;
+  sendBuffer[0] ='\0';
+}
+
+pfodBTCBufferedStream::pfodBTCBufferedStream() {
+    init();
 }
 
 /**

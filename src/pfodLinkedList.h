@@ -201,6 +201,7 @@ template<typename T>
 pfodLinkedList<T>::pfodLinkedList() {
   root = NULL;
   current = NULL;
+  count = 0;
 }
 
 /*

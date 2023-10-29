@@ -13,18 +13,22 @@ void pfodBLEBufferedSerial::setDebugStream(Print* out) {
   debugOut = out;
 }
 
-pfodBLEBufferedSerial::pfodBLEBufferedSerial() {
+void pfodBLEBufferedSerial::init() {
   stream = NULL;
   debugOut = NULL;
-  size_t _bufferSize = PFOD_DEFAULT_SEND_BUFFER_SIZE;
-  setBuffer(_bufferSize);
   sendDelay_uS = DEFAULT_BLE_SEND_DELAY_TIME*1000;
   connectCalled = false;
+  timerRunning = false;
+}
+
+pfodBLEBufferedSerial::pfodBLEBufferedSerial() {
+    init();
+    size_t _bufferSize = PFOD_DEFAULT_SEND_BUFFER_SIZE;
+    setBuffer(_bufferSize);
 }
 
 pfodBLEBufferedSerial::pfodBLEBufferedSerial(size_t _bufferSize) {
-  stream = NULL;
-  debugOut = NULL;
+  init();
   setBuffer(_bufferSize);
 }
 
@@ -41,6 +45,7 @@ void pfodBLEBufferedSerial::setBuffer(size_t _bufferSize) {
     bufferSize = defaultBufferSize;
     sendBuffer = defaultBuffer;
   }
+  sendBuffer[0] = '\0';
 }
 
 pfodBLEBufferedSerial* pfodBLEBufferedSerial::connect(Stream* _stream) {

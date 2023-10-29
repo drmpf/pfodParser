@@ -28,11 +28,15 @@ It does not close the connection or prevent raw data being sent
 //#define DEBUG_SETUP
 //#define DEBUG_RAWDATA
 
+
+
 pfodSMS_SIM900::pfodSMS_SIM900() {
+  debugOut = NULL; 
   raw_io.set_pfod_Base((pfod_Base*)this);
   raw_io_ptr = &raw_io;
   gprs = NULL; // not set yet
   powerResetPin = -1; // not set yet
+  init();
 }
 
 Print* pfodSMS_SIM900::getRawDataOutput() {
@@ -74,6 +78,9 @@ void pfodSMS_SIM900::init() {
     debugOut->print(F("NOTE: \\r \\n are replaced by [ ] for printout as in smsLine:'OK[]'\n"));
   }
 #endif // DEBUG
+  gprsMsg[0] = '\0';
+  gprsMsgIdx = 0;
+  gprsLastChar = '\0';
   resendLastResponse = false;
   responseSet = true; // wait for first command
   sendingResponse = false;
@@ -81,6 +88,7 @@ void pfodSMS_SIM900::init() {
   sendingRawdata = false;
   deleteReadSmsMsgs = false;
   haveRequestedIncomingMsg = false;
+  foundOK = false;
   bytesToConvert[0] = '\0';
   timedOutTimer = 0; // timed out;
   rxBuffer[SMS_RX_BUFFER_SIZE] = '\0';
@@ -92,10 +100,13 @@ void pfodSMS_SIM900::init() {
   rawdataTxBufferIdx = 0;
   rawdataSMSbuffer[0] = '\0';
   clearTxBuffer();
+  responseSMSbuffer[0] = '\0';
+  start_mS = 0;
+ 
   currentConnection = &connection_A;
-  clearConnection (currentConnection);
+  clearConnection(currentConnection);
   nextConnection = &connection_B;
-  clearConnection (nextConnection);
+  clearConnection(nextConnection);
   for (int i = 0; i < MAX_KNOWN_CONNECTION; i++) {
     clearKnownConnection(knownConnectionsArray + i);
     knownArrayPtrs[i] = knownConnectionsArray + i;
@@ -106,6 +117,7 @@ void pfodSMS_SIM900::init() {
     incomingMsgNos[i][0] = '\0';
   }
   incomingMsgNos_head = 0;
+  incomingMsgNos_tail = 0;
   emptyIncomingMsgNo(); // sets tail == head so empty
   clearGprsLine();
   expectingMessageLines = false; // note msg from pfodApp may have embedded new line
@@ -262,7 +274,7 @@ void pfodSMS_SIM900::clearKnownConnection(int idx) {
 #endif // DEBUG
     return; // error
   }
-  clearKnownConnection (knownArrayPtrs[idx]);
+  clearKnownConnection(knownArrayPtrs[idx]);
 }
 
 void pfodSMS_SIM900::clearKnownConnection(knownConnection *kCon) {
@@ -445,7 +457,7 @@ void pfodSMS_SIM900::processGprsLine(const char* smsLine) {
         // do not reset timer
         rxBufferLen = initialRxBufferLen;
         rxBuffer[rxBufferLen] = '\0';
-        clearConnection (nextConnection);
+        clearConnection(nextConnection);
         // if sendingResend will finish that before doing this new resend
         resendLastResponse = true;
         break;

@@ -21,11 +21,8 @@
 #include <limits.h>
 #include "pfodRingBuffer.h"
 
-
 pfodRingBuffer::pfodRingBuffer() {
-  buf = NULL;
-  bufSize = 0;
-  clear();
+  init(NULL,0);
 }
 
 pfodRingBuffer::pfodRingBuffer(uint8_t* _buf, size_t _size) {
@@ -58,6 +55,8 @@ void pfodRingBuffer::clear() {
   buffer_tail = buffer_head;
   buffer_count = 0;
   isWriteMarked = false;
+  writeMark = buffer_head;
+  writeMarkCount = buffer_count;
 }
 
 void pfodRingBuffer::markWrite() {

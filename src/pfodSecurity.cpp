@@ -78,6 +78,9 @@ pfodSecurity::pfodSecurity() {
 
 pfodSecurity::pfodSecurity(const char *_version) : pfodParser(_version) {
   debugOut = NULL;
+  io = NULL;
+  raw_io = NULL;
+  raw_io_connect_arg = NULL;
   pfod_Base_set = NULL;
   doFlush = false; // set to true for SMS only, otherwise false
   initialization = true;
@@ -87,6 +90,22 @@ pfodSecurity::pfodSecurity(const char *_version) : pfodParser(_version) {
   timeSinceLastConnection = 0;
   pfodParser::ignoreSeqNum();
   timerDebug_ms = millis();
+  lastConnectionClosed = false;
+  eepromAddress = -1; // disable EEPROM usage
+  hexKeyPgr = NULL;
+  outputParserState = pfodParser::pfodWaitingForStart;
+  inMsgCount = 0;
+  outMsgCount = 0;
+  msgHashCount = -1; // stop collecting hash
+  msgHashBytes[0]='\0';
+  challenge[0]='\0';
+  connectionTimer = 0;
+  failedHash = false;
+  connectionTimerStart = 0;
+  lastMillis = 0;
+  noPassword = true;
+  authorizing = AUTHORIZING_SUCCESS;
+  parsing = false;
 }
 
 
