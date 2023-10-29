@@ -23,7 +23,9 @@ class pfodBTCBufferedStream : public Stream {
     void setDebugStream(Print* out);
     size_t bytesToBeSent(); // bytes in buffer to be sent
     void clearTxBuffer();
-  private:
+  protected:
+    void init();
+  private:      
     Stream* stream;
     void sendAfterDelay();
     unsigned long sendDelayTime;

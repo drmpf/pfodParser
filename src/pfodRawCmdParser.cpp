@@ -50,12 +50,14 @@ pfodRawCmdParser::pfodRawCmdParser() {
 void pfodRawCmdParser::init() {
   argsIdx = 0;
   readIdx = 0;
+  argsCount = 0;
   args[0] = 0; // no cmd
   args[1] = 0; //
   args[pfodMaxMsgLen] = 0; // double terminate
   args[pfodMaxMsgLen - 1] = 0;
   cmdStart = args; // if no version
   parserState = pfodWaitingForStart; // not started yet pfodInMsg when have seen {
+  versionStart = emptyVersion;
   refresh = false;
 
 }

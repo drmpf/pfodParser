@@ -29,7 +29,7 @@
 
 class pfodDwgs : public pfodDwgsBase {
   public:
-
+    pfodDwgs();
     // returns the first index of the reserved ones
     static int reserveIdx(int numToReserve);
 

@@ -71,7 +71,6 @@ class pfodMACClient {
     uint8_t keyLen; // 0 if no key, else 16 (after padding key with 0 if shorter)
     boolean bigEndian;  // true if bigEndian uC
 
-
 };
 
 

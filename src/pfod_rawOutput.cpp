@@ -7,6 +7,10 @@
  * Provide this copyright is maintained.
  */
 
+pfod_rawOutput::pfod_rawOutput() {
+    _pfod_Base = NULL;
+}
+
 void pfod_rawOutput::set_pfod_Base( pfod_Base* arg) {
   _pfod_Base = arg;
 }

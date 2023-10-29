@@ -17,6 +17,8 @@ class pfodDwgs;
 class pfodDrawing : public pfodAutoCmd {
   public:
     pfodDrawing(pfodParser *parserPtr, pfodDwgs* dwgsPtr);
+    pfodDrawing();
+    void setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr);
 
     virtual bool sendDwg(); // returns is dwg sent else false i.e. not this dwg's loadCmd
     virtual bool processDwgCmds(); // return true if handled else false

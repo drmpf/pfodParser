@@ -23,6 +23,8 @@ pfodESPBufferedClient::pfodESPBufferedClient() {
   // bufferSize for now always 1460
   sendDelayTime = DEFAULT_SEND_DELAY_TIME;
   sendBufferIdx = 0;
+  sendTimerStart = 0;
+  sendBuffer[0] = '\0';
 }
 
 pfodESPBufferedClient* pfodESPBufferedClient::connect(WiFiClient* _client) {

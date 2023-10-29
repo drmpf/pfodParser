@@ -17,6 +17,7 @@ class pfod_rawOutput : public Print {
     size_t write(uint8_t c);
     size_t write(const uint8_t *buffer, size_t size);
     void set_pfod_Base(pfod_Base* arg);
+    pfod_rawOutput();
   private:
     pfod_Base* _pfod_Base;
 

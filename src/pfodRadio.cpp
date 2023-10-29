@@ -324,6 +324,7 @@ bool pfodRadio::inTxMode() {
   return ((currentMode == pfodRadioDriver::Tx));
 }
 
+
 pfodRadio::pfodRadio(pfodRadioDriver * _driver, uint8_t _thisAddress) {
   if (_thisAddress == 0xff) {
     // Error: thisAddress must be in the range 0 to 254 inclusive
@@ -353,6 +354,18 @@ pfodRadio::pfodRadio(pfodRadioDriver * _driver, uint8_t _thisAddress) {
   linkConnectionTimeout = 0;
   debug_mS = millis();
   sendTimerRunning = false;
+  rawDataBuffer_1024[0] = '\0'; // for now temp storage for outgoing msgs
+  buffer_1024[0] = '\0';; // for now temp storage for outgoing msgs
+  buffer_256[0] = '\0';; // for now temp storage for incoming msgs
+  canAcceptNewConnections = false;
+  lastWriteTime = 0;
+  debugOut = NULL;
+  timeLastMsgSent = 0;
+  retryCount = 0;
+  randomTimeout = 0;
+  lastRSSI = 0;
+  sendTimeStart_mS = 0;
+  
 }
 
 // sets new randomTimeout

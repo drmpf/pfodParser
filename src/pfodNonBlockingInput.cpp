@@ -11,6 +11,7 @@
 
 pfodNonBlockingInput::pfodNonBlockingInput() {
   nonBlockingInput_clearFlag = false;
+  input = NULL;
 }
 
 /**

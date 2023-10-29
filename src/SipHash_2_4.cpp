@@ -123,10 +123,11 @@ const uint8_t v3_init[] PROGMEM = {0x74, 0x65, 0x64, 0x62, 0x79, 0x74, 0x65, 0x7
 
 // total ram 42 bytes + stack usage for calls
 
-
 // This class already defines an instance sipHash, see the SipHashTest.ino
 SipHash_2_4::SipHash_2_4(void) {
   result = v0;
+  msg_byte_counter = 0;
+  m_idx = 0;
 }
 
 /*

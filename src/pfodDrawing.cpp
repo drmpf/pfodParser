@@ -9,8 +9,16 @@
 
 #include <pfodDrawing.h>
 
+pfodDrawing::pfodDrawing() {
+  parserPtr = NULL;
+  dwgsPtr = NULL;
+}
 
 pfodDrawing::pfodDrawing(pfodParser *_parserPtr, pfodDwgs* _dwgsPtr) {
+   setParserDwgs(_parserPtr,_dwgsPtr);
+}
+
+void pfodDrawing::setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr) {
   parserPtr = _parserPtr;
   dwgsPtr = _dwgsPtr;
   parserPtr->addDwg(this);

@@ -41,6 +41,7 @@ union _ulongBytes {
 pfodMACClient::pfodMACClient() {
   debugOut = NULL;
   keyLen = 0;
+  key[0]='\0';
   bigEndian = isBigEndian();
   initCalled = false;
 }

@@ -13,6 +13,7 @@
 #include "pfodDelay.h"
 
 pfodDelay::pfodDelay() {
+  mS_delay = 0;
   running = false; // not running on start
   startTime = 0; // not started yet
   finishNow = false; // do not finish early

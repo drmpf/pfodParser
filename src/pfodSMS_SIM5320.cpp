@@ -31,12 +31,16 @@
 
 
 pfodSMS_SIM5320::pfodSMS_SIM5320() {
+  debugOut = NULL; 
   raw_io.set_pfod_Base((pfod_Base*)this);
   raw_io_ptr = &raw_io;
   gprs = NULL; // not set yet
   powerResetPin = -1; // not set yet
   powerStatusPin = -1;
   resetPin = -1;
+  havePowerResetPins = false;
+  haveResetPin = false;
+  init();
 }
 
 Print* pfodSMS_SIM5320::getRawDataOutput() {
@@ -58,6 +62,7 @@ unsigned long pfodSMS_SIM5320::getDefaultTimeOut() {
 void pfodSMS_SIM5320::setDebugStream(Stream* out) {
   debugOut = out;
 }
+
 
 /**
   Initialize the stream to be used to send and receive SMS msgs
@@ -343,6 +348,14 @@ bool pfodSMS_SIM5320::clearAllSmsMsgsOnInit() {
   called from pfodSecurity::connect()
 */
 void pfodSMS_SIM5320::init() {
+#ifdef DEBUG
+  if (debugOut != NULL) {
+    debugOut->print(F("NOTE: \\r \\n are replaced by [ ] for printout as in smsLine:'OK[]'\n"));
+  }
+#endif // DEBUG
+  gprsMsg[0] = '\0';
+  gprsMsgIdx = 0;
+  gprsLastChar = '\0';
   resendLastResponse = false;
   responseSet = true; // wait for first command
   sendingResponse = false;
@@ -350,8 +363,10 @@ void pfodSMS_SIM5320::init() {
   sendingRawdata = false;
   deleteReadSmsMsgs = false;
   haveRequestedIncomingMsg = false;
+  foundOK = false;
   bytesToConvert[0] = '\0';
  // timedOutTimer = 0; // timed out;
+ // start_mS = 0;
   rxBuffer[SMS_RX_BUFFER_SIZE] = '\0';
   rxBuffer[0] = '\0';
   rxBufferLen = 0;
@@ -361,10 +376,12 @@ void pfodSMS_SIM5320::init() {
   rawdataTxBufferIdx = 0;
   rawdataSMSbuffer[0] = '\0';
   clearTxBuffer();
+  responseSMSbuffer[0] = '\0';
+ 
   currentConnection = &connection_A;
-  clearConnection (currentConnection);
+  clearConnection(currentConnection);
   nextConnection = &connection_B;
-  clearConnection (nextConnection);
+  clearConnection(nextConnection);
   for (int i = 0; i < MAX_KNOWN_CONNECTION; i++) {
     clearKnownConnection(knownConnectionsArray + i);
     knownArrayPtrs[i] = knownConnectionsArray + i;
@@ -375,9 +392,11 @@ void pfodSMS_SIM5320::init() {
     incomingMsgNos[i][0] = '\0';
   }
   incomingMsgNos_head = 0;
+  incomingMsgNos_tail = 0;
   emptyIncomingMsgNo(); // sets tail == head so empty
   clearGprsLine();
   expectingMessageLines = false; // note msg from pfodApp may have embedded new line
+  gprsReady = false;
   pfodWaitForUtils::dumpReply(gprs, debugOut);
   if (!clearAllSmsMsgsOnInit()) {
 #ifdef DEBUG_SETUP
