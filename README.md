@@ -19,6 +19,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.63 added multiple connections support  
 Version 3.62 added default initializations  
 Version 3.61 added linked list for processing dwg cmds, added pfodESPBufferedClient, fixed label/touchActionInput encoding  
 Version 3.60 revised arguments to supports pfodSecurity  

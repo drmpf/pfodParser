@@ -66,6 +66,7 @@ class pfodDwgsBase {
     virtual void init(Print *out, struct pfodDwgVALUES* _values);
     virtual ~pfodDwgsBase() {};
     Print *out;
+    void setOut(Print *_printPtr);
     static const int BLACK_WHITE = -1;
     static const int BLACK = 0;
     static const int MAROON = 1;

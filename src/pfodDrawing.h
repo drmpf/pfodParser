@@ -19,7 +19,7 @@ class pfodDrawing : public pfodAutoCmd {
     pfodDrawing(pfodParser *parserPtr, pfodDwgs* dwgsPtr);
     pfodDrawing();
     void setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr);
-
+    void setParser(pfodParser* _parserPtr); // overrides the output stream
     virtual bool sendDwg(); // returns is dwg sent else false i.e. not this dwg's loadCmd
     virtual bool processDwgCmds(); // return true if handled else false
  protected:
