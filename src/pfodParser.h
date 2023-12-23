@@ -141,6 +141,7 @@ class pfodParser: public Print {
     //    const static int EXIT = 64;
     const static int DOWN_UP = 256; // only for touchZone filter send, never recieved by parser
     const static int TOUCH_DISABLED = 512; // only for touchZone filter send, never recieved by parser
+    static pfodLinkedList<pfodDrawing> listOfDrawings;
 
   private:
      void constructInit();
@@ -150,7 +151,6 @@ class pfodParser: public Print {
     void replace(const char* findStr, const char *replacePtr, char* buffer);
     //static const byte DisconnectNow = '!';
     Stream* io;
-    pfodLinkedList<pfodDrawing> listOfDrawings;
     char emptyVersion[1];
     byte emptyBytes[1];
     byte missingEditedText[1];

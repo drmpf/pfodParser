@@ -18,6 +18,12 @@ pfodDrawing::pfodDrawing(pfodParser *_parserPtr, pfodDwgs* _dwgsPtr) {
    setParserDwgs(_parserPtr,_dwgsPtr);
 }
 
+// overrides the output stream
+void pfodDrawing::setParser(pfodParser *_parserPtr) {
+  parserPtr = _parserPtr;
+  dwgsPtr->setOut(_parserPtr); 
+}        
+
 void pfodDrawing::setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr) {
   parserPtr = _parserPtr;
   dwgsPtr = _dwgsPtr;

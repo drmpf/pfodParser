@@ -143,7 +143,6 @@ class pfodSecurity : public pfodParser { //Stream {
     size_t writeToPfodApp(uint8_t* idxPtr);
     size_t writeToPfodApp(uint8_t b);
     Stream *io;
-    pfodLinkedList<pfodDrawing> listOfDrawings;
     Print *raw_io; // set to null on disconnect
     Print *raw_io_connect_arg; // save for later resuse
     Print *debugOut;

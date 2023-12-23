@@ -72,6 +72,8 @@
 #define AUTHORIZING_SUCCESS (AUTHORIZING_SENT_CHALLENGE+1)
 #define AUTHORIZING_CMD '_'
 
+pfodLinkedList<pfodDrawing> pfodSecurity::listOfDrawings;
+
 pfodSecurity::pfodSecurity() {
   pfodSecurity("");
 }
@@ -1360,8 +1362,9 @@ byte pfodSecurity::parse() {
     if (cmd == '!') {
       //closeConnection(); called above
     } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
-      pfodDrawing *dwgPtr = listOfDrawings.getFirst();
+      pfodDrawing *dwgPtr = pfodParser::listOfDrawings.getFirst();
       while (dwgPtr) {
+        dwgPtr->setParser(this); // make this parser the output stream
         if (dwgPtr->sendDwg()) {
           cmd = 0; // this msg has been replied to
           break;
@@ -1370,7 +1373,7 @@ byte pfodSecurity::parse() {
           break; // leave rtn unchanged so main code
           //can detect touch on menu item and pick up changes if necessary
         }
-        dwgPtr = listOfDrawings.getNext();
+        dwgPtr = pfodParser::listOfDrawings.getNext();
       }
     }
     return cmd;

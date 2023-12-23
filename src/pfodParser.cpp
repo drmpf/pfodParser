@@ -41,6 +41,8 @@
 
 #include "pfodParser.h"
 
+pfodLinkedList<pfodDrawing> pfodParser::listOfDrawings;
+
 pfodParser::pfodParser() {
   constructInit();
 }
@@ -460,7 +462,7 @@ byte pfodParser::getParserState() {
 }
 
 void pfodParser::addDwg(pfodDrawing *dwgPtr) {
-	listOfDrawings.add(dwgPtr); 
+	pfodParser::listOfDrawings.add(dwgPtr); 
 	// pfodLinkedList expects its data to be cleaned up by caller if necessary 
 }
 	
@@ -478,8 +480,9 @@ byte pfodParser::parse() {
       if (rtn == '!') {
         closeConnection();
       } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
-        pfodDrawing *dwgPtr = listOfDrawings.getFirst();
+        pfodDrawing *dwgPtr = pfodParser::listOfDrawings.getFirst();
       	while (dwgPtr) {
+           dwgPtr->setParser(this); // make this parser the output stream
       	  if (dwgPtr->sendDwg()) {
       	    rtn = 0; // this msg has been replied to
       	    break;
@@ -488,7 +491,7 @@ byte pfodParser::parse() {
       	    break; // leave rtn unchanged so main code 
       	    //can detect touch on menu item and pick up changes if necessary
       	  }
-      	  dwgPtr = listOfDrawings.getNext();
+      	  dwgPtr = pfodParser::listOfDrawings.getNext();
         }
       }
       return rtn;

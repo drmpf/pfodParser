@@ -23,6 +23,10 @@ void pfodDwgsBase::init(Print *_out, struct pfodDwgVALUES* _values) {
   out = _out;
 }
 
+void pfodDwgsBase::setOut(Print *_printPtr) {
+    out = _printPtr;
+}
+
 struct pfodDwgVALUES *pfodDwgsBase::getValuesPtr() {
 	return valuesPtr;
 }
