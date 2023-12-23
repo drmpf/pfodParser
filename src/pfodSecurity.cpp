@@ -72,7 +72,6 @@
 #define AUTHORIZING_SUCCESS (AUTHORIZING_SENT_CHALLENGE+1)
 #define AUTHORIZING_CMD '_'
 
-pfodLinkedList<pfodDrawing> pfodSecurity::listOfDrawings;
 
 pfodSecurity::pfodSecurity() {
   pfodSecurity("");
