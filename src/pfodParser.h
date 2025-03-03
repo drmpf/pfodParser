@@ -100,7 +100,7 @@ class pfodParser: public Print {
     virtual void setDebugOut(Print* out) { 	setDebugStream(out);}
     virtual void setDebug(Print* out) {	setDebugStream(out);}
 
-    virtual void setIdleTimeout(unsigned long timeout); // does nothing in parser
+    virtual void setIdleTimeout(unsigned long timeout_in_secs); // does set timeout in parser
     virtual Stream* getPfodAppStream(); // get the command response stream we are writing to
     // for pfodParser this is also the rawData stream
 
@@ -175,6 +175,8 @@ class pfodParser: public Print {
     static const byte pfodTilda = (byte)'~';
     static const byte pfodAccent = (byte)'`';
     static const byte pfodArgStarted = 0xfe;
+    unsigned long parserTimeout; // 0 if not set;
+    unsigned long lastMsgTime; // 0 if not set;
 };
 
 #endif // pfodParser_h

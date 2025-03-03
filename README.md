@@ -19,6 +19,8 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.63.3 added specification to docs (mainly for AI reference)  
+Version 3.63.2 added parse timeout  
 Version 3.63.1 added multiple connections support  
 Version 3.62 added default initializations  
 Version 3.61 added linked list for processing dwg cmds, added pfodESPBufferedClient, fixed label/touchActionInput encoding  

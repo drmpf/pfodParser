@@ -1,0 +1,28 @@
+var classpfod_radio_msg =
+[
+    [ "pfodRadioMsg", "classpfod_radio_msg.html#a483a767ed8bc18bdc663bd62d147f5ee", null ],
+    [ "getAckedMsgSeqNo", "classpfod_radio_msg.html#abff1fbc3b5c449d63f68063073f0e49a", null ],
+    [ "getAddressedTo", "classpfod_radio_msg.html#aa8095e8247e69be5a282aaaae0f1273b", null ],
+    [ "getBuf", "classpfod_radio_msg.html#ad1c359aa1c465b5d17b30b0e8dfe2fa8", null ],
+    [ "getLen", "classpfod_radio_msg.html#a4343495e9fd9e7f24e165309b6d92698", null ],
+    [ "getMaxMsgBufferSize", "classpfod_radio_msg.html#acfec8292bf71cb34916afcb23b8c4926", null ],
+    [ "getMsgSeqNo", "classpfod_radio_msg.html#ad65ad0381643c025d5636f77ae495cb5", null ],
+    [ "getReceivedFrom", "classpfod_radio_msg.html#a138ad54372999bd12cf4dcc751c8f3a6", null ],
+    [ "init", "classpfod_radio_msg.html#af5eb99cc02bb88a1ac2c81ed4aef304c", null ],
+    [ "isAckFor", "classpfod_radio_msg.html#a3a12ce230ec55e4352358f61e15b28fb", null ],
+    [ "isNewConnectionRequest", "classpfod_radio_msg.html#a2ff46c059403d8ee37feab962e72e5d7", null ],
+    [ "isNewMsg", "classpfod_radio_msg.html#a286a7395913dd3c80bb54e8753fb7efb", null ],
+    [ "isPureAck", "classpfod_radio_msg.html#aa8026672876dbc2aa793bce1b76b915a", null ],
+    [ "isPureAckFor", "classpfod_radio_msg.html#aa3cf3d7b3a9109f1a5ae5f311c0b08c5", null ],
+    [ "isResendRequest", "classpfod_radio_msg.html#acef1486c36dac29d40c3fe4118193af7", null ],
+    [ "saveMsg", "classpfod_radio_msg.html#af3e5e47d2b7decb2668ba34e7ddab43d", null ],
+    [ "saveMsg", "classpfod_radio_msg.html#a4c3e77b3b426efa1675b8e9b9ebf8783", null ],
+    [ "setAckedMsgSeqNo", "classpfod_radio_msg.html#a4c4167b8f22f793b042bad060d95b9ad", null ],
+    [ "ackedMsgSeqNo", "classpfod_radio_msg.html#a3e83d5c7af86a6c7cd6f387002b98681", null ],
+    [ "addressedTo", "classpfod_radio_msg.html#a631b5985ac5d197c5ca472fb7643bc8a", null ],
+    [ "maxMsgLen", "classpfod_radio_msg.html#ae4957fc0f680e6cf3444ffb630c64323", null ],
+    [ "msgBuf", "classpfod_radio_msg.html#adc3dbfa8934ea81479618ac70663511f", null ],
+    [ "msgLen", "classpfod_radio_msg.html#af9e50e791366f4d74a8853dffddd18f7", null ],
+    [ "msgSeqNo", "classpfod_radio_msg.html#af40cf0b28de19f20dd160d0ae1da8b6f", null ],
+    [ "receivedFrom", "classpfod_radio_msg.html#a457061203c900d5ab5b163101c68504a", null ]
+];

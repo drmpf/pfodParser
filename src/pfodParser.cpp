@@ -55,6 +55,8 @@ void pfodParser::constructInit() {
   seqNum = 0; // no seq num yet
   lastSeqNum = 0;
   ignoreCmdSeqNum = 0; // check seqNum if any
+  parserTimeout = 0;
+  lastMsgTime = 0;
 }
 
 pfodParser::pfodParser(const char *_version) {
@@ -88,7 +90,7 @@ void pfodParser::init() {
   row = 0; col = 0; touchType = 0;
   editedText = missingEditedText;
   encodingProcessed = 0;
-
+  lastMsgTime = 0;
   //  rawCol = 0;
   //  rawRow = 0;
 }
@@ -155,9 +157,14 @@ void pfodParser::flush() {
   io->flush(); // whatever that does, may block
 }
 
-void pfodParser::setIdleTimeout(unsigned long timeout) {
-  (void)(timeout);
-  // do nothing here
+void pfodParser::setIdleTimeout(unsigned long timeout_in_seconds) {
+  parserTimeout = timeout_in_seconds * 1000;
+#ifdef DEBUG_TIMER
+  if (debugOut != NULL) {
+    debugOut->print(F("setIdleTimeout() set idleTimeout to "));
+    debugOut->println(parserTimeout);
+  }
+#endif
 }
 
 void pfodParser::setCmd(byte cmd) {
@@ -467,8 +474,16 @@ void pfodParser::addDwg(pfodDrawing *dwgPtr) {
 }
 	
 	
-byte pfodParser::parse() {
+byte pfodParser::parse() { // called often
   byte rtn = 0;
+  if (parserTimeout != 0) {
+      // check for time out
+      if ((millis() - lastMsgTime) > parserTimeout) {
+         // close connection
+         closeConnection();
+         return '!';
+      }
+  }
   if (!io) {
     return rtn;
   }
@@ -477,6 +492,7 @@ byte pfodParser::parse() {
     rtn = parse((byte)in);
     if (rtn != 0) {
       // found msg
+      lastMsgTime = millis(); // reset timeout
       if (rtn == '!') {
         closeConnection();
       } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
