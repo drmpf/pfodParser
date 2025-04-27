@@ -19,6 +19,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.63.4 corrected empty cmd test  
 Version 3.63.3 added specification to docs (mainly for AI reference)  
 Version 3.63.2 added parse timeout  
 Version 3.63.1 added multiple connections support  

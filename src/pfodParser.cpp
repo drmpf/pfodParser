@@ -338,7 +338,7 @@ bool pfodParser::dwgCmdEquals(const char* dwgCmdStr) {
 }
 
 bool pfodParser::dwgCmdEquals(pfodAutoCmd &a_Cmd) { // valid only after parseDwgCmd() called on image cmd
-  if ( (!(a_Cmd.cmd)) || (*activeCmdStart == '\0')) {
+  if ( (!(a_Cmd.cmd[0])) || (*activeCmdStart == '\0')) {
     return 0; // false
   }
   return !strcmp(a_Cmd.cmd, (const char*)activeCmdStart);
