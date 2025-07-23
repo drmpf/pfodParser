@@ -29,7 +29,7 @@
   At which time they are reset to empty command and no args.
 */
 /*
-   (c)2014-2017 Forward Computing and Control Pty. Ltd.
+   (c)2014-2025 Forward Computing and Control Pty. Ltd.
    NSW Australia, www.forward.com.au
    This code is not warranted to be fit for any purpose. You may only use it at your own risk.
    This code may be freely used for both private and commercial use
@@ -93,6 +93,24 @@ void pfodParser::init() {
   lastMsgTime = 0;
   //  rawCol = 0;
   //  rawRow = 0;
+}
+
+void pfodParser::printDwgCmdReceived(Print * outPtr) {
+  if (!outPtr) {
+    return;
+  }
+  if (!(*getDwgCmd())) {
+    outPtr->print("current cmd:"); outPtr->print((char*)getCmd()); outPtr->println(" is not a dwg cmd");
+  }
+  outPtr->print("     touchZone cmd "); outPtr->print((const char*)getDwgCmd()); outPtr->print(" at ");
+  outPtr->print("("); outPtr->print(getTouchedX()); outPtr->print(","); outPtr->print(getTouchedY()); outPtr->print(") ");
+  if (isTouch()) {
+    outPtr->print("touch type:TOUCHED");
+  }
+  outPtr->println();
+  if (*getEditedText()) { // first char not '\0'
+    outPtr->print("     Edited text '"); outPtr->print((const char*)getEditedText()); outPtr->println("'");
+  }
 }
 
 void  pfodParser::ignoreSeqNum() {
@@ -468,6 +486,7 @@ byte pfodParser::getParserState() {
   return pfodInMsg;
 }
 
+// static
 void pfodParser::addDwg(pfodDrawing *dwgPtr) {
 	pfodParser::listOfDrawings.add(dwgPtr); 
 	// pfodLinkedList expects its data to be cleaned up by caller if necessary 
@@ -496,6 +515,7 @@ byte pfodParser::parse() { // called often
       if (rtn == '!') {
         closeConnection();
       } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
+        parseDwgCmd(); // do once here for all the dwg cmds
         pfodDrawing *dwgPtr = pfodParser::listOfDrawings.getFirst();
       	while (dwgPtr) {
            dwgPtr->setParser(this); // make this parser the output stream

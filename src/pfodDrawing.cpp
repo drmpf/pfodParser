@@ -11,7 +11,8 @@
 
 pfodDrawing::pfodDrawing() {
   parserPtr = NULL;
-  dwgsPtr = NULL;
+  dwgsPtr = new pfodDwgs;
+  pfodParser::addDwg(this);
 }
 
 pfodDrawing::pfodDrawing(pfodParser *_parserPtr, pfodDwgs* _dwgsPtr) {
@@ -24,6 +25,7 @@ void pfodDrawing::setParser(pfodParser *_parserPtr) {
   dwgsPtr->setOut(_parserPtr); 
 }        
 
+// deprecated
 void pfodDrawing::setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr) {
   parserPtr = _parserPtr;
   dwgsPtr = _dwgsPtr;

@@ -13,6 +13,7 @@ addDwg KEYWORD2
 setInput KEYWORD2
 clearInput KEYWORD2
 readInput KEYWORD2
+pfodStreamString  KEYWORD2
 setDebugStream	KEYWORD2
 setDebugOut	KEYWORD2
 setDebug	KEYWORD2

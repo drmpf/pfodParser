@@ -2,6 +2,7 @@
 #define PFOD_LINKEDLIST_H_
 // pfodLinkedList.h
 /*
+   Revised 2025/06/24 to add contains()
    Revised 2022/09/26 to leave iterator unchanged except for remove() and getFirst()/getNext()
    
    Modified by Matthew Ford to remove index and only use pointers and add getFirst(), getNext() iterator
@@ -25,10 +26,11 @@
   - No last element pointer
   - No sequential get-cache
   - No support for sorting
+  - No duplicate entries
 
   This object consumes just 5 bytes per instance + 4 per node, making itself more appropriate for use in memory-critical
-  environments. Since the class is targeted for use with small lists with up to a few dozens of entries, the optimization
-  cuts are not significantly affecting the performance.
+  environments. Since the class is targeted for use with small lists with up to a few dozens of entries, the lack of
+  optimizations does not significantly affect performance.
 
   Based on LinkedList library by ivanseidel (https://github.com/ivanseidel/LinkedList).
 
@@ -84,6 +86,13 @@ class pfodLinkedList {
     */
     virtual size_t getIndex(T*);
 
+    /*
+       check if this pointer is in the list
+       current iterator is NOT changed
+      @ret - true if found in list, else false
+    */
+    virtual bool contains(T*);
+    
     /*
        returns the data pointer if the current iterator, can be NULL
        use to mark current position and then reset later using
@@ -182,10 +191,11 @@ class pfodLinkedList {
   - No last element pointer
   - No sequential get-cache
   - No support for sorting
+  - No duplicate entries
 
   This object consumes just 5 bytes per instance + 4 per node, making itself more appropriate for use in memory-critical
-  environments. Since the class is targeted for use with small lists with up to a few dozens of entries, the optimization
-  cuts are not significantly affecting the performance.
+  environments. Since the class is targeted for use with small lists with up to a few dozens of entries, the lack of
+  optimizations does not significantly affect performance.
 
   Based on LinkedList library by ivanseidel (https://github.com/ivanseidel/LinkedList).
 
@@ -353,6 +363,20 @@ size_t pfodLinkedList<T>::getIndex(T * _t) {
     listPtr = listPtr->next;
   }
   return size();    // not found
+}
+
+/*
+   check if this pointer is in the list
+   current iterator is NOT changed
+   @ret - true if found in list, else false
+*/
+template<typename T>
+bool pfodLinkedList<T>::contains(T * _t) {
+  if ((root == NULL) || (_t == NULL)) {
+    return false;
+  }
+  size_t idx = getIndex(_t);
+  return (idx != size());
 }
 
 /*
