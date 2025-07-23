@@ -93,35 +93,24 @@ pfodDwgs::pfodDwgs(Print *_outPtr) {
 
 void pfodDwgs::start(int cols, int rows, int backgroundColor,  uint8_t moreData) {
   out->print('{'); out->print('+'); out->print(backgroundColor); out->print('`');  out->print(cols); out->print('`'); out->print(rows);
-  out->print('~');
+  out->print('~'); // need this for parsing even if no 'm'
   if (moreData != 0) {
     out->print('m');
   }
 }
 
 void pfodDwgs::startUpdate(uint8_t moreData) {
-  out->print('{'); out->print('+');
-  if (moreData != 0) {
-    out->print('~');
-    out->print('m');
-  }
+    out->print('{'); out->print('+');
+    if (moreData != 0) {
+      out->print('~');
+      out->print('m');
+    }
 }
 
 void pfodDwgs::end() {
-  out->print('}');
+    out->print('}');
 }
 
-//void pfodDwgs::pushZero(int16_t col, int16_t row, float scale) {
-//  out->print('|'); out->print('z');
-//  out->print('`');  out->print(col); out->print('`'); out->print(row);
-//  if (scale != 1) {
-//    printFloat(scale);
-//  }
-//}
-
-//void pfodDwgs::pushZero(int col, int row = 0, float scale = 1.0f){
-//	pushZero((int16_t)col,(int16_t)row,(float)scale);
-//}
 
 void pfodDwgs::pushZero(double col, double row, double scale) {
   out->print('|'); out->print('z');

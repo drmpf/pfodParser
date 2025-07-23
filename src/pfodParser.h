@@ -35,7 +35,7 @@
 #include "pfodParserUtils.h"
 #include "pfodDelay.h"
 #include "pfodDwgs.h"
-#include "pfodControl.h"
+//#include "pfodControl.h"
 #include "pfodDrawing.h" 
 #include "pfodLinkedList.h"
 //#include "pfodSecurity.h"
@@ -49,8 +49,10 @@ class pfodParser: public Print {
   public:
     pfodParser();
     pfodParser(const char* version);
+    void printDwgCmdReceived(Print * outPtr); // debug current dwg cmd
+
     // methods required for Print
-	virtual size_t write(uint8_t c);
+	 virtual size_t write(uint8_t c);
     virtual size_t write(const uint8_t *buffer, size_t size);
     virtual void flush();  // may do nothing calls io->flush()
 
@@ -80,8 +82,7 @@ class pfodParser: public Print {
     virtual bool cmdEquals(const char* cmdStr); // returns true if parser cmd, as returned by getCmd() == cmdStr 
     virtual bool cmdEquals(const char cmdChar); // returns true if parser cmd as returned by getCmd() is just once char and == cmdChar
     virtual bool cmdEquals(pfodAutoCmd &a_Cmd); // for load dwg cmds
-    virtual void addDwg(pfodDrawing *dwgPtr); // add a pfodDrawing to the list of drawings to be automatically processed by parse()
-
+    static void addDwg(pfodDrawing *dwgPtr); // add a pfodDrawing to the list of drawings to be automatically processed by parse()
 
     /**
        pfodWaitingForStart if outside msg

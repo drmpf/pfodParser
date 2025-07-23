@@ -12,13 +12,14 @@ See [pfodParser Examples](https://www.forward.com.au/pfod/index.html)
 See [pfodDwgs Examples](https://www.forward.com.au/pfod/pfodControls/index.html)  
 
 # Software License
-(c)2014-2022 Forward Computing and Control Pty. Ltd.  
+(c)2014-2025 Forward Computing and Control Pty. Ltd.  
 NSW Australia, www.forward.com.au  
 This code is not warranted to be fit for any purpose. You may only use it at your own risk.  
 This code may be freely used for both private and commercial use  
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.63.5 added pfodStreamString  
 Version 3.63.4 corrected empty cmd test  
 Version 3.63.3 added specification to docs (mainly for AI reference)  
 Version 3.63.2 added parse timeout  
