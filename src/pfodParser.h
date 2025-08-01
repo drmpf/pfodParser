@@ -132,6 +132,8 @@ class pfodParser: public Print {
     virtual int getTouchedRow(); // default 0
     virtual int getTouchedY(); // default 0
     virtual int getTouchedX(); // default 0
+    // these are also defined in pfodDwgsBase.h
+    // defined here for use by parser menu processing.
     const static int TOUCH = 0;
     const static int DOWN = 1;
     const static int DRAG = 2;
@@ -141,6 +143,7 @@ class pfodParser: public Print {
     //    const static int ENTRY = 32;
     //    const static int EXIT = 64;
     const static int DOWN_UP = 256; // only for touchZone filter send, never recieved by parser
+    const static int DOWN_DRAG_UP = 256; // alias for DOWN_UP only for touchZone filter send, never recieved by parser
     const static int TOUCH_DISABLED = 512; // only for touchZone filter send, never recieved by parser
     static pfodLinkedList<pfodDrawing> listOfDrawings;
 

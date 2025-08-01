@@ -97,6 +97,7 @@ class pfodDwgsBase {
     const static int EXIT = 64; // queued if pfodApp busy waiting for response
     // =========
     const static int DOWN_UP = 256; // msg not sent until finger removed (UP) but updates touchAction
+    const static int DOWN_DRAG_UP = 256; // alias for DOWN_UP only for touchZone filter send, never recieved by parser
     const static int TOUCH_DISABLED = 512; // capture touch to prevent scroll but do not send msg
 
     // These are only valid for size and offset, and label values

@@ -19,6 +19,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.63.6 added DOWN_DRAG_UP alias for DOWN_UP  
 Version 3.63.5 added pfodStreamString  
 Version 3.63.4 corrected empty cmd test  
 Version 3.63.3 added specification to docs (mainly for AI reference)  
