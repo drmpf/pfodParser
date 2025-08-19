@@ -24,12 +24,19 @@ class pfodStreamString :  public Stream, public String {
 
     size_t write(uint8_t c) {
       size_t n = 0;
-      if (splitCmds && ((c == '|') || (c == '}'))) {
-        char itemSeparator[] = "\",\r\n\"";
-        if (concat(itemSeparator)) {
-          n += strlen(itemSeparator);
+      if (splitCmds) {
+        if ((c == '|') || (c == '}')) {
+          char itemSeparator[] = "\",\r\n\"";
+          if (concat(itemSeparator)) {
+            n += strlen(itemSeparator);
+          }
+        } else if (c == '\n') { // should do other json filtering here also
+          if (concat((char)'\\')) {
+            n += 1;
+          }
+          c = 'n';
         }
-      }
+      }  // if (splitCmds)
       if (concat((char)c)) {
         n += 1;
       }
