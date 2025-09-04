@@ -19,6 +19,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.63.8 fix newline fitering in pfodStreamString add JSON escapes  
 Version 3.63.7 added newline fitering to pfodStreamString  
 Version 3.63.6 added DOWN_DRAG_UP alias for DOWN_UP  
 Version 3.63.5 added pfodStreamString  
