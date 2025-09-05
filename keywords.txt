@@ -9,6 +9,7 @@ pfodRingBuffer	KEYWORD1
 pfodBufferedStream	KEYWORD1
 pfodNonBlockingInput	KEYWORD1
 pfodDrawing	KEYWORD1
+pfodStreamString	KEYWORD1
 addDwg KEYWORD2
 setInput KEYWORD2
 clearInput KEYWORD2
