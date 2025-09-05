@@ -3,7 +3,6 @@
 // String Print class to capture JSON output
 class pfodStreamString :  public Stream, public String {
   protected:
-
     size_t escapeJSON(uint8_t c) {
       // note should test that concat actually succeeds
       switch (c) {
@@ -84,6 +83,7 @@ class pfodStreamString :  public Stream, public String {
       size_t n = 0;
       if (splitCmds) { // => outputing JSON
         if ((c == '|') || (c == '}')) {
+          n += flush_u_buffer();
           char itemSeparator[] = "\",\r\n\"";
           if (concat(itemSeparator)) {
             n += strlen(itemSeparator);
