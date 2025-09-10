@@ -348,7 +348,7 @@ void pfodDwgsBase::sendColRowVars(float val) {
 void pfodDwgsBase::printColor() {
   int _colorValue = valuesPtr->color;
   out->print('~');
-  if (_colorValue >= 0) {
+  if (_colorValue >= 0) { // -1 is the default
     out->print(_colorValue);
   }
 }
