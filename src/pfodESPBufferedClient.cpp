@@ -1,4 +1,4 @@
-#if defined (ESP32) || defined (ESP8266) || defined (ARDUINO_SAMD_NANO_33_IOT)
+#if defined (ESP32) || defined (ESP8266) || defined (ARDUINO_SAMD_NANO_33_IOT) || (defined(ARDUINO_ARCH_RP2040) && !defined(__MBED__))
 
 #include "pfodESPBufferedClient.h"
 /**
@@ -10,7 +10,7 @@
 // uncomment this next line and call setDebugStream(&Serial); to enable debug out
 //#define DEBUG
 
-// uncomment this next line and call send chars written to the Serial  USUALLY NOT USED!!
+// uncomment this next line and call send chars written to the debugOut  USUALLY NOT USED!!
 //#define DEBUG_MSG_TO_SERIAL
 
 void pfodESPBufferedClient::setDebugStream(Print* out) {
@@ -84,12 +84,14 @@ size_t pfodESPBufferedClient::_write(uint8_t c) {
     return 0;
   }
 #ifdef DEBUG_MSG_TO_SERIAL
-  if (c=='{') {
-  	  Serial.print("\n>>");
-  }
-  Serial.print((char)c);
-  if (c == '}') {
-  	  Serial.println();
+  if (debugOut) {
+    if (c=='{') {
+  	  debugOut->print("\n>>");
+    }
+    debugOut->print((char)c);
+    if (c == '}') {
+  	  debugOut->println();
+    }
   }
 #endif  
   size_t rtn = 1;
@@ -99,7 +101,7 @@ size_t pfodESPBufferedClient::_write(uint8_t c) {
   //push UART data to connected client, if buffer full OR send timer times out after data stops coming
   if (sendBufferIdx == DEFAULT_SEND_BUFFER_SIZE) {
 #ifdef DEBUG
-    if (debugOut != NULL) {
+    if (debugOut) {
       debugOut->print("buffer full write "); debugOut->print(sendBufferIdx); debugOut->println(" bytes to client");
       debugOut->println(millis());
     }
@@ -109,13 +111,13 @@ size_t pfodESPBufferedClient::_write(uint8_t c) {
       // returns ((size_t)-1) if cannot write in 5 sec
       rtn = client->write((const uint8_t *)sendBuffer, sendBufferIdx); // this call may block if last packet not ACKed yet
 #ifdef DEBUG
-      if (debugOut != NULL) {
+      if (debugOut) {
         debugOut->print(millis()); debugOut->println(" after write");
       }
 #endif // DEBUG    
     } else {
 #ifdef DEBUG
-    if (debugOut != NULL) {
+    if (debugOut) {
       debugOut->print("client not connected do nothing "); 
       debugOut->println(millis());
     }
@@ -140,7 +142,7 @@ void pfodESPBufferedClient::sendAfterDelay() {
  //   } else {
  //     // ESP not busy and this call will not block	
 #ifdef DEBUG
-       if (debugOut != NULL) {
+       if (debugOut) {
          debugOut->print("sendAfterDelay() "); debugOut->print(sendBufferIdx); debugOut->println(" bytes to client");
          debugOut->println(millis());
        }
@@ -153,7 +155,7 @@ void pfodESPBufferedClient::sendAfterDelay() {
        client->write((const uint8_t *)sendBuffer, sendBufferIdx);
        //client.flush();  // don't flush does not affect write but does clear inbound buffer :-(
 #ifdef DEBUG
-       if (debugOut != NULL) {
+       if (debugOut) {
          debugOut->print(millis()); debugOut->println(" after sendAfterDelay() write");
        }
 #endif // DEBUG    

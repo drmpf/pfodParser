@@ -46,15 +46,18 @@ class pfodDwgs;
 
 class pfodDrawing : public pfodAutoCmd {
   public:
-    pfodDrawing(pfodParser *parserPtr, pfodDwgs* dwgsPtr); // deprecated
     pfodDrawing();
-    void setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr);
+    void init();
     void setParser(pfodParser* _parserPtr); // overrides the output stream
     virtual bool sendDwg(); // returns is dwg sent else false i.e. not this dwg's loadCmd
     virtual bool processDwgCmds(); // return true if handled else false
+    pfodDrawing(pfodParser *parserPtr, pfodDwgs* dwgsPtr); // deprecated use init() and setParser()
+    void setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr); // deprecated use init() and setParser()
  protected:
  	pfodParser *parserPtr;
     pfodDwgs *dwgsPtr;
+ private:
+    bool initializedDrawing;
  };
  
 #endif

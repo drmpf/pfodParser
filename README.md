@@ -1,14 +1,16 @@
 # pfodParser
-The pfodParser library is handles commands sent from the Android pfodApp, pfodApp supports WiFi, BLE, Bluetooth and SMS connections, the library also includes support for sending dwg commands back to pfodApp to create interactive GUI's.
+The pfodParser library is handles commands sent from the pfodWeb and Android pfodApp, pfodApp supports WiFi, BLE, Bluetooth and SMS connections, the library also includes support for sending dwg commands back to pfodApp to create interactive GUI's.
 
 This library includes:-  
 * **pfodParser**, parses pfodApp commands  
 * **pfodSecurity**, alternative to pfodParser that adds 128bit sercuity   
 * **pfodDwgs**, classes for sending dwg commands to create interactive GUI's  
+* **pfodWeb_data_src**, the source files .html / .js for pfodWeb.  See examples pfodWeb_HelloWorld and pfodWeb_LedOnOff
 
 # How-To
 See [pfodParser Documentation](https://www.forward.com.au/pfod/pfodParserLibraries/index.html)  
 See [pfodParser Examples](https://www.forward.com.au/pfod/index.html)  
+See [pfodWeb Examples](https://www.forward.com.au/pfod/pfodWeb/index.html)
 See [pfodDwgs Examples](https://www.forward.com.au/pfod/pfodControls/index.html)  
 
 # Software License
@@ -19,7 +21,10 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
-Version 3.63.10 added clear() method to pfodStreamString for pi picoW  
+Version 3.64.1 Breaking Change. pfodDrawing sub-classes now need to call init() to complete initialization and to add them to the pfodParser linked list. Added source files .html / .js for pfodWeb  
+Version 3.64.0 added pfodWeb support for Pi PicoW/2W, ESP32 and ESP8266, added pfodDebugPtr, pfodESPBufferedClient now supports Pi Pico W/2W  
+Version 3.63.11 pfodESPBufferedClient now also supports Pi Pico W / 2W  
+Version 3.63.10 added clear() method to pfodStreamString for Pi PicoW  
 Version 3.63.9 added JSON escaping of control chars in the range 0x00 to 0x1F  
 Version 3.63.8 fix newline fitering in pfodStreamString add JSON escapes  
 Version 3.63.7 added newline fitering to pfodStreamString  
