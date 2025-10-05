@@ -10,6 +10,15 @@ pfodBufferedStream	KEYWORD1
 pfodNonBlockingInput	KEYWORD1
 pfodDrawing	KEYWORD1
 pfodStreamString	KEYWORD1
+initializeFS  KEYWORD2
+showLittleFS_size  KEYWORD2
+listDir  KEYWORD2
+start_pfodAppServer  KEYWORD2
+handle_pfodAppServer  KEYWORD2
+pfodApp_setVersion  KEYWORD2
+start_pfodWebServer  KEYWORD2
+handle_pfodWebServer  KEYWORD2
+pfodWeb_setVersion  KEYWORD2
 addDwg KEYWORD2
 setInput KEYWORD2
 clearInput KEYWORD2

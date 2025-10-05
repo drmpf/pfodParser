@@ -10,9 +10,14 @@
  This code may be freely used for both private and commerical use.
  Provide this copyright is maintained.
 */
-#if defined (ESP32) || defined (ESP8266) || defined (ARDUINO_SAMD_NANO_33_IOT) 
+#if defined (ESP32) || defined (ESP8266) || defined (ARDUINO_SAMD_NANO_33_IOT) || (defined(ARDUINO_ARCH_RP2040) && !defined(__MBED__))
 
-#include "Stream.h"
+#include "pfodStream.h"
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#else
+#include "WiFi.h"
+#endif
 #include "WiFiClient.h"
 class pfodESPBufferedClient : public Stream {
 

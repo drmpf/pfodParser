@@ -36,14 +36,20 @@
    Provide this copyright is maintained.
 */
 
-// uncomment this next line and call send chars written to the Serial  USUALLY NOT USED!!
+// uncomment this next line and call send chars written to the debug output  USUALLY NOT USED!!
 //#define DEBUG_MSG_TO_SERIAL
 
 #include "pfodParser.h"
+#include "pfodDebugPtr.h"
+static Stream* debugPtr = NULL;
 
 pfodLinkedList<pfodDrawing> pfodParser::listOfDrawings;
 
 pfodParser::pfodParser() {
+  (void)debugPtr; // suppress unused warning
+#ifdef DEBUG_MSG_TO_SERIAL
+  debugPtr = getDebugPtr();
+#endif  
   constructInit();
 }
 
@@ -136,13 +142,15 @@ size_t pfodParser::write(uint8_t c) {
   if (!io) {
     return 1; // cannot write if io null but just pretend to
   }
-#ifdef DEBUG_MSG_TO_SERIAL  
-  if (c=='{') {
-  	  Serial.print("\n>>");
-  }
-  Serial.print((char)c);
-  if (c == '}') {
-  	  Serial.println();
+#ifdef DEBUG_MSG_TO_SERIAL 
+  if (debugPtr) { 
+    if (c=='{') {
+  	  debugPtr->print("\n>>");
+    }
+    debugPtr->print((char)c);
+    if (c == '}') {
+  	  debugPtr->println();
+    }
   }
 #endif  
   return io->write(c);
@@ -573,10 +581,12 @@ byte pfodParser::parse(byte in) {
     return 0;
   }
 #ifdef DEBUG_MSG_TO_SERIAL     
-  if ((parserState == pfodWaitingForStart) || (parserState == pfodMsgEnd)) {
-  	  Serial.print("\n<< ");
+  if (debugPtr) {
+    if ((parserState == pfodWaitingForStart) || (parserState == pfodMsgEnd)) {
+  	  debugPtr->print("\n<< ");
+    }
+    debugPtr->print((char)in);
   }
-  Serial.print((char)in);
 #endif
 
   if ((parserState == pfodWaitingForStart) || (parserState == pfodMsgEnd)) {
