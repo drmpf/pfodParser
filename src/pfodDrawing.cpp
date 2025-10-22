@@ -10,11 +10,21 @@
 #include <pfodDrawing.h>
 
 pfodDrawing::pfodDrawing() {
+  initializedDrawing = false;
   parserPtr = NULL;
-  dwgsPtr = new pfodDwgs;
-  pfodParser::addDwg(this);
+  dwgsPtr = NULL;
 }
 
+void pfodDrawing::init() {
+  if (initializedDrawing) {
+    return;
+  }
+  initializedDrawing = true;
+  dwgsPtr = new pfodDwgs;
+  pfodParser::addDwg(this); // allocates pointer for linked list
+}
+
+// deprecated use init() and setParser()
 pfodDrawing::pfodDrawing(pfodParser *_parserPtr, pfodDwgs* _dwgsPtr) {
    setParserDwgs(_parserPtr,_dwgsPtr);
 }
@@ -25,7 +35,7 @@ void pfodDrawing::setParser(pfodParser *_parserPtr) {
   dwgsPtr->setOut(_parserPtr); 
 }        
 
-// deprecated
+// deprecated use init() and setParser()
 void pfodDrawing::setParserDwgs(pfodParser *_parserPtr , pfodDwgs* _dwgsPtr) {
   parserPtr = _parserPtr;
   dwgsPtr = _dwgsPtr;

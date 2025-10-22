@@ -1,15 +1,52 @@
 # pfodParser
-The pfodParser library is handles commands sent from the Android pfodApp, pfodApp supports WiFi, BLE, Bluetooth and SMS connections, the library also includes support for sending dwg commands back to pfodApp to create interactive GUI's.
+The pfodParser library is handles commands sent from the pfodWeb.html and the Android pfodApp.  
+
+pfodWeb.html (included in this library) runs in your brower and connects to any Arduino board via Serial. It can also connect via BLE or HTTP.  See the pfodWeb examples and the [pfodWeb Installation and Tutorials](https://www.forward.com.au/pfod/pfodWeb/index.html)<br>
+pfodApp (Android app) supports WiFi, BLE, Bluetooth and SMS connections.<br>  
+The entire GUI is completely controlled by your micro's sketch.  
 
 This library includes:-  
-* **pfodParser**, parses pfodApp commands  
+* **pfodParser**, parses pfodApp commands 
+* **pfodWeb**, browser version of pfodApp that connects via Serial, BLE or HTTP to display interactive GUI's   
 * **pfodSecurity**, alternative to pfodParser that adds 128bit sercuity   
-* **pfodDwgs**, classes for sending dwg commands to create interactive GUI's  
+* **pfodDwgs**, classes for sending dwg commands to create interactive GUI's 
+* **pfodWeb_data_src**, the source files .html / .js for pfodWeb.  See examples HelloWorld_serial and LedOnOff_http
+
+# pfodWeb
+The pfodWeb sub-directory contains index.html, pfodWeb.html and pfodWebDebug.html that combine html and js files combined in to single loadable files. No local server is required. 
+No additional downloads are required. You can run pfodWeb on a completely isolated network with no internet access.  
+
+index.html prompts to use either pfodWeb or pfodWebDebug.  pfodWebDebug has extensive console logging and also shows the dotted outlines of touchZones  
+pfodWeb.html and pfodWebDebug.html prompt for the connection to use and then requests the pfod menu/dwg and displays it.  
+
+There is a raw message view, accessed via the right click menu, that displays all data sent from your micro, including interspersed debug msgs.
+
+**pfodWeb.html?targetIP**  pre-selects http as the connection type.   
+**pfodWeb.html?targetIP=**_\<ip\>_  immediately attempts to connect the the specified IP.    
+**pfodWeb.html?serial**  pre-selectes Serial as the connection type.    
+**pfodWeb.html?serial=**_\<baudrate\>_  pre-selectes Serial with the specified baudrate as the connection type.    
+**pfodWeb.html?ble**  pre-selectes BLE as the connection type.    
+
+The sub-directory pfodWeb_src contains the individual files.  **build.bat** / **build.sh** generates the combined files.
+
+The individual files making up these webpages can also be served from the pfodDevice itself if there is a file system with sufficient space less than 200kB.  
+The subdirectory data contains the .gz files to be loaded into the microprocessor's file system. 
+
+**build_data.bat** / **build_data.sh** in pfodWeb_src generate the .gz files in the data subdirectory  
+**data_index.html** -> **index.gz** in that case to be served by the microprocessor.  
+
+When pfodWeb.html or pfodWebDebug.html is served from the pfodDevice (microprocessor) they are redirected to pfodWeb.html?target=<pfodDeviceIP> and pfodWebDebug.html?target=<pfodDeviceIP>  
+to automatically connect to that pfodDevice to serve the pfod messages.  
+
+You can use the pfodWeb files served from your microprocessor to connect to another pfodDevice via http by requesting  
+**http://**_\<pfodDeviceIP\>_**/pfodWeb.html?targetIP**
+to display the connection dialog from which you can select which device to connect to.  
+Note: Browser security restrictions prevents connecting to Serial or BLE when pfodWeb served from **http://**_\<pfodDeviceIP\>_**  need to be served as https.       
 
 # How-To
+See [pfodWeb Installation and Tutorials](https://www.forward.com.au/pfod/pfodWeb/index.html)  
 See [pfodParser Documentation](https://www.forward.com.au/pfod/pfodParserLibraries/index.html)  
 See [pfodParser Examples](https://www.forward.com.au/pfod/index.html)  
-See [pfodDwgs Examples](https://www.forward.com.au/pfod/pfodControls/index.html)  
 
 # Software License
 (c)2014-2025 Forward Computing and Control Pty. Ltd.  
@@ -19,7 +56,12 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
-Version 3.63.10 added clear() method to pfodStreamString for pi picoW  
+Version 3.66.1 Added support for pfodWeb to connect Serial and BLE connection.    
+Version 3.65.1 revised pfodWeb examples and serving of pfodWeb files. Added support for Serial and BLE connection  
+Version 3.64.1 Breaking Change. pfodDrawing sub-classes now need to call init() to complete initialization and to add them to the pfodParser linked list. Added source files .html / .js for pfodWeb  
+Version 3.64.0 added pfodWeb support for Pi PicoW/2W, ESP32 and ESP8266, added pfodDebugPtr, pfodESPBufferedClient now supports Pi Pico W/2W  
+Version 3.63.11 pfodESPBufferedClient now also supports Pi Pico W / 2W  
+Version 3.63.10 added clear() method to pfodStreamString for Pi PicoW  
 Version 3.63.9 added JSON escaping of control chars in the range 0x00 to 0x1F  
 Version 3.63.8 fix newline fitering in pfodStreamString add JSON escapes  
 Version 3.63.7 added newline fitering to pfodStreamString  

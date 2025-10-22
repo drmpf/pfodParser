@@ -1,0 +1,299 @@
+<!--
+================================================================================
+  STANDALONE BUNDLE: index.html
+  Generated: 2025-10-20T19:42:26.592Z
+
+  This file contains all JavaScript inlined for standalone deployment.
+  No external files or webserver required - just open in browser!
+
+  For development, edit the separate source files and rebuild.
+
+  Build command: node build-bundle.js
+
+  (c)2025 Forward Computing and Control Pty. Ltd.
+  NSW Australia, www.forward.com.au
+================================================================================
+-->
+<!DOCTYPE html>
+<!--
+   index.html
+ * (c)2025 Forward Computing and Control Pty. Ltd.
+ * NSW Australia, www.forward.com.au
+ * This code is not warranted to be fit for any purpose. You may only use it at your own risk.
+ * This generated code may be freely used for both private and commercial use
+ * provided this copyright is maintained.
+-->
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pfodWeb</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1.title {
+            color: blue;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .version {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .form-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .form-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            max-width: 200px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-family: monospace;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .button.debug {
+            background-color: #2196F3;
+        }
+        .button.debug:hover {
+            background-color: #1976D2;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+        .help-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .example {
+            font-family: monospace;
+            background-color: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 3px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        .protocol-selector {
+            margin: 20px 0;
+        }
+        .protocol-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .protocol-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .protocol-option input[type="radio"] {
+            cursor: pointer;
+        }
+        .protocol-option label {
+            cursor: pointer;
+            margin: 0;
+            font-weight: normal;
+        }
+        .ip-section {
+            transition: opacity 0.3s;
+        }
+        .ip-section.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .serial-settings {
+            margin: 20px 0;
+            display: none;
+        }
+        .serial-settings.visible {
+            display: block;
+        }
+        .ble-settings {
+            margin: 20px 0;
+            display: none;
+        }
+        .ble-settings.visible {
+            display: block;
+        }
+        select {
+            padding: 8px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+    </style>
+<link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAQD0AAAEAGADQLwAAFgAAACgAAABAAAAAegAAAAEAGAAAAAAAAAAAAGAAAABgAAAAAAAAAAAAAAD//////////////////////////////////////////////////////////////////////////////////////////////////////////v7+/v7+/Pz9+vr8+fn8+fn8+fn8+vr9+vr+/Pz+/v7//v7////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8/v707u7s4eHl0dHgyMjdxsbfxsbgysrlz8/s39/07e39+/v////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7+vrp2NjTqqq9f3+sWFiiOjqaJyeXGhqTDw+SDw+SDw+TDw+XGBiaJyegOjqrWFi8fHzRqqro19f5+vr////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////q29vKnJysWVmZIyORBgaPAACRAACSAACUAACVAACWAACWAACWAACWAACVAACUAACSAACRAACPAACRAACXIiKrU1PJmJjp19f////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+///iyMi5eHidLS2RAACRAACUAACWAACYAACYAACYAACYAACXAACXAACXAACXAACXAACXAACYAACYAACYAACYAACWAACUAACRAACPAACaJye4c3PfxcX9///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////m0tK4dnaYIiKPAACSAACWAACYAACYAACWAACUAACTAACQAACPAACQAACQAACRAACRAACSAACQAACPAACQAACTAACUAACWAACYAACYAACXAACTAACPAACXHBy2b2/jzc3////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z6+vEj4+cLCyOAACTAACXAACYAACWAACTAACPAACSBgaaJSWmSkq1bW3CjIzMoaHUr6/UsbHUsbHTr6/MoqLCjIy3cXGnTU2ZJyeTBgaPAACTAACWAACYAACXAACTAACPAACbJyfBiYnw6Oj////////////////////////////////////////////////////////////////////////////////////////////////////////////ex8eqU1OSBgaTAACXAACYAACWAACSAACRAACeLy+2b2/Sra3q29v69/f////////////////////////////////////////5+vrr3t7VsbG5c3OdMzORAACSAACVAACYAACXAACSAACRAACpTk7cv7/////////////////////////////////////////////////////////////////////////////////////////////////+/v7OoaGcLS2PAACVAACXAACWAACSAACSCQmkRUXImJjr39/////////////////////////////////////////////////////////////////////////u4eHLnJynS0uTBgaSAACWAACYAACVAACPAACaJyfKmJj7/Pz////////////////////////////////////////////////////////////////////////////////////49/fDjIyVFBSSAACXAACXAACTAACRAACiPDzLnJzx6ur////////////////////////////////////////////////////////////////////////////////////////07u7OpKSkQ0OQAACTAACXAACXAACTAACTEhLAhIT39PT////////////////////////////////////////////////////////////////////////////59va/goKSDAySAACXAACWAACRAACXGhq9fX3s39/////////////////////////////////////////////////////////////////////////////////////////////////////////v5OTAhYWYHh6RAACWAACXAACTAACTBga8e3v28/P////////////////////////////////////////////////////////////////////8/f3Bh4eSDAyTAACYAACVAACQAACiPDzWs7P////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////XubmlRUWPAACVAACXAACTAACTCQm9fn76+fn////////////////////////////////////////////////////////////////LnZ2UEhKSAACXAACVAACQAACrVFTl1NT////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////p2NiwXl6RAACUAACXAACTAACTDAzHlJT////////////////////////////////////////////////////////////cv7+bKCiTAACXAACVAACSAACxY2Pt4uL////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////x6em0aWmRAACVAACXAACTAACXHh7Wt7f////////////////////////////////////////////////////w5eWnS0uPAACXAACWAACPAACuXFzu4+P////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////x6uqxZGSQAACWAACXAACRAACkQkLs3t7////////////////////////////////////////////////AhISSAACVAACXAACRAAClQkLo2dn////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////s3t6pTU2QAACXAACWAACPAAC6eXn+/v7////////////////////////////////////////fyMiYIiKSAACYAACTAACZIiLbvLz////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////exsacKCiSAACYAACTAACYHBzbvb3////////////////////////////////////6+fmyZWWQAACXAACWAACUBgbGkJD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////HlZWSCQmVAACXAACPAACuWlr49fX////////////////////////////////ZurqVFBSUAACXAACRAACsUFHl2uK6mqCqd3WocHLRr6b////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z7u6rU1OQAACXAACVAACTEhLVsrL////////////////////////////9//+0ZmaPAACXAACVAACUDAzZtrT1/P+EPEtuAABsAAC2e2z////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yt7eWFhaUAACYAACQAACuXl77+vr////////////////////////k0dGYIiKTAACYAACRAACsVlb///74//+KQ1J2AAB1AAC7h3j////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////6+vqwYWGQAACYAACUAACXGhrgycn////////////////////////GkJCQAACXAACWAACTCQnSra3////1/P+KQ1J3AAB1AAC8iHn////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////YtbWTEhKVAACXAACPAADAhob////////////////////6+vqpU1ORAACYAACSAACjPT3y6+v////z+P+KQ1J3AAB1AAC9i3v////////////+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////07++lRUWTAACYAACSAAClRUX38/P////////////////p2NiZIyOUAACYAACQAAC7fX3////////y9/+KQ1J3AAB4AADDlIX////XyM6qfYGcYGCla2jEn5nv5+L////////////////////////////////UwsXJra3Ms7PIrKzn19L////////////////////////9///SvcHKrq3MsrLLrKzv493////////////////////////////////////Bh4ePAACXAACUAACXGhrjz8/////////////////UsrKSBgaWAACWAACTBgbUs7P////////y9/+KQ1J3AAB7AACxemy5lZp7FBxrAABtAABuAAB1AACXSkLhysH////////////////////////s7vaHPktxAAB2AABwAACwc2b////////////////////////m5OyALzpzAAB1AABzAADFmIn////////////////////////////////////bvb2TDAyWAACXAACQAADQqKj////////////////Di4uPAACXAACUAACaJyfr3d3////////y9/+KQ1J4AAB8AACBEg95AAZ/GBSZU1CSSkt8DxR0AAB0AACVRTrs3dT////////////////////c1997HCd5AAB9AAB0AACYSDz89e/////////////////////Pw893Dxh6AAB8AABzAACucWT////////////////////////////////////u4+OcLCyUAACYAACPAAC+goL///////////////+0a2uPAACYAACSAACjQkL59PT////////y9/+KQ1J4AAB8AAB3AACbUEbj08r////4/P3BqLJ+Hih1AAB1AAC4gXb////////////////////DsLx1Bgx9AAB/AAB5AACCHhTn1Mn///////////////////+ykqF1AAB+AAB/AAB3AACWQzf58uz////////////////////////////////5+vqoTEyTAACYAACQAACyY2P//////////v7+//+sVlaRAACYAACSAACuXFz+///////////y9/+KQ1J4AAB5AACGIxrgysH///////////////+lfYl1AAB1AACQNiz06t////////////////+ogI90AAB/AACAAAB8AAB4AADLo5f////////////////5//+WX212AAB/AAB/AAB5AACCHBTn1Mj///////////////////////////////////+xZWWRAACYAACSAACoTk76+fn//v7+/v759/elSEiRAACYAACQAAC1a2v////////////y9/+KQ1J3AAB3AACiXlD///n////////////////Kvcl5DBZ3AAB9EgngyL3////////////2+/+RUWF2AAB+AAB+AAB9AAB0AACub2H////////////////k5O2DMDp4AAB9AAB9AAB7AAB5AADOqZr///////////////////////////////////+6eHiPAACYAACSAACjPj717+/+/v7+/v738PCjPz+SAACYAACPAAC4d3f////////////y9/+KQ1J3AAB2AAC2gHH////////////////////b1+F7Hih5AAB5AADTr6L////////////g3+mAKDV4AAB/AACJKCd9BgZ2AACSPDL37uX////////////Iucd3CRR4AACJIyOLLTV7AAB1AACzeWn///////////////////////////////////++g4OQAACYAACTAACfNzfy6+v+/v7+/v717++jPT2SAACYAACPAAC5eHj////////////y9/+KQ1J3AAB2AAC+kIH////////////////////g3uh9Iy95AAB3AADMpJX////////////HusZ3DBJ4AACIIxi1i4qEKjV2AAB/FAzhyLz///////////+rhpZ0AAB4AACtcGStg4p5AAB1AACYSz/89u////////////////////////////////+/hoaPAACYAACTAACfMzPz6ur+/v7+/v748fGiQUGRAACYAACPAAC4c3P////////////y9/+KQ1J3AAB2AAC9jX3////////////////////c2uR7Hih5AAB2AADPqpn///////////+ui5l1AAB2AACVQjXm3NqTVWN1AAB2AADDloj////////1/P+QUmF1AAB5AADQrZ7Owcx4CRR2AACFIhjq2c3///////////////////////////////++f3+OAACYAACSAACgOTn07Oz+/v7//v76+fmoTk6SAACYAACRAACzZ2f////////////y9/+KQ1J3AAB2AACuc2X////////////////////Ows56Dxh4AAB6CQDZvLH////////4//+TW2h2AAB1AACoZlb///+qhZR0AAB0AAClYVL///v////h3eV/JzJ0AACBGA/s2c3n6vN9Iy93AAB6BgDTsKT///////////////////////////////+3cHCQAACYAACRAACkQ0P48/P+/v7///////+vX1+RAACYAACTAACpUVH8/f3////////y9/+KQ1J4AAB4AACRPTLz5+D///////////////+shZZ2AAB1AACIJxzu3tH////////m5fCCMjx3AAB2AADAjoD////FtsV2Bg90AACLMCf0597////Dsr52Bg91AACSPDD++e74//+LRVN2AAB0AAC4gHL///////////////////////////////+tWlqSAACYAACSAACrWFj9/f3//v7///////+6enqOAACYAACTAACeNTX07e3////////y9/+KQ1J4AAB6AAB5AACzfG/49fD////////NvcaCLTV2AAB0AACqaFz//fn////////Owc15EhZ4AAB5BgDWtaf////h4el/KDJ2AAB8DAbfwbT///+mf45zAAB0AACral7///////+gcX90AAB1AACbUEL8+fP////////////////////////08vKiPDySAACYAACPAAC2cHD////////////////KmZmQAACXAACVAACWGBjlz8/////////y9v6JQVB2AAB8AACEIiJ3BgmUQz6wg4OlcnaCJSx0AABzAACHJyDexLv///////////+zlKJ1AAB3AACFIhbs2c/////3/P+TVWV1AAB1AADDlIT5//+PUWB2AAB3AADHm4////////+3nax0AAB3AACIJxzt3dT////////////////////////n19eXHh6VAACXAACPAADGj4/////////////////cwsKTDw+VAACXAACRAADKoKD////////t7fiCNUVsAAB4AADAk4mmdn5wAABsAABvAABwAAByAACHJyDMqZ/////////////7//+aZnR1AAB2AACXRTn69e3///////+tjJp0AAB0AACoYVXXyc2BKjV1AACAFAniy73////////RxtN5FBp4AAB5CQDVtqj////////////////////////RqamSBgaXAACWAACRCQnYuLj////////////////x6emdMzOSAACYAACQAACwZGT////////09vu4lJqufn2zg4Hu4Nb5//+/o6yWU1mHNTaPPjyqdG3cycH////////////////r7fSEOUV3AAB0AACtcWP////////////LwMp4DBZ3AACLLSOia219DBR2AACQOi317OT////////p6fCCNT93AAB1AAC5hXj///////////////////////+0bW2PAACYAACTAACbLCzt39////////////////////+za2uPAACYAACUAACaJyfn1NT////////////////////////////////5+vzx7u/28vH////////////////////////Uy9V6FBx5AAB4AADHm4/////////////p6fCEN0F3AAB/AACAFBR7AAB1AACpal3////////////5/v+UXGp2AAB2AACfVUr//fb////////////////r3NycLS2TAACYAACQAACvYWH9///////////////////////SrKySBgaWAACXAACPAADDiYn///////////////////////////////////////////////////////////////////+5oKt2AAZ5AAB+Egzfxrn////////////7//+aZ3V1AAB+AAB/AAB9AAB2AADHmo7///////////////+siJh1AAB2AACKLCDv4Nj////////////////Hk5OQAACWAACWAACSAADOoqL////////////////////////x6OiiPDyTAACYAACTAACfNTXr3d3////////////////////////////////////////////////////////////9//+eb352AAB2AACLMiXy5d3///////////////+4m6l2AAB+AAB/AAB6AAB/FAzgybz////////////////EtMB2Bgx5AAB6CQbauqz////////////v5OSjPj6TAACYAACSAACeMjLt4OD////////////////////////////Djo6QAACWAACWAACRAADAg4P////////////////////////////////////////////////////////////q6vGCMj5vAABuAACcTT79+/L////////////////SyNN0DBZ0AAB3AABvAACLLyP06eD////////////////Z1N94FiBxAABtAAC4f3H////////////FkJCRAACWAACXAACPAAC9fn7////////////////////////////////q2tqeMjKTAACYAACSAACbJyfgyMj////////////////////////////////////////////////////////f1t+VVFuTSEeRSkq/kYf////////////////////s6/KdZm6US0yWU1OSSEq1f3b//Pb////////////////v7vWfaXGTSEqQRUK1fXP/+/j////kz8+dLy+TAACYAACSAACcLCzm0tL////////////////////////////////////EjY2RAACVAACXAACPAACuXV317u7////////////////////////////////////////////////////9///39PT8/fz5+Pn+/Pv////////////////////////5+fn8/Pv9///6+vv7+/j////////////////////////5+Pn7/Pv5+vr6+fj////49veyZmaQAACXAACWAACQAAC+goL////////////////////////////////////////w5+emRkaRAACXAACVAACTBgbDiYn+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Hk5OTDAyUAACXAACSAACiPDzt3t7////////////////////////////////////////////VsLCXGBiTAACXAACSAACYGhrRp6f////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VsLCYHh6UAACXAACTAACUEhLPp6f////////////////////////////////////////////////8//++fn6SAACVAACXAACSAACaKCjWs7P////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////au7ufMjKSAACXAACVAACRAAC4cXH6+fn////////////////////////////////////////////////////w5uarU1OQAACWAACXAACRAACcLCzVra3////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////YtLSfNTWRAACXAACWAACPAACoSkrs4OD////////////////////////////////////////////////////////////k0NCjPDyQAACWAACXAACSAACYIiLGlZX4+Pj////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7+vrLnZ2ZIyORAACXAACXAACRAACeNTXgyMj////////////////////////////////////////////////////////////////////cwMCfMjKQAACWAACXAACUAACTDw+1bW3q2Nj////////////////////////////////////////////////////////////////////////////////////////////////////////////////s39+5d3eUEhKTAACXAACXAACRAACeLCzZuLj////////////////////////////////////////////////////////////////////////////avb2gNzePAACWAACXAACUAACRAAChOTnMoaH18PD////////////////////////////////////////////////////////////////////////////////////////////////48/PPpaWjPT2QAACUAACXAACWAACQAACdMDDYt7f////////////////////////////////////////////////////////////////////////////////////gyMimSkqQAACUAACXAACWAACSAACTCQmpUFDSrKz18PD////////////////////////////////////////////////////////////////////////////////48vLUsrKsVVWSDAySAACWAACXAACUAACPAACkQUHbwMD////////////////////////////////////////////////////////////////////////////////////////////r3Ny0aWmSDAyTAACWAACYAACVAACRAACSDAynS0vImJjo2dn9/f3////////////////////////////////////////////////////////////p29vLnJypUFCTDw+QAACVAACYAACXAACTAACTBgaxZGTo1tb////////////////////////////////////////////////////////////////////////////////////////////////////49PTKm5udMjKPAACTAACXAACYAACVAACSAACQAACaJyetXV3FkJDbvLzq3Nz17u77+/v////+///+///////7+/v08fHr3t7cvr7Hk5OuXV2bKCiRAACRAACVAACYAACXAACUAACPAACcLCzHlJT38fH////////////////////////////////////////////////////////////////////////////////////////////////////////////////m09O4cnKWGBiPAACUAACXAACYAACXAACUAACRAACQAACSDAyYIyOfOTmnTU2tWVmuW1uuW1utWVmnTU2hOjqZJyeTDAyPAACRAACTAACWAACYAACXAACUAACPAACVFha0a2vjzs7////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9/v7avr6yZGSWGBiPAACSAACWAACYAACYAACXAACWAACVAACTAACTAACSAACRAACRAACSAACTAACTAACUAACWAACXAACYAACYAACWAACSAACQAACVFBSuXl7Yubn8+vr////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8+/vfxMS5dnacMDCRBgaPAACSAACVAACXAACYAACYAACYAACYAACYAACYAACYAACYAACYAACYAACXAACVAACSAACPAACRAACdLCy4cXHbvr75+fn////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////t4uLRq6u2bm6iOjqVGBiRAACPAACOAACQAACRAACSAACSAACSAACQAACPAACOAACRAACVFhagOTmzbGzQpaXr4OD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z7+/kz8/TrKzEj4+5eHiyZGSsWVmpU1OnU1OqVlawYWG3dnbDjY3Rq6vkzMz07Oz////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+/v79/v77/v7+/v7//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////v7//v7///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">pfodWeb</h1>
+        <div class="version" id="version-display">Loading version...</div>
+        <p>(c)2025 <a href="https://www.forward.com.au/pfod/pfodWeb" target="_blank">https://www.forward.com.au/pfod/pfodWeb</a></p>
+        
+        <div class="form-section">
+            <h3>Choose Your Interface</h3>
+
+            <div class="button-group">
+                <button class="button" onclick="launchPfodWeb()">
+                    Launch pfodWeb
+                </button>
+                <button class="button debug" onclick="launchPfodWebDebug()">
+                    Launch pfodWebDebug
+                </button>
+            </div>
+
+            <div id="error-message" class="error-message"></div>
+        </div>
+        
+        <div class="help-text">
+            <strong>pfodWeb:</strong> Standard interface for pfod menus and drawings<br>
+            <strong>pfodWebDebug:</strong> Debug version with console logging and detailed output
+        </div>
+    </div>
+
+    
+    
+<!-- All JavaScript files combined inline -->
+<script>
+// Set flag to indicate this is a bundled version (prevents dynamic script loading)
+window.PFODWEB_BUNDLED = true;
+
+
+/* ========================================
+ * Inlined from: version.js
+ * ======================================== */
+// Shared constants to avoid circular dependencies
+  var JS_VERSION = "V2.0.0 -- 13th October 2025";
+// V2.0.0 removed nodejs server, bundled all files in single htmls
+// V1.1.5 added init() of drawings
+// V1.1.4 added pfodMainDrawing.h generated file
+// V1.1.3 dwg updates as response received
+
+// Make available globally for browser use
+if (typeof window !== 'undefined') {
+    window.JS_VERSION = JS_VERSION;
+}
+
+// Export for Node.js use
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { JS_VERSION };
+}
+</script>
+<script>
+        // Parse URL parameters
+        function getURLParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function launchPfodWeb() {
+            // Build URL, forwarding any URL parameters (for pfodWebDesigner compatibility)
+            const currentLocation = window.location;
+            const baseUrl = `${currentLocation.protocol}//${currentLocation.host}${currentLocation.pathname.substring(0, currentLocation.pathname.lastIndexOf('/') + 1)}`;
+
+            // Forward all URL parameters (protocol, targetIP, baudRate, etc)
+            let url = `${baseUrl}pfodWeb.html${currentLocation.search}`;
+
+            window.location.href = url;
+        }
+
+        function launchPfodWebDebug() {
+            // Build URL, forwarding any URL parameters (for pfodWebDesigner compatibility)
+            const currentLocation = window.location;
+            const baseUrl = `${currentLocation.protocol}//${currentLocation.host}${currentLocation.pathname.substring(0, currentLocation.pathname.lastIndexOf('/') + 1)}`;
+
+            // Forward all URL parameters (protocol, targetIP, baudRate, etc)
+            let url = `${baseUrl}pfodWebDebug.html${currentLocation.search}`;
+
+            window.location.href = url;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update version display
+            document.getElementById('version-display').textContent = JS_VERSION;
+
+            // Log any forwarded parameters
+            const params = new URLSearchParams(window.location.search);
+            if (params.toString()) {
+                console.log('URL parameters detected (will be forwarded):', params.toString());
+            }
+        });
+    </script>
+</body>
+</html>

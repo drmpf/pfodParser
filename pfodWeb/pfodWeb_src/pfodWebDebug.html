@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<!--
+   pfodWebDebug.html
+ * (c)2025 Forward Computing and Control Pty. Ltd.
+ * NSW Australia, www.forward.com.au
+ * This code is not warranted to be fit for any purpose. You may only use it at your own risk.
+ * This generated code may be freely used for both private and commercial use
+ * provided this copyright is maintained.
+-->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pfodWeb</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        #layout-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            overflow: hidden;
+        }
+        #canvas-pane {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: white;
+            overflow: auto;
+        }
+        #resize-divider {
+            width: 6px;
+            background-color: #ccc;
+            cursor: col-resize;
+            flex-shrink: 0;
+            border-left: 1px solid #999;
+            border-right: 1px solid #999;
+            transition: background-color 0.2s;
+        }
+        #resize-divider:hover {
+            background-color: #999;
+        }
+        #resize-divider.dragging {
+            background-color: #0066cc;
+        }
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        #white-border {
+            background-color: white;
+            border-radius: 20px;
+            padding: 3px;
+            border-width: 2px;
+        }
+        #black-border {
+            background-color: black;
+            border-radius: 18px;
+            padding: 3px;
+            border-width: 2px;
+        }
+        #border-inner {
+            background-color: white;
+            border-radius: 16px;
+            padding: 5px;
+            border-width: 3px;
+        }
+        canvas {
+            background-color: #0000ff;
+            display: block;
+            padding: 0px;
+            width: 100%;
+            height: 100%;
+        }
+        #message-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        #message-overlay h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        #message-overlay p {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #666;
+            max-width: 600px;
+        }
+        #connection-prompt {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 2000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .prompt-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        .prompt-container h2 {
+            color: blue;
+            margin-bottom: 20px;
+        }
+        .protocol-selector {
+            margin: 20px 0 10px 0;
+        }
+        .protocol-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .protocol-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .protocol-option input[type="radio"] {
+            cursor: pointer;
+        }
+        .protocol-option label {
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .connection-details {
+            margin: 20px 0;
+        }
+        .connection-details input[type="text"],
+        .connection-details select {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .connection-details button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .connection-details button:hover {
+            background-color: #45a049;
+        }
+        .connection-details button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
+        .connection-details button:disabled:hover {
+            background-color: #cccccc;
+        }
+        .connection-details .help-text {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0 10px 0;
+        }
+        .protocol-section {
+            display: none;
+        }
+        .protocol-section.visible {
+            display: block;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="layout-container">
+        <div id="canvas-pane">
+            <div id="canvas-container">
+                <div id="white-border">
+                    <div id="black-border">
+                      <div id="border-inner">
+                        <canvas id="drawing-canvas" width="300" height="100"></canvas>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="resize-divider"></div>
+        <div id="raw-message-viewer"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Loading files ...', canvas.width / 2, canvas.height / 2);
+    </script>
+
+    <div id="message-overlay">
+        <h1 id="message-title"></h1>
+        <p id="message-text"></p>
+    </div>
+
+    <div id="connection-prompt">
+        <div class="prompt-container">
+            <h2>pfodWebDebug Connection Setup</h2>
+            <div style="color: #666; font-size: 12px; margin: -10px 0 10px 0;">
+                <span id="connection-version">Loading...</span><br>
+                (c)2025 <a href="https://www.forward.com.au/pfod/pfodWeb" target="_blank">https://www.forward.com.au/pfod/pfodWeb</a>
+            </div>
+
+            <div class="protocol-selector">
+                <label><strong>Select Connection Protocol:</strong></label>
+                <div class="protocol-options">
+                    <div class="protocol-option">
+                        <input type="radio" id="prompt-protocol-http" name="prompt-protocol" value="http" checked>
+                        <label for="prompt-protocol-http">HTTP</label>
+                    </div>
+                    <div class="protocol-option">
+                        <input type="radio" id="prompt-protocol-serial" name="prompt-protocol" value="serial">
+                        <label for="prompt-protocol-serial">Serial</label>
+                    </div>
+                    <div class="protocol-option">
+                        <input type="radio" id="prompt-protocol-ble" name="prompt-protocol" value="ble">
+                        <label for="prompt-protocol-ble">BLE</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connection-details">
+                <!-- HTTP Settings -->
+                <div id="http-settings" class="protocol-section visible">
+                    <label for="prompt-ip">IP Address:</label><br>
+                    <input type="text" id="prompt-ip" placeholder="192.168.1.100" maxlength="15">
+                    <div class="help-text">Enter the IP address of your pfod device</div>
+                </div>
+
+                <!-- Serial Settings -->
+                <div id="serial-settings" class="protocol-section">
+                    <label for="prompt-baud">Baud Rate:</label><br>
+                    <select id="prompt-baud">
+                        <option value="" disabled>Select baud rate...</option>
+                        <option value="9600">9600</option>
+                        <option value="19200">19200</option>
+                        <option value="38400">38400</option>
+                        <option value="57600">57600</option>
+                        <option value="74880">74880</option>
+                        <option value="115200" selected>115200</option>
+                    </select>
+                    <div class="help-text">Select baud rate, then click Connect to choose serial port</div>
+                </div>
+
+                <!-- BLE Settings -->
+                <div id="ble-settings" class="protocol-section">
+                    <div class="help-text">Click Connect to scan for BLE devices</div>
+                </div>
+
+                <!-- Response Timeout (applies to all protocols) -->
+                <div style="margin: 5px 0;">
+                    <label for="prompt-timeout">Timeout (s):</label>
+                    <select id="prompt-timeout" style="width: 80px;">
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                    </select>
+                </div>
+
+                <button id="connect-button" onclick="connectWithPrompt()">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load main application script which will load its dependencies -->
+    <script>
+        // Draggable divider for resizing canvas and message viewer
+        let isDragging = false;
+        const divider = document.getElementById('resize-divider');
+        const layoutContainer = document.getElementById('layout-container');
+        const canvasPane = document.getElementById('canvas-pane');
+        const messageViewer = document.getElementById('raw-message-viewer');
+
+        function setSplitRatio(ratio) {
+          canvasPane.style.flex = ratio;
+          messageViewer.style.flex = (1 - ratio);
+        }
+
+        // Hide divider and message viewer initially
+        divider.style.display = 'none';
+        messageViewer.style.display = 'none';
+
+        // Set canvas to 100% width initially - viewer is hidden
+        canvasPane.style.flex = 1;
+        messageViewer.style.flex = 0;
+
+        divider.addEventListener('mousedown', () => {
+          isDragging = true;
+          divider.classList.add('dragging');
+          document.body.style.userSelect = 'none';
+          document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+
+          const rect = layoutContainer.getBoundingClientRect();
+          const newCanvasWidth = e.clientX - rect.left;
+          const containerWidth = rect.width;
+          const newRatio = newCanvasWidth / containerWidth;
+
+          // Constrain ratio between 40% and 90%
+          const constrainedRatio = Math.max(0.40, Math.min(0.90, newRatio));
+          setSplitRatio(constrainedRatio);
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            divider.classList.remove('dragging');
+            document.body.style.userSelect = 'auto';
+            document.body.style.cursor = 'auto';
+          }
+        });
+
+        // Update connection prompt version on load and hide unavailable protocols
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof JS_VERSION !== 'undefined') {
+                document.getElementById('connection-version').textContent = JS_VERSION;
+            }
+            // Hide protocol options that are not needed based on URL parameters
+            hideUnavailableProtocols();
+        });
+
+        // Hide protocol options based on URL parameters
+        function hideUnavailableProtocols() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasTargetIP = urlParams.has('targetIP');
+            const hasSerial = urlParams.has('serial');
+            const hasBLE = urlParams.has('ble');
+
+            const protocolOptions = document.querySelector('.protocol-options');
+            const protocolSelectorLabel = document.querySelector('.protocol-selector label');
+
+            if (hasTargetIP) {
+                // Show HTTP label only, hide all radio buttons
+                if (protocolOptions) protocolOptions.classList.add('hidden');
+                if (protocolSelectorLabel) {
+                    protocolSelectorLabel.innerHTML = '<strong>HTTP</strong>';
+                    protocolSelectorLabel.style.fontSize = '1.25em';
+                }
+            } else if (hasSerial) {
+                // Show Serial label only, hide all radio buttons
+                if (protocolOptions) protocolOptions.classList.add('hidden');
+                if (protocolSelectorLabel) {
+                    protocolSelectorLabel.innerHTML = '<strong>Serial</strong>';
+                    protocolSelectorLabel.style.fontSize = '1.25em';
+                }
+            } else if (hasBLE) {
+                // Show BLE label only, hide all radio buttons
+                if (protocolOptions) protocolOptions.classList.add('hidden');
+                if (protocolSelectorLabel) {
+                    protocolSelectorLabel.innerHTML = '<strong>BLE</strong>';
+                    protocolSelectorLabel.style.fontSize = '1.25em';
+                }
+            }
+        }
+
+        // Connection prompt functions
+        function updatePromptUI() {
+            const protocol = document.querySelector('input[name="prompt-protocol"]:checked').value;
+            document.getElementById('http-settings').classList.toggle('visible', protocol === 'http');
+            document.getElementById('serial-settings').classList.toggle('visible', protocol === 'serial');
+            document.getElementById('ble-settings').classList.toggle('visible', protocol === 'ble');
+            validateConnectButton();
+        }
+
+        // Validate connect button state
+        function validateConnectButton() {
+            const protocol = document.querySelector('input[name="prompt-protocol"]:checked').value;
+            const connectButton = document.getElementById('connect-button');
+
+            if (protocol === 'http') {
+                const ip = document.getElementById('prompt-ip').value.trim();
+                connectButton.disabled = !ip || ip === '';
+            } else if (protocol === 'serial') {
+                const baudRate = document.getElementById('prompt-baud').value;
+                connectButton.disabled = !baudRate || baudRate === '';
+            } else {
+                // BLE doesn't need validation
+                connectButton.disabled = false;
+            }
+        }
+
+        // Set up protocol radio listeners
+        document.querySelectorAll('input[name="prompt-protocol"]').forEach(radio => {
+            radio.addEventListener('change', updatePromptUI);
+        });
+
+        // Set up IP input listener
+        document.getElementById('prompt-ip').addEventListener('input', validateConnectButton);
+
+        // Set up baud rate change listener
+        document.getElementById('prompt-baud').addEventListener('change', validateConnectButton);
+
+        // Set up Enter key handler for the entire connection prompt
+        document.getElementById('connection-prompt').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const connectButton = document.getElementById('connect-button');
+                if (!connectButton.disabled) {
+                    connectWithPrompt();
+                }
+            }
+        });
+
+        async function connectWithPrompt() {
+            const protocol = document.querySelector('input[name="prompt-protocol"]:checked').value;
+
+            // Collect connection settings
+            const connectionSettings = {
+                protocol: protocol
+            };
+
+            // Get timeout setting (applies to all protocols)
+            const timeoutValue = parseInt(document.getElementById('prompt-timeout').value, 10);
+            if (!isNaN(timeoutValue)) {
+                connectionSettings.responseTimeoutSec = timeoutValue;
+            }
+
+            // Validate and collect protocol-specific settings
+            if (protocol === 'http') {
+                const ip = document.getElementById('prompt-ip').value.trim();
+                if (!ip) {
+                    alert('Please enter an IP address');
+                    return;
+                }
+                connectionSettings.targetIP = ip;
+            } else if (protocol === 'serial') {
+                const baudRate = document.getElementById('prompt-baud').value;
+                connectionSettings.baudRate = parseInt(baudRate, 10);
+            } else if (protocol === 'ble') {
+                // No additional settings needed for BLE
+            }
+
+            // Create ConnectionManager for all protocols
+            try {
+                // Create ConnectionManager with the connection settings
+                const tempConnectionManager = new ConnectionManager(connectionSettings);
+
+                // For Serial and BLE, prompt for device selection NOW (before hiding prompt)
+                if (protocol === 'serial' || protocol === 'ble') {
+                    await tempConnectionManager.connect();
+                    console.log('[CONNECT_PROMPT] Device selected and connected, proceeding...');
+                }
+
+                // Store the entire ConnectionManager for continueInitialization to use (for all protocols)
+                // This preserves all protocol information and settings
+                window.pfodConnectionManager = tempConnectionManager;
+                console.log('[CONNECT_PROMPT] ConnectionManager stored, protocol:', protocol);
+            } catch (error) {
+                console.error('[CONNECT_PROMPT] Connection failed:', error);
+
+                // Show error with Close button to return to connection setup
+                pfodAlert(error.message, () => {
+                    // Disable the unsupported protocol option
+                    const radioButton = document.getElementById('prompt-protocol-' + protocol);
+                    /**
+                    if (radioButton) {
+                        radioButton.disabled = true;
+                        const label = document.querySelector(`label[for="prompt-protocol-${protocol}"]`);
+                        if (label) {
+                            label.style.color = '#999';
+                            label.style.textDecoration = 'line-through';
+                        }
+                    }
+                    **/
+
+                    // Switch to HTTP protocol as default
+                    document.getElementById('prompt-protocol-http').checked = true;
+                    updatePromptUI();
+
+                    // Show the connection prompt again
+                    document.getElementById('connection-prompt').style.display = 'flex';
+                });
+                return;
+            }
+
+            // Hide the connection prompt
+            document.getElementById('connection-prompt').style.display = 'none';
+
+            // Continue initialization with settings
+            if (typeof continueInitialization === 'function') {
+                continueInitialization(connectionSettings);
+            }
+        }
+    </script>
+
+    <script src="./messageViewer.js"></script>
+    <script src="./pfodWebDebug.js"></script>
+</body>
+</html>
