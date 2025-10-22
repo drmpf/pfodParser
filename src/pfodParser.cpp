@@ -46,10 +46,6 @@ static Stream* debugPtr = NULL;
 pfodLinkedList<pfodDrawing> pfodParser::listOfDrawings;
 
 pfodParser::pfodParser() {
-  (void)debugPtr; // suppress unused warning
-#ifdef DEBUG_MSG_TO_SERIAL
-  debugPtr = getDebugPtr();
-#endif  
   constructInit();
 }
 
