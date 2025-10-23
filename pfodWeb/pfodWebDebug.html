@@ -1,7 +1,7 @@
 <!--
 ================================================================================
   STANDALONE BUNDLE: pfodWebDebug.html
-  Generated: 2025-10-20T19:42:26.588Z
+  Generated: 2025-10-23T21:26:53.702Z
 
   This file contains all JavaScript inlined for standalone deployment.
   No external files or webserver required - just open in browser!
@@ -258,7 +258,9 @@ window.PFODWEB_BUNDLED = true;
  * Inlined from: version.js
  * ======================================== */
 // Shared constants to avoid circular dependencies
-  var JS_VERSION = "V2.0.0 -- 13th October 2025";
+  var JS_VERSION = "V2.0.2 -- 22nd October 2025";
+// V2.0.2 fixed transform pushZero for nested dwgs
+// V2.0.1 edit to .ino files
 // V2.0.0 removed nodejs server, bundled all files in single htmls
 // V1.1.5 added init() of drawings
 // V1.1.4 added pfodMainDrawing.h generated file
@@ -7883,9 +7885,23 @@ class DrawingMerger {
                 
                 // Process the nested drawing recursively if not already processed
                 if (nestedDrawingName && !processedDrawings.has(nestedDrawingName)) {
-                    processedDrawings.add(nestedDrawingName);                                                           
+                    processedDrawings.add(nestedDrawingName);
+
+                    // Compose the nested insertDwg's transform with the current parent transform
+                    // This ensures that nested insertDwgs inherit the parent's offset and scale
+                    const composedItem = {...item};
+                    const composedTransform = {...item.transform};
+                    // Apply parent transform: position = local_position * parent_scale + parent_position
+                    // Apply scale: scale = local_scale * parent_scale
+                    composedTransform.x = composedTransform.x * dwgTransform.scale + dwgTransform.x;
+                    composedTransform.y = composedTransform.y * dwgTransform.scale + dwgTransform.y;
+                    composedTransform.scale = composedTransform.scale * dwgTransform.scale;
+                    composedItem.transform = composedTransform;
+
+                    console.log(`[MERGE_DWG_NESTED] Composed transform for nested drawing "${nestedDrawingName}": parent=${JSON.stringify(dwgTransform)}, local=${JSON.stringify(item.transform)}, composed=${JSON.stringify(composedTransform)}`);
+
                     // Process the nested drawing with the intersection clip region
-                    this.mergeDrawingItems(item, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion);
+                    this.mergeDrawingItems(composedItem, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion);
                 } else if (nestedDrawingName) {
                     console.log(`[MERGE_DWG] Drawing "${nestedDrawingName}" already processed, skipping content processing`);
                 }

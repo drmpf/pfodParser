@@ -47,7 +47,7 @@ static pfodStreamString jsonCapture;
 #define cacheControlStr "max-age=864000"
 
 static const char FS_INIT_ERROR[] PROGMEM = "Invalid LittleFS. Check at least 500Kb of FS allocated for ESP32 and PiPicoW and data uploaded. For ESP8266 need >550Kb";
-static const char FS_NOT_USED_ERROR[] PROGMEM = " LittleFS not serving pfodWeb files.\n\n Use pfodWebServer";
+static const char FS_NOT_USED_ERROR[] PROGMEM = " LittleFS not serving pfodWeb files.\n\n Use pfodWeb";
 
 static bool serverStarted = false;
 
@@ -292,7 +292,7 @@ void start_pfodWebServer(const char* version, bool _serverFromLittleFS) {
   } else {
     if (debugPtr) {
       debugPtr->println(" !! LittleFS not used to server pfodWeb files");
-      debugPtr->println(" !! Use pfodWebServer");
+      debugPtr->println(" !! Use pfodWeb");
     }
   }
   if (serverFromLittleFS) {

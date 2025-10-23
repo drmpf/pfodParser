@@ -308,9 +308,23 @@ class DrawingMerger {
                 
                 // Process the nested drawing recursively if not already processed
                 if (nestedDrawingName && !processedDrawings.has(nestedDrawingName)) {
-                    processedDrawings.add(nestedDrawingName);                                                           
+                    processedDrawings.add(nestedDrawingName);
+
+                    // Compose the nested insertDwg's transform with the current parent transform
+                    // This ensures that nested insertDwgs inherit the parent's offset and scale
+                    const composedItem = {...item};
+                    const composedTransform = {...item.transform};
+                    // Apply parent transform: position = local_position * parent_scale + parent_position
+                    // Apply scale: scale = local_scale * parent_scale
+                    composedTransform.x = composedTransform.x * dwgTransform.scale + dwgTransform.x;
+                    composedTransform.y = composedTransform.y * dwgTransform.scale + dwgTransform.y;
+                    composedTransform.scale = composedTransform.scale * dwgTransform.scale;
+                    composedItem.transform = composedTransform;
+
+                    console.log(`[MERGE_DWG_NESTED] Composed transform for nested drawing "${nestedDrawingName}": parent=${JSON.stringify(dwgTransform)}, local=${JSON.stringify(item.transform)}, composed=${JSON.stringify(composedTransform)}`);
+
                     // Process the nested drawing with the intersection clip region
-                    this.mergeDrawingItems(item, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion);
+                    this.mergeDrawingItems(composedItem, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion);
                 } else if (nestedDrawingName) {
                     console.log(`[MERGE_DWG] Drawing "${nestedDrawingName}" already processed, skipping content processing`);
                 }
