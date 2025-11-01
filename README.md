@@ -56,6 +56,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 3.66.3 Fixed scaling of nested drawings.  
 Version 3.66.2 Fixed display of nested drawings.      
 Version 3.66.1 Added support for pfodWeb to connect Serial and BLE connection.    
 Version 3.65.1 revised pfodWeb examples and serving of pfodWeb files. Added support for Serial and BLE connection  

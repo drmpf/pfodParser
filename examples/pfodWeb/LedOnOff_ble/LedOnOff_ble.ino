@@ -33,8 +33,15 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 
+// ble receive/read
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include "freertos/semphr.h"
+
+SemaphoreHandle_t receive_read_lock = NULL;
+
 // download the libraries from http://www.forward.com.au/pfod/pfodParserLibraries/index.html
-// pfodParser.zip V3.65+ contains pfodParser, pfodSecurity, pfodDelay, pfodBLEBufferedSerial, pfodSMS and pfodRadio
+// pfodParser.zip V3.66+ contains pfodParser, pfodSecurity, pfodDelay, pfodBLEBufferedSerial, pfodSMS and pfodRadio
 #include <pfodParser.h>
 
 #include <pfodBLEBufferedSerial.h>  // used to prevent flooding bluetooth sends
@@ -203,7 +210,15 @@ pfodBLESerial::pfodBLESerial() {}
 bool pfodBLESerial::isConnected() {
   return (connected);
 }
-void pfodBLESerial::begin() {}
+void pfodBLESerial::begin() {
+  receive_read_lock = xSemaphoreCreateRecursiveMutex();
+  if (!receive_read_lock) {
+    while (1) {
+      Serial.println("Failed to create receive_read_lock");
+      delay(3000);
+    }
+  }
+}
 
 void pfodBLESerial::close() {}
 
@@ -228,20 +243,28 @@ size_t pfodBLESerial::write(uint8_t b) {
 }
 
 int pfodBLESerial::read() {
-  if (rxTail == rxHead) {
-    return -1;
+  uint8_t b = 0;
+  if (xSemaphoreTakeRecursive(receive_read_lock, portMAX_DELAY)) {
+    if (rxTail == rxHead) {
+      return -1;
+    }
+    // note increment rxHead befor writing
+    // so need to increment rxTail befor reading
+    rxTail = (rxTail + 1) % sizeof(rxBuffer);
+    b = rxBuffer[rxTail];
+    xSemaphoreGiveRecursive(receive_read_lock);
   }
-  // note increment rxHead befor writing
-  // so need to increment rxTail befor reading
-  rxTail = (rxTail + 1) % sizeof(rxBuffer);
-  uint8_t b = rxBuffer[rxTail];
   return b;
 }
 
 // called as part of parser.parse() so will poll() each loop()
 int pfodBLESerial::available() {
+  int rtn = 0;
   flush();  // send any pending data now. This happens at the top of each loop()
-  int rtn = ((rxHead + sizeof(rxBuffer)) - rxTail) % sizeof(rxBuffer);
+  if (xSemaphoreTakeRecursive(receive_read_lock, portMAX_DELAY)) {
+    rtn = ((rxHead + sizeof(rxBuffer)) - rxTail) % sizeof(rxBuffer);
+    xSemaphoreGiveRecursive(receive_read_lock);
+  }
   return rtn;
 }
 
@@ -255,20 +278,27 @@ void pfodBLESerial::flush() {
 }
 
 int pfodBLESerial::peek() {
-  if (rxTail == rxHead) {
-    return -1;
+  uint8_t byte = 0;
+  if (xSemaphoreTakeRecursive(receive_read_lock, portMAX_DELAY)) {
+    if (rxTail == rxHead) {
+      return -1;
+    }
+    size_t nextIdx = (rxTail + 1) % sizeof(rxBuffer);
+    byte = rxBuffer[nextIdx];
+    xSemaphoreGiveRecursive(receive_read_lock);
   }
-  size_t nextIdx = (rxTail + 1) % sizeof(rxBuffer);
-  uint8_t byte = rxBuffer[nextIdx];
   return byte;
 }
 
 void pfodBLESerial::addReceiveBytes(const uint8_t* bytes, size_t len) {
   // note increment rxHead befor writing
   // so need to increment rxTail befor reading
-  for (size_t i = 0; i < len; i++) {
-    rxHead = (rxHead + 1) % sizeof(rxBuffer);
-    rxBuffer[rxHead] = bytes[i];
+  if (xSemaphoreTakeRecursive(receive_read_lock, portMAX_DELAY)) {
+    for (size_t i = 0; i < len; i++) {
+      rxHead = (rxHead + 1) % sizeof(rxBuffer);
+      rxBuffer[rxHead] = bytes[i];
+    }
+    xSemaphoreGiveRecursive(receive_read_lock);
   }
 }
 

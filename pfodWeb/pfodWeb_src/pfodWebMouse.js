@@ -9,6 +9,9 @@
 
 // Make pfodWebMouse available globally for browser use
 window.pfodWebMouse = {
+  // Flag to track if touchActionInput dialog is currently open
+  touchActionInputOpen: false,
+
   // Helper method to calculate scale factors based on actual rendered canvas size
   // This handles layout changes (like raw message view) that affect canvas display
   getCanvasScale: function() {
@@ -955,8 +958,17 @@ window.pfodWebMouse = {
       backgroundColor: touchActionInput.backgroundColor
     };
     console.log(`[TOUCH_ACTION_INPUT] Format options:`, formatOptions);
+
+    // Set flag to indicate touchActionInput dialog is open
+    window.pfodWebMouse.touchActionInputOpen = true;
+    console.log(`[TOUCH_ACTION_INPUT] Set touchActionInputOpen flag to true`);
+
     window.pfodWebMouse.showTextInputDialog.call(this, touchActionInput.prompt, initialText, formatOptions, (result, text) => {
       console.log(`[TOUCH_ACTION_INPUT] Dialog result: ${result}, text: "${text}"`);
+
+      // Clear the dialog flag now that dialog has closed and we're processing the result
+      window.pfodWebMouse.touchActionInputOpen = false;
+      console.log(`[TOUCH_ACTION_INPUT] Cleared touchActionInputOpen flag`);
 
       if (result === 'ok') {
         // Build command with the edited text included
@@ -996,6 +1008,14 @@ window.pfodWebMouse = {
         window.pfodWebMouse.executeTouchAction.call(this, drawingName, cmd, col, row, touchType);
       } else {
         console.log(`[TOUCH_ACTION_INPUT] User cancelled text input, no request sent`);
+        // Resume refresh after dialog closes if mouse is not down
+        // The dialog closure does not trigger a mouse event, so we need to manually resume
+        if (!this.touchState.isDown) {
+          console.log(`[TOUCH_ACTION_INPUT] Resuming refresh after cancel (mouse not down)`);
+          this.scheduleNextUpdate();
+        } else {
+          console.log(`[TOUCH_ACTION_INPUT] Mouse still down after cancel - refresh will resume on mouse up`);
+        }
       }
     });
   },
@@ -1165,6 +1185,8 @@ window.pfodWebMouse = {
       document.body.removeChild(this.textInputDialog);
       this.textInputDialog = null;
     }
+    // DO NOT clear touchActionInputOpen flag here - it will be cleared in the callback handler
+    // This allows flag to remain true while switching between dialogs
   },
 
 

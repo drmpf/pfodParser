@@ -660,11 +660,14 @@ class DrawingViewer {
     // Get the current main drawing data from redraw system (where data is actually stored after processing)
     const currentDrawingData = this.redraw.redrawDrawingManager.drawingsData[mainDrawingName]?.data;
 
+    // Check if a touchActionInput dialog is currently open
+    const hasOpenDialog = window.pfodWebMouse.touchActionInputOpen;
+
     // Only schedule an update if refresh is greater than 0, mouse is not down, queue is empty, and no request in flight
     // This ensures that a refresh value of 0 properly disables automatic updates
     // and prevents updates during mouse interactions or ongoing queue processing
     if (this.isUpdating && currentDrawingData && currentDrawingData.refresh > 0 && !this.touchState.isDown &&
-        this.requestQueue.length === 0 && !this.sentRequest) {
+        this.requestQueue.length === 0 && !this.sentRequest && !hasOpenDialog) {
       console.log(`[REFRESH] Scheduling next update in ${currentDrawingData.refresh}ms for drawing "${this.redraw.getCurrentDrawingName()}"`);
       this.updateTimer = setTimeout(() => this.fetchRefresh(), currentDrawingData.refresh);
       // Also schedule updates for inserted drawings
@@ -683,6 +686,8 @@ class DrawingViewer {
       console.log(`[REFRESH] Skipping update scheduling - queue not empty (${this.requestQueue.length} requests)`);
     } else if (this.sentRequest) {
       console.log(`[REFRESH] Skipping update scheduling - request in flight for "${this.sentRequest.drawingName}"`);
+    } else if (hasOpenDialog) {
+      console.log('[REFRESH] Skipping update scheduling - touchActionInput dialog is open');
     }
 
   }
@@ -691,6 +696,13 @@ class DrawingViewer {
   async fetchRefresh() {
     console.log(`[REFRESH] Refresh timer fired - starting update cycle for drawing "${this.redraw.getCurrentDrawingName()}" at ${new Date().toISOString()}`);
 
+    // Check if a touchActionInput dialog is currently open
+    if (window.pfodWebMouse.touchActionInputOpen) {
+      console.log(`[REFRESH] Blocking refresh cycle - touchActionInput dialog is open`);
+      this.scheduleNextUpdate(); // Reschedule for later
+      return;
+    }
+
     // Block update requests if user activity is present
     if (this.touchState.isDown) {
       console.log(`[REFRESH] Blocking update cycle - mouse is down`);
@@ -698,16 +710,21 @@ class DrawingViewer {
       return;
     }
 
-    // Check if queue has user requests (non-refresh requestType)
-    const hasUserRequests = this.requestQueue.some(req => req.requestType !== 'refresh');
+    // Check if queue has user requests (non-refresh/non-refresh-related requestType)
+    // Protect refresh-related requests (refresh, refresh-insertDwg, insertDwg) from being blocked
+    const hasUserRequests = this.requestQueue.some(req =>
+      req.requestType !== 'refresh' && req.requestType !== 'refresh-insertDwg' && req.requestType !== 'insertDwg'
+    );
     if (hasUserRequests) {
       console.log(`[REFRESH] Blocking refresh cycle - user requests in queue`);
       this.scheduleNextUpdate(); // Reschedule for later
       return;
     }
 
-    // Check if user request is in flight (non-refresh requestType)
-    if (this.sentRequest && this.sentRequest.requestType !== 'refresh') {
+    // Check if user request is in flight (non-refresh/non-refresh-related requestType)
+    if (this.sentRequest && (this.sentRequest.requestType !== 'refresh' &&
+        this.sentRequest.requestType !== 'refresh-insertDwg' &&
+        this.sentRequest.requestType !== 'insertDwg')) {
       console.log(`[REFRESH] Blocking refresh cycle - user request in flight (${this.sentRequest.requestType})`);
       this.scheduleNextUpdate(); // Reschedule for later
       return;
@@ -741,11 +758,24 @@ class DrawingViewer {
 
       // Update collection removed - using unified shadow processing system
 
-      // First, queue the current drawing update
-      console.log(`[UPDATE] Queueing update for current drawing "${currentDrawingName}"`);
-      await this.queueDrawingUpdate(currentDrawingName);
+      // Check if designer mode is active
+      const urlParams = new URLSearchParams(window.location.search);
+      const isDesignerMode = urlParams.has('designer');
 
-      // Inserted drawings will be queued automatically as they're discovered during response processing
+      if (isDesignerMode) {
+        // In designer mode, only queue the main drawing
+        console.log(`[UPDATE] Designer mode detected - queueing only main drawing "${currentDrawingName}"`);
+        await this.queueDrawingUpdate(currentDrawingName);
+      } else {
+        // In normal mode, queue main drawing and all inserted drawings with their versions
+        const allDrawings = this.redraw.redrawDrawingManager.drawings;
+        console.log(`[UPDATE] Normal mode - queueing main drawing and ${allDrawings.length - 1} inserted drawings`);
+
+        for (const drawingName of allDrawings) {
+          console.log(`[UPDATE] Queueing update for drawing "${drawingName}"`);
+          await this.queueDrawingUpdate(drawingName);
+        }
+      }
 
       // Re-enable updates
       this.isUpdating = true;
@@ -770,19 +800,20 @@ class DrawingViewer {
       return;
     }
 
-    // If this is a non-refresh request, clean up any existing refresh requests
-    if (requestType !== 'refresh') {
+    // If this is a non-refresh request (touch, etc), clean up any existing refresh requests
+    // BUT: protect refresh-insertDwg items which are part of the refresh block
+    if (requestType !== 'refresh' && requestType !== 'refresh-insertDwg' && requestType !== 'insertDwg') {
       // Remove all refresh requests from queue
-      const refreshRequestsInQueue = this.requestQueue.filter(req => req.requestType === 'refresh');
+      const refreshRequestsInQueue = this.requestQueue.filter(req => req.requestType === 'refresh' || req.requestType === 'refresh-insertDwg');
       if (refreshRequestsInQueue.length > 0) {
-        this.requestQueue = this.requestQueue.filter(req => req.requestType !== 'refresh');
-        console.log(`[QUEUE] Removed ${refreshRequestsInQueue.length} refresh requests from queue due to user activity`);
+        this.requestQueue = this.requestQueue.filter(req => req.requestType !== 'refresh' && req.requestType !== 'refresh-insertDwg');
+        console.log(`[QUEUE] Removed ${refreshRequestsInQueue.length} refresh/refresh-insertDwg requests from queue due to user activity (${requestType})`);
       }
 
-      // Mark sent refresh request for discard
-      if (this.sentRequest && this.sentRequest.requestType === 'refresh') {
+      // Mark sent refresh request for discard (including refresh-insertDwg being processed)
+      if (this.sentRequest && (this.sentRequest.requestType === 'refresh' || this.sentRequest.requestType === 'refresh-insertDwg')) {
         this.sentRequest.discardResponse = true;
-        console.log(`[QUEUE] Marked sent refresh request for "${this.sentRequest.drawingName}" to be discarded`);
+        console.log(`[QUEUE] Marked sent ${this.sentRequest.requestType} request for "${this.sentRequest.drawingName}" to be discarded`);
       }
     }
 
@@ -817,7 +848,6 @@ class DrawingViewer {
     this.requestQueue.push({
       drawingName: drawingName,
       cmd: cmd,
-      retryCount: 0,
       touchZoneInfo: touchZoneInfo,
       requestType: requestType
     });
@@ -1033,10 +1063,6 @@ class DrawingViewer {
     console.warn(`[QUEUE] sentRequest is:`, JSON.stringify(this.sentRequest, null, 2));
 
     try {
-      if (request.retryCount > 0) {
-       console.warn(`[QUEUE] Processing request for "${request.drawingName}" (retry: ${request.retryCount}/${this.connectionManager.getMaxRetries()})`);
-      }
-
       // Initialize shadow processing for session-starting requests only
       // insertDwg and refresh-insertDwg requests are part of existing sessions
       if (['mainMenu', 'main', 'touch', 'refresh'].includes(request.requestType)) {
@@ -1144,7 +1170,14 @@ class DrawingViewer {
       console.log('[QUEUE] parsedText ', JSON.stringify(data,null,2));
       **/
       const data = JSON.parse(responseText);
-      // Handle different response types for 
+
+      // Cache response if it has a version (disabled in designer mode)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('designer') && typeof cacheResponse === 'function') {
+        cacheResponse(data, request, this.connectionManager);
+      }
+
+      // Handle different response types for
       let cmd;
       if (data.cmd) {
         cmd = data.cmd;
@@ -1325,52 +1358,34 @@ class DrawingViewer {
         this.shadowProcessing.shadowDrawingManager.ensureItemCollections(request.drawingName);
       }
 
-      // Increment retry count
-      request.retryCount++;
+      // Retries are now handled internally by connectionManager
+      // If we get here, all retries have been exhausted
+      console.error(`[QUEUE] Error after all retries exhausted by connectionManager for "${request.drawingName}": ${error.message}`);
 
-      if (request.retryCount <= this.connectionManager.getMaxRetries()) {
-        //console.log(`[QUEUE] Retrying request for "${request.drawingName}" (attempt ${request.retryCount} of ${this.connectionManager.getMaxRetries()})`);
-        // Put the request back at the front of the queue for retry
-        this.requestQueue.unshift(request);
-        //console.log(`[SENTREQUEST] CLEARED: "${request.drawingName}" (${request.requestType}) at ${new Date().toISOString()}`);
-        this.sentRequest = null;
-        setTimeout(() => {
-           this.processRequestQueue();
-        }, 10);
-        return;
+      // Display error message for main drawing or initial connection (null drawing name)
+      const currentDrawingName = this.shadowProcessing.shadowDrawingManager.getCurrentDrawingName();
+      const isMainOrInitial = (request.drawingName === null || request.drawingName === currentDrawingName);
 
+      if (isMainOrInitial) {
+        // Show alert dialog with Close button that reloads page
+        console.log(`[ALERT] Triggering No Connection alert for "${request.drawingName}" (main or initial connection)`);
+        this.showNoConnectionAlert();
       } else {
-        console.error(`[QUEUE] Maximum retries (${this.connectionManager.getMaxRetries()}) reached for "${request.drawingName}". Removing from queue.`);
+        // For inserted drawings, just log the error but continue processing
+        console.warn(`[QUEUE] ERROR: Failed to load inserted drawing "${request.drawingName}" - continuing without it`);
+      }
 
-        // Display error message for main drawing or initial connection (null drawing name)
-        const currentDrawingName = this.shadowProcessing.shadowDrawingManager.getCurrentDrawingName();
-        const isMainOrInitial = (request.drawingName === null || request.drawingName === currentDrawingName);
+      // Clear the failed request
+      console.log(`[SENTREQUEST] CLEARED: "${request.drawingName}" (${request.requestType}) at ${new Date().toISOString()}`);
+      this.sentRequest = null;
 
-        if (isMainOrInitial) {
-          // Show alert dialog with Close button that reloads page
-          console.log(`[ALERT] Triggering No Connection alert for "${request.drawingName}" (main or initial connection)`);
-          this.showNoConnectionAlert();
-        } else {
-          // For inserted drawings, just log the error but continue processing
-          console.warn(`[QUEUE] ERROR: Failed to load inserted drawing "${request.drawingName}" after ${this.connectionManager.getMaxRetries()} attempts - continuing without it`);
-        }
-
-        // Clear the failed request (it's already been removed from sentRequest)
-        console.log(`[SENTREQUEST] CLEARED: "${request.drawingName}" (${request.requestType}) at ${new Date().toISOString()}`);
-        this.sentRequest = null;
- //       setTimeout(() => {
- //          this.processRequestQueue();
- //       }, 10);
-
-        // For inserted drawings, if we're at the end of the queue, proceed with redraw
-        if (this.requestQueue.length === 0 && !this.sentRequest) {
-          console.log(`[QUEUE] Queue empty after failed requests. Drawing with available data.`);
-            this.setProcessingQueue(false);
-          this.redrawCanvas();
-          // Resume update scheduling after failed request cleanup
-          this.scheduleNextUpdate();
-
-        }
+      // For inserted drawings, if we're at the end of the queue, proceed with redraw
+      if (this.requestQueue.length === 0 && !this.sentRequest) {
+        console.log(`[QUEUE] Queue empty after failed request. Drawing with available data.`);
+        this.setProcessingQueue(false);
+        this.redrawCanvas();
+        // Resume update scheduling after failed request cleanup
+        this.scheduleNextUpdate();
       }
     } finally {
       // If there are more requests in the queue, continue processing
@@ -2383,6 +2398,11 @@ async function initializeApp() {
       validateConnectButton();
     }
     document.getElementById('connection-prompt').style.display = 'flex';
+    // Focus on IP address field for immediate input
+    // Use setTimeout to ensure focus happens after display is set
+    setTimeout(() => {
+      document.getElementById('prompt-ip').focus();
+    }, 0);
   }
 }
 

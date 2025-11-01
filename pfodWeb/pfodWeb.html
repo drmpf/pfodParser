@@ -1,7 +1,7 @@
 <!--
 ================================================================================
   STANDALONE BUNDLE: pfodWeb.html
-  Generated: 2025-10-23T21:26:53.685Z
+  Generated: 2025-10-31T23:50:03.239Z
 
   This file contains all JavaScript inlined for standalone deployment.
   No external files or webserver required - just open in browser!
@@ -236,6 +236,37 @@
         .hidden {
             display: none;
         }
+        .button-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #connect-button {
+            margin-bottom: 0;
+        }
+        #clear-cache-button {
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 10.6px;
+            border: 2px solid black;
+            cursor: pointer;
+            margin: 10px 5px;
+            margin-top: 20px;
+        }
+        #clear-cache-button:hover {
+            background-color: #f5f5f5;
+            border-color: #999;
+        }
+        #clear-cache-button:disabled {
+            background-color: #f0f0f0;
+            color: #999;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
     </style>
 <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAQD0AAAEAGADQLwAAFgAAACgAAABAAAAAegAAAAEAGAAAAAAAAAAAAGAAAABgAAAAAAAAAAAAAAD//////////////////////////////////////////////////////////////////////////////////////////////////////////v7+/v7+/Pz9+vr8+fn8+fn8+fn8+vr9+vr+/Pz+/v7//v7////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8/v707u7s4eHl0dHgyMjdxsbfxsbgysrlz8/s39/07e39+/v////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7+vrp2NjTqqq9f3+sWFiiOjqaJyeXGhqTDw+SDw+SDw+TDw+XGBiaJyegOjqrWFi8fHzRqqro19f5+vr////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////q29vKnJysWVmZIyORBgaPAACRAACSAACUAACVAACWAACWAACWAACWAACVAACUAACSAACRAACPAACRAACXIiKrU1PJmJjp19f////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+///iyMi5eHidLS2RAACRAACUAACWAACYAACYAACYAACYAACXAACXAACXAACXAACXAACXAACYAACYAACYAACYAACWAACUAACRAACPAACaJye4c3PfxcX9///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////m0tK4dnaYIiKPAACSAACWAACYAACYAACWAACUAACTAACQAACPAACQAACQAACRAACRAACSAACQAACPAACQAACTAACUAACWAACYAACYAACXAACTAACPAACXHBy2b2/jzc3////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z6+vEj4+cLCyOAACTAACXAACYAACWAACTAACPAACSBgaaJSWmSkq1bW3CjIzMoaHUr6/UsbHUsbHTr6/MoqLCjIy3cXGnTU2ZJyeTBgaPAACTAACWAACYAACXAACTAACPAACbJyfBiYnw6Oj////////////////////////////////////////////////////////////////////////////////////////////////////////////ex8eqU1OSBgaTAACXAACYAACWAACSAACRAACeLy+2b2/Sra3q29v69/f////////////////////////////////////////5+vrr3t7VsbG5c3OdMzORAACSAACVAACYAACXAACSAACRAACpTk7cv7/////////////////////////////////////////////////////////////////////////////////////////////////+/v7OoaGcLS2PAACVAACXAACWAACSAACSCQmkRUXImJjr39/////////////////////////////////////////////////////////////////////////u4eHLnJynS0uTBgaSAACWAACYAACVAACPAACaJyfKmJj7/Pz////////////////////////////////////////////////////////////////////////////////////49/fDjIyVFBSSAACXAACXAACTAACRAACiPDzLnJzx6ur////////////////////////////////////////////////////////////////////////////////////////07u7OpKSkQ0OQAACTAACXAACXAACTAACTEhLAhIT39PT////////////////////////////////////////////////////////////////////////////59va/goKSDAySAACXAACWAACRAACXGhq9fX3s39/////////////////////////////////////////////////////////////////////////////////////////////////////////v5OTAhYWYHh6RAACWAACXAACTAACTBga8e3v28/P////////////////////////////////////////////////////////////////////8/f3Bh4eSDAyTAACYAACVAACQAACiPDzWs7P////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////XubmlRUWPAACVAACXAACTAACTCQm9fn76+fn////////////////////////////////////////////////////////////////LnZ2UEhKSAACXAACVAACQAACrVFTl1NT////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////p2NiwXl6RAACUAACXAACTAACTDAzHlJT////////////////////////////////////////////////////////////cv7+bKCiTAACXAACVAACSAACxY2Pt4uL////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////x6em0aWmRAACVAACXAACTAACXHh7Wt7f////////////////////////////////////////////////////w5eWnS0uPAACXAACWAACPAACuXFzu4+P////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////x6uqxZGSQAACWAACXAACRAACkQkLs3t7////////////////////////////////////////////////AhISSAACVAACXAACRAAClQkLo2dn////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////s3t6pTU2QAACXAACWAACPAAC6eXn+/v7////////////////////////////////////////fyMiYIiKSAACYAACTAACZIiLbvLz////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////exsacKCiSAACYAACTAACYHBzbvb3////////////////////////////////////6+fmyZWWQAACXAACWAACUBgbGkJD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////HlZWSCQmVAACXAACPAACuWlr49fX////////////////////////////////ZurqVFBSUAACXAACRAACsUFHl2uK6mqCqd3WocHLRr6b////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z7u6rU1OQAACXAACVAACTEhLVsrL////////////////////////////9//+0ZmaPAACXAACVAACUDAzZtrT1/P+EPEtuAABsAAC2e2z////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yt7eWFhaUAACYAACQAACuXl77+vr////////////////////////k0dGYIiKTAACYAACRAACsVlb///74//+KQ1J2AAB1AAC7h3j////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////6+vqwYWGQAACYAACUAACXGhrgycn////////////////////////GkJCQAACXAACWAACTCQnSra3////1/P+KQ1J3AAB1AAC8iHn////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////YtbWTEhKVAACXAACPAADAhob////////////////////6+vqpU1ORAACYAACSAACjPT3y6+v////z+P+KQ1J3AAB1AAC9i3v////////////+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////07++lRUWTAACYAACSAAClRUX38/P////////////////p2NiZIyOUAACYAACQAAC7fX3////////y9/+KQ1J3AAB4AADDlIX////XyM6qfYGcYGCla2jEn5nv5+L////////////////////////////////UwsXJra3Ms7PIrKzn19L////////////////////////9///SvcHKrq3MsrLLrKzv493////////////////////////////////////Bh4ePAACXAACUAACXGhrjz8/////////////////UsrKSBgaWAACWAACTBgbUs7P////////y9/+KQ1J3AAB7AACxemy5lZp7FBxrAABtAABuAAB1AACXSkLhysH////////////////////////s7vaHPktxAAB2AABwAACwc2b////////////////////////m5OyALzpzAAB1AABzAADFmIn////////////////////////////////////bvb2TDAyWAACXAACQAADQqKj////////////////Di4uPAACXAACUAACaJyfr3d3////////y9/+KQ1J4AAB8AACBEg95AAZ/GBSZU1CSSkt8DxR0AAB0AACVRTrs3dT////////////////////c1997HCd5AAB9AAB0AACYSDz89e/////////////////////Pw893Dxh6AAB8AABzAACucWT////////////////////////////////////u4+OcLCyUAACYAACPAAC+goL///////////////+0a2uPAACYAACSAACjQkL59PT////////y9/+KQ1J4AAB8AAB3AACbUEbj08r////4/P3BqLJ+Hih1AAB1AAC4gXb////////////////////DsLx1Bgx9AAB/AAB5AACCHhTn1Mn///////////////////+ykqF1AAB+AAB/AAB3AACWQzf58uz////////////////////////////////5+vqoTEyTAACYAACQAACyY2P//////////v7+//+sVlaRAACYAACSAACuXFz+///////////y9/+KQ1J4AAB5AACGIxrgysH///////////////+lfYl1AAB1AACQNiz06t////////////////+ogI90AAB/AACAAAB8AAB4AADLo5f////////////////5//+WX212AAB/AAB/AAB5AACCHBTn1Mj///////////////////////////////////+xZWWRAACYAACSAACoTk76+fn//v7+/v759/elSEiRAACYAACQAAC1a2v////////////y9/+KQ1J3AAB3AACiXlD///n////////////////Kvcl5DBZ3AAB9EgngyL3////////////2+/+RUWF2AAB+AAB+AAB9AAB0AACub2H////////////////k5O2DMDp4AAB9AAB9AAB7AAB5AADOqZr///////////////////////////////////+6eHiPAACYAACSAACjPj717+/+/v7+/v738PCjPz+SAACYAACPAAC4d3f////////////y9/+KQ1J3AAB2AAC2gHH////////////////////b1+F7Hih5AAB5AADTr6L////////////g3+mAKDV4AAB/AACJKCd9BgZ2AACSPDL37uX////////////Iucd3CRR4AACJIyOLLTV7AAB1AACzeWn///////////////////////////////////++g4OQAACYAACTAACfNzfy6+v+/v7+/v717++jPT2SAACYAACPAAC5eHj////////////y9/+KQ1J3AAB2AAC+kIH////////////////////g3uh9Iy95AAB3AADMpJX////////////HusZ3DBJ4AACIIxi1i4qEKjV2AAB/FAzhyLz///////////+rhpZ0AAB4AACtcGStg4p5AAB1AACYSz/89u////////////////////////////////+/hoaPAACYAACTAACfMzPz6ur+/v7+/v748fGiQUGRAACYAACPAAC4c3P////////////y9/+KQ1J3AAB2AAC9jX3////////////////////c2uR7Hih5AAB2AADPqpn///////////+ui5l1AAB2AACVQjXm3NqTVWN1AAB2AADDloj////////1/P+QUmF1AAB5AADQrZ7Owcx4CRR2AACFIhjq2c3///////////////////////////////++f3+OAACYAACSAACgOTn07Oz+/v7//v76+fmoTk6SAACYAACRAACzZ2f////////////y9/+KQ1J3AAB2AACuc2X////////////////////Ows56Dxh4AAB6CQDZvLH////////4//+TW2h2AAB1AACoZlb///+qhZR0AAB0AAClYVL///v////h3eV/JzJ0AACBGA/s2c3n6vN9Iy93AAB6BgDTsKT///////////////////////////////+3cHCQAACYAACRAACkQ0P48/P+/v7///////+vX1+RAACYAACTAACpUVH8/f3////////y9/+KQ1J4AAB4AACRPTLz5+D///////////////+shZZ2AAB1AACIJxzu3tH////////m5fCCMjx3AAB2AADAjoD////FtsV2Bg90AACLMCf0597////Dsr52Bg91AACSPDD++e74//+LRVN2AAB0AAC4gHL///////////////////////////////+tWlqSAACYAACSAACrWFj9/f3//v7///////+6enqOAACYAACTAACeNTX07e3////////y9/+KQ1J4AAB6AAB5AACzfG/49fD////////NvcaCLTV2AAB0AACqaFz//fn////////Owc15EhZ4AAB5BgDWtaf////h4el/KDJ2AAB8DAbfwbT///+mf45zAAB0AACral7///////+gcX90AAB1AACbUEL8+fP////////////////////////08vKiPDySAACYAACPAAC2cHD////////////////KmZmQAACXAACVAACWGBjlz8/////////y9v6JQVB2AAB8AACEIiJ3BgmUQz6wg4OlcnaCJSx0AABzAACHJyDexLv///////////+zlKJ1AAB3AACFIhbs2c/////3/P+TVWV1AAB1AADDlIT5//+PUWB2AAB3AADHm4////////+3nax0AAB3AACIJxzt3dT////////////////////////n19eXHh6VAACXAACPAADGj4/////////////////cwsKTDw+VAACXAACRAADKoKD////////t7fiCNUVsAAB4AADAk4mmdn5wAABsAABvAABwAAByAACHJyDMqZ/////////////7//+aZnR1AAB2AACXRTn69e3///////+tjJp0AAB0AACoYVXXyc2BKjV1AACAFAniy73////////RxtN5FBp4AAB5CQDVtqj////////////////////////RqamSBgaXAACWAACRCQnYuLj////////////////x6emdMzOSAACYAACQAACwZGT////////09vu4lJqufn2zg4Hu4Nb5//+/o6yWU1mHNTaPPjyqdG3cycH////////////////r7fSEOUV3AAB0AACtcWP////////////LwMp4DBZ3AACLLSOia219DBR2AACQOi317OT////////p6fCCNT93AAB1AAC5hXj///////////////////////+0bW2PAACYAACTAACbLCzt39////////////////////+za2uPAACYAACUAACaJyfn1NT////////////////////////////////5+vzx7u/28vH////////////////////////Uy9V6FBx5AAB4AADHm4/////////////p6fCEN0F3AAB/AACAFBR7AAB1AACpal3////////////5/v+UXGp2AAB2AACfVUr//fb////////////////r3NycLS2TAACYAACQAACvYWH9///////////////////////SrKySBgaWAACXAACPAADDiYn///////////////////////////////////////////////////////////////////+5oKt2AAZ5AAB+Egzfxrn////////////7//+aZ3V1AAB+AAB/AAB9AAB2AADHmo7///////////////+siJh1AAB2AACKLCDv4Nj////////////////Hk5OQAACWAACWAACSAADOoqL////////////////////////x6OiiPDyTAACYAACTAACfNTXr3d3////////////////////////////////////////////////////////////9//+eb352AAB2AACLMiXy5d3///////////////+4m6l2AAB+AAB/AAB6AAB/FAzgybz////////////////EtMB2Bgx5AAB6CQbauqz////////////v5OSjPj6TAACYAACSAACeMjLt4OD////////////////////////////Djo6QAACWAACWAACRAADAg4P////////////////////////////////////////////////////////////q6vGCMj5vAABuAACcTT79+/L////////////////SyNN0DBZ0AAB3AABvAACLLyP06eD////////////////Z1N94FiBxAABtAAC4f3H////////////FkJCRAACWAACXAACPAAC9fn7////////////////////////////////q2tqeMjKTAACYAACSAACbJyfgyMj////////////////////////////////////////////////////////f1t+VVFuTSEeRSkq/kYf////////////////////s6/KdZm6US0yWU1OSSEq1f3b//Pb////////////////v7vWfaXGTSEqQRUK1fXP/+/j////kz8+dLy+TAACYAACSAACcLCzm0tL////////////////////////////////////EjY2RAACVAACXAACPAACuXV317u7////////////////////////////////////////////////////9///39PT8/fz5+Pn+/Pv////////////////////////5+fn8/Pv9///6+vv7+/j////////////////////////5+Pn7/Pv5+vr6+fj////49veyZmaQAACXAACWAACQAAC+goL////////////////////////////////////////w5+emRkaRAACXAACVAACTBgbDiYn+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Hk5OTDAyUAACXAACSAACiPDzt3t7////////////////////////////////////////////VsLCXGBiTAACXAACSAACYGhrRp6f////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VsLCYHh6UAACXAACTAACUEhLPp6f////////////////////////////////////////////////8//++fn6SAACVAACXAACSAACaKCjWs7P////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////au7ufMjKSAACXAACVAACRAAC4cXH6+fn////////////////////////////////////////////////////w5uarU1OQAACWAACXAACRAACcLCzVra3////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////YtLSfNTWRAACXAACWAACPAACoSkrs4OD////////////////////////////////////////////////////////////k0NCjPDyQAACWAACXAACSAACYIiLGlZX4+Pj////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7+vrLnZ2ZIyORAACXAACXAACRAACeNTXgyMj////////////////////////////////////////////////////////////////////cwMCfMjKQAACWAACXAACUAACTDw+1bW3q2Nj////////////////////////////////////////////////////////////////////////////////////////////////////////////////s39+5d3eUEhKTAACXAACXAACRAACeLCzZuLj////////////////////////////////////////////////////////////////////////////avb2gNzePAACWAACXAACUAACRAAChOTnMoaH18PD////////////////////////////////////////////////////////////////////////////////////////////////48/PPpaWjPT2QAACUAACXAACWAACQAACdMDDYt7f////////////////////////////////////////////////////////////////////////////////////gyMimSkqQAACUAACXAACWAACSAACTCQmpUFDSrKz18PD////////////////////////////////////////////////////////////////////////////////48vLUsrKsVVWSDAySAACWAACXAACUAACPAACkQUHbwMD////////////////////////////////////////////////////////////////////////////////////////////r3Ny0aWmSDAyTAACWAACYAACVAACRAACSDAynS0vImJjo2dn9/f3////////////////////////////////////////////////////////////p29vLnJypUFCTDw+QAACVAACYAACXAACTAACTBgaxZGTo1tb////////////////////////////////////////////////////////////////////////////////////////////////////49PTKm5udMjKPAACTAACXAACYAACVAACSAACQAACaJyetXV3FkJDbvLzq3Nz17u77+/v////+///+///////7+/v08fHr3t7cvr7Hk5OuXV2bKCiRAACRAACVAACYAACXAACUAACPAACcLCzHlJT38fH////////////////////////////////////////////////////////////////////////////////////////////////////////////////m09O4cnKWGBiPAACUAACXAACYAACXAACUAACRAACQAACSDAyYIyOfOTmnTU2tWVmuW1uuW1utWVmnTU2hOjqZJyeTDAyPAACRAACTAACWAACYAACXAACUAACPAACVFha0a2vjzs7////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9/v7avr6yZGSWGBiPAACSAACWAACYAACYAACXAACWAACVAACTAACTAACSAACRAACRAACSAACTAACTAACUAACWAACXAACYAACYAACWAACSAACQAACVFBSuXl7Yubn8+vr////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8+/vfxMS5dnacMDCRBgaPAACSAACVAACXAACYAACYAACYAACYAACYAACYAACYAACYAACYAACYAACXAACVAACSAACPAACRAACdLCy4cXHbvr75+fn////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////t4uLRq6u2bm6iOjqVGBiRAACPAACOAACQAACRAACSAACSAACSAACQAACPAACOAACRAACVFhagOTmzbGzQpaXr4OD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z7+/kz8/TrKzEj4+5eHiyZGSsWVmpU1OnU1OqVlawYWG3dnbDjY3Rq6vkzMz07Oz////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+/v79/v77/v7+/v7//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////v7//v7///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==">
 </head>
@@ -267,7 +298,9 @@ window.PFODWEB_BUNDLED = true;
  * Inlined from: version.js
  * ======================================== */
 // Shared constants to avoid circular dependencies
-  var JS_VERSION = "V2.0.2 -- 22nd October 2025";
+  var JS_VERSION = "V2.0.4 -- 24nd October 2025";
+// V2.0.4 fixed scaling for nested dwgs
+// V2.0.3 fixed transform for nested dwgs
 // V2.0.2 fixed transform pushZero for nested dwgs
 // V2.0.1 edit to .ino files
 // V2.0.0 removed nodejs server, bundled all files in single htmls
@@ -411,17 +444,22 @@ function pfodAlert(message, onClose = null) {
 /**
  * Shared dedup mechanism - used by all connection protocols
  * Rotating character prepended to commands to detect duplicates
- * Only increments on successful sends, not on retries
+ * Each send() call atomically gets a unique dedup character
+ * Retries reuse the same cached dedup for that send() call
  */
 let dedupCounter = 0;
 const dedupChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+/**
+ * Get next dedup character - increments atomically
+ * Each call guarantees a unique character for that send() call
+ * Retries must cache and reuse the returned character
+ * @returns {string} - The next dedup character
+ */
 function getCurrentDedupChar() {
-  return dedupChars[dedupCounter];
-}
-
-function advanceDedupChar() {
+  const char = dedupChars[dedupCounter];
   dedupCounter = (dedupCounter + 1) % dedupChars.length;
+  return char;
 }
 
 /**
@@ -492,7 +530,7 @@ class ConnectionManager {
     // HTTP = 0 (fail fast for network)
     // Serial = 1 (most reliable, allow one retry)
     const retryConfig = {
-      'ble': 0,
+      'ble': 1,
       'http': 2,
       'serial': 2
     };
@@ -630,14 +668,55 @@ class HTTPConnection {
   }
 
   /**
-   * Send a command via HTTP and return the response text
+   * Send a command via HTTP with internal retry logic
+   * Retries up to maxRetries times using the same dedup character
+   * Only advances dedup on final success
    * @param {string} cmd - The pfod command (e.g., "{.}" or "{dwgName}")
    * @returns {Promise<string>} - Response text
    */
   async send(cmd) {
-    // Prepend current dedup character to the command (don't advance yet - only advance on success)
+    // Get dedup character atomically - getCurrentDedupChar() increments for next call
     const cmdWithPrefix = getCurrentDedupChar() + cmd;
+    const maxRetries = this.connectionManager.getMaxRetries();
+    let lastError = null;
 
+    console.log(`[HTTP_CONNECTION] Allocated dedup='${cmdWithPrefix[0]}' for this send()`);
+
+    // Retry loop: attempt up to (maxRetries + 1) times
+    // All retries use the SAME cmdWithPrefix (dedup already captured)
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[HTTP_CONNECTION] Send attempt ${attempt + 1}/${maxRetries + 1}: ${cmdWithPrefix}`);
+
+        const responseText = await this.sendOnce(cmdWithPrefix, cmd);
+
+        // Success! Return response (dedup already allocated and advanced at start)
+        console.log(`[HTTP_CONNECTION] Success on attempt ${attempt + 1} with dedup='${cmdWithPrefix[0]}'`);
+        return responseText;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[HTTP_CONNECTION] Attempt ${attempt + 1}/${maxRetries + 1} failed: ${error.message}`);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries) {
+          console.error(`[HTTP_CONNECTION] All ${maxRetries + 1} attempts exhausted with dedup='${cmdWithPrefix[0]}'. Throwing error back to queue.`);
+          throw error;
+        }
+
+        // Otherwise, retry with same dedup character
+        console.log(`[HTTP_CONNECTION] Retrying with same dedup='${cmdWithPrefix[0]}'...`);
+      }
+    }
+
+    // Should not reach here, but just in case
+    throw lastError || new Error('HTTP send failed');
+  }
+
+  /**
+   * Single HTTP send attempt (no retries)
+   * @private
+   */
+  async sendOnce(cmdWithPrefix, originalCmd) {
     // Build endpoint from command with prefix
     const endpoint = this.baseURL + `/pfodWeb?cmd=${encodeURIComponent(cmdWithPrefix)}`;
     const options = this.buildFetchOptions();
@@ -660,7 +739,7 @@ class HTTPConnection {
 
       // Record the command being sent (with the dedup prefix)
       if (ConnectionManager.messageCollector) {
-        ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'http', cmd);
+        ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'http', originalCmd);
       }
 
       const response = await fetch(endpoint, {
@@ -689,7 +768,7 @@ class HTTPConnection {
         if (startBrace > 0) {
           const beforeText = responseText.substring(0, startBrace);
           if (beforeText.trim()) {
-            ConnectionManager.messageCollector.addMessage('received', beforeText, 'http', cmd);
+            ConnectionManager.messageCollector.addMessage('received', beforeText, 'http', originalCmd);
           }
         }
 
@@ -697,23 +776,20 @@ class HTTPConnection {
         const endBrace = startBrace >= 0 ? findMatchingClosingBrace(responseText, startBrace) : -1;
         if (startBrace !== -1 && endBrace !== -1) {
           const pfodMessage = responseText.substring(startBrace, endBrace + 1);
-          ConnectionManager.messageCollector.addMessage('received', pfodMessage, 'http', cmd);
+          ConnectionManager.messageCollector.addMessage('received', pfodMessage, 'http', originalCmd);
 
           // Find text after }
           const afterText = responseText.substring(endBrace + 1);
           if (afterText.trim()) {
-            ConnectionManager.messageCollector.addMessage('received', afterText, 'http', cmd);
+            ConnectionManager.messageCollector.addMessage('received', afterText, 'http', originalCmd);
           }
         } else if (startBrace === -1) {
           // No { found - record entire response as junk
           if (responseText.trim()) {
-            ConnectionManager.messageCollector.addMessage('received', responseText, 'http', cmd);
+            ConnectionManager.messageCollector.addMessage('received', responseText, 'http', originalCmd);
           }
         }
       }
-
-      // Advance dedup character only on successful response (not on retry/timeout)
-      advanceDedupChar();
 
       return responseText;
     } catch (error) {
@@ -1071,8 +1147,8 @@ class SerialConnection {
         this.timeoutId = null;
       }
 
-      // Advance dedup character only on successful response (not on retry/timeout)
-      advanceDedupChar();
+      // Don't advance dedup here - let send() handle it after successful response
+      // This allows retries to use the same dedup character
 
       this.responseResolve(jsonString);
       this.responseResolve = null;
@@ -1084,9 +1160,9 @@ class SerialConnection {
   }
 
   /**
-   * Send a command via serial and return the response
-   * For first request: starts with 1 second timeout, doubles on each timeout up to user-set timeout
-   * Logs warnings (not errors) for first request timeouts during auto-detection
+   * Send a command via serial with internal retry logic
+   * Retries up to maxRetries times using the same dedup character
+   * Only advances dedup on final success
    * @param {string} cmd - The pfod command (e.g., "{.}" or "{dwgName}")
    * @returns {Promise<string>} - Response text (usually JSON)
    */
@@ -1103,32 +1179,71 @@ class SerialConnection {
       console.warn(`[SERIAL_CONNECTION] This should not happen - queue protection may not be working`);
     }
 
-    // Cancel any previous timeout that might still be running
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-      console.log(`[SERIAL_CONNECTION] Cancelled previous timeout`);
-      this.timeoutId = null;
-    }
+    // Get dedup character atomically - getCurrentDedupChar() increments for next call
+    const cmdWithPrefix = getCurrentDedupChar() + cmd;
+    const maxRetries = this.connectionManager.getMaxRetries();
+    const isFirstRequest = this.firstRequest;
+    let lastError = null;
 
-    // Clear previous response state
+    console.log(`[SERIAL_CONNECTION] Allocated dedup='${cmdWithPrefix[0]}' for this send()`);
+
+    // Clear response state once at the start - keep accumulated data across retries
     this.readBuffer = '';
 
-    // For first request, implement progressive timeout doubling
-    if (this.firstRequest) {
-      this.firstRequest = false;
-      return this.sendWithProgressiveTimeout(cmd);
+    // Retry loop: attempt up to (maxRetries + 1) times
+    // Data continues to accumulate in readBuffer across retry attempts
+    // All retries use the SAME cmdWithPrefix (dedup already captured)
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[SERIAL_CONNECTION] Send attempt ${attempt + 1}/${maxRetries + 1}: ${cmdWithPrefix}`);
+
+        // Cancel any previous timeout
+        if (this.timeoutId) {
+          clearTimeout(this.timeoutId);
+          console.log(`[SERIAL_CONNECTION] Cancelled previous timeout`);
+          this.timeoutId = null;
+        }
+
+        let responseText;
+        // For first request, use progressive timeout
+        if (isFirstRequest && attempt === 0) {
+          this.firstRequest = false;
+          responseText = await this.sendOnceWithProgressiveTimeout(cmdWithPrefix, cmd);
+        } else {
+          // Normal send for subsequent requests or retries
+          // NOTE: readBuffer is NOT cleared here - it persists across retries
+          // This allows partial responses to accumulate if retries occur
+          responseText = await this.sendOnceInternal(cmdWithPrefix, cmd, this.connectionManager.getResponseTimeout());
+        }
+
+        // Success! Return response (dedup already allocated and advanced at start)
+        console.log(`[SERIAL_CONNECTION] Success on attempt ${attempt + 1} with dedup='${cmdWithPrefix[0]}'`);
+        return responseText;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[SERIAL_CONNECTION] Attempt ${attempt + 1}/${maxRetries + 1} failed: ${error.message}`);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries) {
+          console.error(`[SERIAL_CONNECTION] All ${maxRetries + 1} attempts exhausted with dedup='${cmdWithPrefix[0]}'. Throwing error back to queue.`);
+          throw error;
+        }
+
+        // Otherwise, retry with same dedup character
+        console.log(`[SERIAL_CONNECTION] Retrying with same dedup='${cmdWithPrefix[0]}'...`);
+      }
     }
 
-    // Normal send for subsequent requests
-    return this.sendOnce(cmd, this.connectionManager.getResponseTimeout());
+    // Should not reach here, but just in case
+    throw lastError || new Error('Serial send failed');
   }
 
   /**
    * Send with progressive timeout doubling for first request
-   * EVERY timeout throws error back to caller (pfodWebDebug queue) for retry
-   * Timeout doubles on each retry until user-set max or first response received
+   * Throws error on timeout to trigger retry loop in send()
+   * @private
    */
-  async sendWithProgressiveTimeout(cmd) {
+  async sendOnceWithProgressiveTimeout(cmdWithPrefix, originalCmd) {
     const maxTimeout = this.connectionManager.getResponseTimeout();
     const timeoutToUse = Math.min(this.firstRequestAttemptTimeout, maxTimeout);
     const isMaxTimeout = (timeoutToUse >= maxTimeout);
@@ -1137,45 +1252,39 @@ class SerialConnection {
 
     try {
       // Try to send with current timeout
-      const response = await this.sendOnce(cmd, timeoutToUse);
+      const response = await this.sendOnceInternal(cmdWithPrefix, originalCmd, timeoutToUse);
 
       // Success! Clear first request flag and return
-      this.firstRequest = false;
       console.error(`[SERIAL_CONNECTION] First request succeeded with ${timeoutToUse}ms timeout`);
       return response;
     } catch (error) {
       // Check if it was a timeout error
       if (error.message.includes('timeout')) {
-        // Double timeout for next retry (unless already at max)
-        if (!isMaxTimeout) {
-        //  this.firstRequestAttemptTimeout *= 2;
-        }
-
-        // Log and throw error back to queue for retry
+        // Log timeout error to trigger retry loop
         if (isMaxTimeout) {
           console.error(`[SERIAL_CONNECTION] First request timeout at ${maxTimeout}ms (max) - will retry`);
-          this.firstRequest = false;  // Clear flag when max reached
         } else {
-          console.error(`[SERIAL_CONNECTION] First request timeout at ${timeoutToUse}ms - next attempt will use ${this.connectionManager.getResponseTimeout()}ms`);
+          console.error(`[SERIAL_CONNECTION] First request timeout at ${timeoutToUse}ms - retry loop will attempt again`);
         }
 
-        // Throw error for EVERY timeout - let queue handle retry
+        // Throw error to trigger retry in send() method
         throw new Error('Serial response timeout - device may not be responding');
       } else {
         // Non-timeout error, propagate immediately
-        this.firstRequest = false;  // Clear flag on error
         throw error;
       }
     }
   }
 
   /**
-   * Send command once with specified timeout
-   * @param {string} cmd - The pfod command
+   * Send command once with specified timeout (internal - no retry)
+   * @param {string} cmdWithPrefix - The command with dedup prefix already applied
+   * @param {string} originalCmd - The original command without prefix
    * @param {number} timeout - Timeout in milliseconds
    * @returns {Promise<string>} - Response text
+   * @private
    */
-  async sendOnce(cmd, timeout) {
+  async sendOnceInternal(cmdWithPrefix, originalCmd, timeout) {
     // Record send time for performance measurement
     this.sendTime = Date.now();
     this.currentTimeout = timeout;
@@ -1196,15 +1305,12 @@ class SerialConnection {
       }, timeout);
     });
 
-    // Prepend current dedup character to the command (don't advance yet - only advance on success)
-    const cmdWithPrefix = getCurrentDedupChar() + cmd;
-
     // Send the command
     console.log(`[SERIAL_CONNECTION] Sending: ${cmdWithPrefix} at ${new Date(this.sendTime).toISOString()}`);
 
     // Record the command being sent (with the dedup prefix)
     if (ConnectionManager.messageCollector) {
-      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'serial', cmd);
+      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'serial', originalCmd);
     }
 
     const encoder = new TextEncoder();
@@ -1521,8 +1627,8 @@ class BLEConnection {
         this.timeoutId = null;
       }
 
-      // Advance dedup character only on successful response (not on retry/timeout)
-      advanceDedupChar();
+      // Don't advance dedup here - let send() handle it after successful response
+      // This allows retries to use the same dedup character
 
       this.responseResolve(jsonString);
       this.responseResolve = null;
@@ -1534,7 +1640,9 @@ class BLEConnection {
   }
 
   /**
-   * Send a command via BLE and return the response
+   * Send a command via BLE with internal retry logic
+   * Retries up to maxRetries times using the same dedup character
+   * Only advances dedup on final success
    * @param {string} cmd - The pfod command (e.g., "{.}" or "{dwgName}")
    * @returns {Promise<string>} - Response text (usually JSON)
    */
@@ -1551,16 +1659,62 @@ class BLEConnection {
       console.warn(`[BLE_CONNECTION] This should not happen - queue protection may not be working`);
     }
 
-    // Cancel any previous timeout that might still be running
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-      console.log(`[BLE_CONNECTION] Cancelled previous timeout`);
-      this.timeoutId = null;
-    }
+    // Get dedup character atomically - getCurrentDedupChar() increments for next call
+    const cmdWithPrefix = getCurrentDedupChar() + cmd;
+    const maxRetries = this.connectionManager.getMaxRetries();
+    let lastError = null;
 
-    // Clear previous response state
+    console.log(`[BLE_CONNECTION] Allocated dedup='${cmdWithPrefix[0]}' for this send()`);
+
+    // Clear response state once at the start - keep accumulated data across retries
     this.readBuffer = '';
 
+    // Retry loop: attempt up to (maxRetries + 1) times
+    // Data continues to accumulate in readBuffer across retry attempts
+    // All retries use the SAME cmdWithPrefix (dedup already captured)
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[BLE_CONNECTION] Send attempt ${attempt + 1}/${maxRetries + 1}: ${cmdWithPrefix}`);
+
+        // Cancel any previous timeout
+        if (this.timeoutId) {
+          clearTimeout(this.timeoutId);
+          console.log(`[BLE_CONNECTION] Cancelled previous timeout`);
+          this.timeoutId = null;
+        }
+
+        // NOTE: readBuffer is NOT cleared here - it persists across retries
+        // This allows partial responses to accumulate if retries occur
+
+        const responseText = await this.sendOnceInternal(cmdWithPrefix, cmd);
+
+        // Success! Return response (dedup already allocated and advanced at start)
+        console.log(`[BLE_CONNECTION] Success on attempt ${attempt + 1} with dedup='${cmdWithPrefix[0]}'`);
+        return responseText;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[BLE_CONNECTION] Attempt ${attempt + 1}/${maxRetries + 1} failed: ${error.message}`);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries) {
+          console.error(`[BLE_CONNECTION] All ${maxRetries + 1} attempts exhausted with dedup='${cmdWithPrefix[0]}'. Throwing error back to queue.`);
+          throw error;
+        }
+
+        // Otherwise, retry with same dedup character
+        console.log(`[BLE_CONNECTION] Retrying with same dedup='${cmdWithPrefix[0]}'...`);
+      }
+    }
+
+    // Should not reach here, but just in case
+    throw lastError || new Error('BLE send failed');
+  }
+
+  /**
+   * Send command once via BLE (no retries)
+   * @private
+   */
+  async sendOnceInternal(cmdWithPrefix, originalCmd) {
     // Record send time for performance measurement
     this.sendTime = Date.now();
 
@@ -1582,15 +1736,12 @@ class BLEConnection {
       }, timeout);
     });
 
-    // Prepend current dedup character to the command (don't advance yet - only advance on success)
-    const cmdWithPrefix = getCurrentDedupChar() + cmd;
-
     // Send the command
     console.log(`[BLE_CONNECTION] Sending: ${cmdWithPrefix} at ${new Date(this.sendTime).toISOString()}`);
 
     // Record the command being sent (with the dedup prefix)
     if (ConnectionManager.messageCollector) {
-      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'ble', cmd);
+      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'ble', originalCmd);
     }
 
     const encoder = new TextEncoder();
@@ -1649,6 +1800,208 @@ window.ConnectionManager = ConnectionManager;
 window.HTTPConnection = HTTPConnection;
 window.SerialConnection = SerialConnection;
 window.BLEConnection = BLEConnection;
+
+
+
+/* ========================================
+ * Inlined from: caching.js
+ * ======================================== */
+/*
+   caching.js
+ * (c)2025 Forward Computing and Control Pty. Ltd.
+ * NSW Australia, www.forward.com.au
+ * This code is not warranted to be fit for any purpose. You may only use it at your own risk.
+ * This generated code may be freely used for both private and commercial use
+ * provided this copyright is maintained.
+ */
+
+/**
+ * Response Caching Module
+ * Handles caching of pfod responses with version tracking
+ */
+
+// Get unique identifier for current connection
+// Returns IP address for HTTP, device name for BLE, or 'Serial' for serial connections
+function getConnectionIdentifier(connectionManager) {
+  if (!connectionManager) {
+    return 'unknown_connection';
+  }
+
+  switch(connectionManager.protocol) {
+    case 'http':
+      return connectionManager.config.targetIP || 'unknown_ip';
+    case 'ble':
+      // BLE device name from config if available
+      return connectionManager.config.deviceName || connectionManager.config.deviceId || 'unknown_ble';
+    case 'serial':
+      return 'Serial';
+    default:
+      return 'unknown_connection';
+  }
+}
+
+// Determine response type from msgType (cmd[0])
+// Returns: 'menuStart', 'menuUpdate', 'dwgStart', 'dwgUpdate', or null
+function getResponseType(msgType) {
+  if (!msgType || typeof msgType !== 'string') {
+    return null;
+  }
+
+  if (msgType.startsWith('{,')) {
+    return 'menuStart';
+  }
+  if (msgType.startsWith('{;')) {
+    return 'menuUpdate';
+  }
+  if (msgType === '{+') {
+    return 'dwgUpdate';
+  }
+  if (msgType.startsWith('{+') && msgType.length > 2) {
+    return 'dwgStart';
+  }
+
+  return null;
+}
+
+// Extract command key from request
+// Format: {[version:]commandKey[separator...]}
+// Separators: backtick, tilde, space, closing brace
+// Examples:
+//   {v1:.} → "."
+//   {v1:c1`data} → "c1"
+//   {v1:c1~data} → "c1"
+//   {c1`data} → "c1"
+//   {.} → "."
+function getCommandKeyFromRequest(request) {
+  if (!request) {
+    return null;
+  }
+
+  const cmd = request.cmd;
+  if (!cmd || typeof cmd !== 'string') {
+    return null;
+  }
+
+  // Skip the opening {
+  let content = cmd.substring(1);
+
+  // Check if there's a version prefix (indicated by :)
+  const colonIndex = content.indexOf(':');
+  if (colonIndex !== -1) {
+    // Skip the version part
+    content = content.substring(colonIndex + 1);
+  }
+
+  // Extract the command key up to the next separator or closing brace
+  // Separators are: backtick, tilde, space, closing brace
+  const match = content.match(/^([^`~\s}]+)/);
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  console.log('[CACHE] Could not extract command key from request:', cmd);
+  return null;
+}
+
+// Extract version from msgType string (cmd[0])
+// Version is the last string after the second ~ if present
+// Returns null if no version found or fewer than 2 tildes
+function extractVersionFromResponse(msgType) {
+  if (!msgType || typeof msgType !== 'string') {
+    return null;
+  }
+
+  // Count tildes to find version (after second ~)
+  const tildeIndices = [];
+  for (let i = 0; i < msgType.length; i++) {
+    if (msgType[i] === '~') {
+      tildeIndices.push(i);
+    }
+  }
+
+  // Need at least 2 tildes for a version
+  if (tildeIndices.length < 2) {
+    console.log('[CACHE] No version found in msgType (fewer than 2 tildes)');
+    return null;
+  }
+
+  // Get everything after the second ~
+  const afterSecondTilde = msgType.substring(tildeIndices[1] + 1).trim();
+
+  if (afterSecondTilde.length === 0) {
+    console.log('[CACHE] No version found after second tilde');
+    return null;
+  }
+
+  // Extract the version string (typically a single token like V1, V2, etc.)
+  const versionMatch = afterSecondTilde.match(/^\S+/);
+  if (versionMatch) {
+    const version = versionMatch[0];
+    console.log(`[CACHE] Extracted version: ${version}`);
+    return version;
+  }
+
+  console.log('[CACHE] Could not parse version from:', afterSecondTilde);
+  return null;
+}
+
+// Generate cache key for storing response
+// Format: pfodWeb_cache_{connection_identifier}_{commandKey}
+function getCacheKey(connectionId, commandKey) {
+  return `pfodWeb_cache_${connectionId}_${commandKey}`;
+}
+
+// Cache response to localStorage
+// Only caches if version is present and response is a cacheable type
+// Uses the command key from the request (what was sent)
+// Extracts msgType from data.cmd[0]
+function cacheResponse(data, request, connectionManager) {
+  try {
+    // Extract msgType from response data
+    if (!data || !data.cmd || !Array.isArray(data.cmd) || data.cmd.length === 0) {
+      console.log('[CACHE] Not caching - no cmd data in response');
+      return;
+    }
+
+    const msgType = data.cmd[0];
+
+    // Determine response type (to validate it's cacheable)
+    const responseType = getResponseType(msgType);
+    if (!responseType) {
+      console.log('[CACHE] Not caching - response type not recognized');
+      return;
+    }
+
+    // Extract version
+    const version = extractVersionFromResponse(msgType);
+    if (!version) {
+      console.log(`[CACHE] Not caching ${responseType} - no version found in response`);
+      return;
+    }
+
+    // Extract command key from request
+    const commandKey = getCommandKeyFromRequest(request);
+    if (!commandKey) {
+      console.log('[CACHE] Not caching - could not extract command key from request');
+      return;
+    }
+
+    // Add version to data object
+    data.version = version;
+
+    // Get connection identifier
+    const connectionId = getConnectionIdentifier(connectionManager);
+
+    // Generate cache key
+    const cacheKey = getCacheKey(connectionId, commandKey);
+
+    // Store to localStorage
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    console.log(`[CACHE] Cached ${responseType} (cmd key: ${commandKey}) for connection "${connectionId}" with version "${version}". Key: ${cacheKey}`);
+  } catch (e) {
+    console.error('[CACHE] Error caching response:', e);
+  }
+}
 
 
 
@@ -2988,11 +3341,14 @@ class DrawingViewer {
     // Get the current main drawing data from redraw system (where data is actually stored after processing)
     const currentDrawingData = this.redraw.redrawDrawingManager.drawingsData[mainDrawingName]?.data;
 
+    // Check if a touchActionInput dialog is currently open
+    const hasOpenDialog = window.pfodWebMouse.touchActionInputOpen;
+
     // Only schedule an update if refresh is greater than 0, mouse is not down, queue is empty, and no request in flight
     // This ensures that a refresh value of 0 properly disables automatic updates
     // and prevents updates during mouse interactions or ongoing queue processing
     if (this.isUpdating && currentDrawingData && currentDrawingData.refresh > 0 && !this.touchState.isDown &&
-        this.requestQueue.length === 0 && !this.sentRequest) {
+        this.requestQueue.length === 0 && !this.sentRequest && !hasOpenDialog) {
       console.log(`[REFRESH] Scheduling next update in ${currentDrawingData.refresh}ms for drawing "${this.redraw.getCurrentDrawingName()}"`);
       this.updateTimer = setTimeout(() => this.fetchRefresh(), currentDrawingData.refresh);
       // Also schedule updates for inserted drawings
@@ -3011,6 +3367,8 @@ class DrawingViewer {
       console.log(`[REFRESH] Skipping update scheduling - queue not empty (${this.requestQueue.length} requests)`);
     } else if (this.sentRequest) {
       console.log(`[REFRESH] Skipping update scheduling - request in flight for "${this.sentRequest.drawingName}"`);
+    } else if (hasOpenDialog) {
+      console.log('[REFRESH] Skipping update scheduling - touchActionInput dialog is open');
     }
 
   }
@@ -3019,6 +3377,13 @@ class DrawingViewer {
   async fetchRefresh() {
     console.log(`[REFRESH] Refresh timer fired - starting update cycle for drawing "${this.redraw.getCurrentDrawingName()}" at ${new Date().toISOString()}`);
 
+    // Check if a touchActionInput dialog is currently open
+    if (window.pfodWebMouse.touchActionInputOpen) {
+      console.log(`[REFRESH] Blocking refresh cycle - touchActionInput dialog is open`);
+      this.scheduleNextUpdate(); // Reschedule for later
+      return;
+    }
+
     // Block update requests if user activity is present
     if (this.touchState.isDown) {
       console.log(`[REFRESH] Blocking update cycle - mouse is down`);
@@ -3026,16 +3391,21 @@ class DrawingViewer {
       return;
     }
 
-    // Check if queue has user requests (non-refresh requestType)
-    const hasUserRequests = this.requestQueue.some(req => req.requestType !== 'refresh');
+    // Check if queue has user requests (non-refresh/non-refresh-related requestType)
+    // Protect refresh-related requests (refresh, refresh-insertDwg, insertDwg) from being blocked
+    const hasUserRequests = this.requestQueue.some(req =>
+      req.requestType !== 'refresh' && req.requestType !== 'refresh-insertDwg' && req.requestType !== 'insertDwg'
+    );
     if (hasUserRequests) {
       console.log(`[REFRESH] Blocking refresh cycle - user requests in queue`);
       this.scheduleNextUpdate(); // Reschedule for later
       return;
     }
 
-    // Check if user request is in flight (non-refresh requestType)
-    if (this.sentRequest && this.sentRequest.requestType !== 'refresh') {
+    // Check if user request is in flight (non-refresh/non-refresh-related requestType)
+    if (this.sentRequest && (this.sentRequest.requestType !== 'refresh' &&
+        this.sentRequest.requestType !== 'refresh-insertDwg' &&
+        this.sentRequest.requestType !== 'insertDwg')) {
       console.log(`[REFRESH] Blocking refresh cycle - user request in flight (${this.sentRequest.requestType})`);
       this.scheduleNextUpdate(); // Reschedule for later
       return;
@@ -3069,11 +3439,24 @@ class DrawingViewer {
 
       // Update collection removed - using unified shadow processing system
 
-      // First, queue the current drawing update
-      console.log(`[UPDATE] Queueing update for current drawing "${currentDrawingName}"`);
-      await this.queueDrawingUpdate(currentDrawingName);
+      // Check if designer mode is active
+      const urlParams = new URLSearchParams(window.location.search);
+      const isDesignerMode = urlParams.has('designer');
 
-      // Inserted drawings will be queued automatically as they're discovered during response processing
+      if (isDesignerMode) {
+        // In designer mode, only queue the main drawing
+        console.log(`[UPDATE] Designer mode detected - queueing only main drawing "${currentDrawingName}"`);
+        await this.queueDrawingUpdate(currentDrawingName);
+      } else {
+        // In normal mode, queue main drawing and all inserted drawings with their versions
+        const allDrawings = this.redraw.redrawDrawingManager.drawings;
+        console.log(`[UPDATE] Normal mode - queueing main drawing and ${allDrawings.length - 1} inserted drawings`);
+
+        for (const drawingName of allDrawings) {
+          console.log(`[UPDATE] Queueing update for drawing "${drawingName}"`);
+          await this.queueDrawingUpdate(drawingName);
+        }
+      }
 
       // Re-enable updates
       this.isUpdating = true;
@@ -3098,19 +3481,20 @@ class DrawingViewer {
       return;
     }
 
-    // If this is a non-refresh request, clean up any existing refresh requests
-    if (requestType !== 'refresh') {
+    // If this is a non-refresh request (touch, etc), clean up any existing refresh requests
+    // BUT: protect refresh-insertDwg items which are part of the refresh block
+    if (requestType !== 'refresh' && requestType !== 'refresh-insertDwg' && requestType !== 'insertDwg') {
       // Remove all refresh requests from queue
-      const refreshRequestsInQueue = this.requestQueue.filter(req => req.requestType === 'refresh');
+      const refreshRequestsInQueue = this.requestQueue.filter(req => req.requestType === 'refresh' || req.requestType === 'refresh-insertDwg');
       if (refreshRequestsInQueue.length > 0) {
-        this.requestQueue = this.requestQueue.filter(req => req.requestType !== 'refresh');
-        console.log(`[QUEUE] Removed ${refreshRequestsInQueue.length} refresh requests from queue due to user activity`);
+        this.requestQueue = this.requestQueue.filter(req => req.requestType !== 'refresh' && req.requestType !== 'refresh-insertDwg');
+        console.log(`[QUEUE] Removed ${refreshRequestsInQueue.length} refresh/refresh-insertDwg requests from queue due to user activity (${requestType})`);
       }
 
-      // Mark sent refresh request for discard
-      if (this.sentRequest && this.sentRequest.requestType === 'refresh') {
+      // Mark sent refresh request for discard (including refresh-insertDwg being processed)
+      if (this.sentRequest && (this.sentRequest.requestType === 'refresh' || this.sentRequest.requestType === 'refresh-insertDwg')) {
         this.sentRequest.discardResponse = true;
-        console.log(`[QUEUE] Marked sent refresh request for "${this.sentRequest.drawingName}" to be discarded`);
+        console.log(`[QUEUE] Marked sent ${this.sentRequest.requestType} request for "${this.sentRequest.drawingName}" to be discarded`);
       }
     }
 
@@ -3145,7 +3529,6 @@ class DrawingViewer {
     this.requestQueue.push({
       drawingName: drawingName,
       cmd: cmd,
-      retryCount: 0,
       touchZoneInfo: touchZoneInfo,
       requestType: requestType
     });
@@ -3361,10 +3744,6 @@ class DrawingViewer {
     console.warn(`[QUEUE] sentRequest is:`, JSON.stringify(this.sentRequest, null, 2));
 
     try {
-      if (request.retryCount > 0) {
-       console.warn(`[QUEUE] Processing request for "${request.drawingName}" (retry: ${request.retryCount}/${this.connectionManager.getMaxRetries()})`);
-      }
-
       // Initialize shadow processing for session-starting requests only
       // insertDwg and refresh-insertDwg requests are part of existing sessions
       if (['mainMenu', 'main', 'touch', 'refresh'].includes(request.requestType)) {
@@ -3472,7 +3851,14 @@ class DrawingViewer {
       console.log('[QUEUE] parsedText ', JSON.stringify(data,null,2));
       **/
       const data = JSON.parse(responseText);
-      // Handle different response types for 
+
+      // Cache response if it has a version (disabled in designer mode)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('designer') && typeof cacheResponse === 'function') {
+        cacheResponse(data, request, this.connectionManager);
+      }
+
+      // Handle different response types for
       let cmd;
       if (data.cmd) {
         cmd = data.cmd;
@@ -3653,52 +4039,34 @@ class DrawingViewer {
         this.shadowProcessing.shadowDrawingManager.ensureItemCollections(request.drawingName);
       }
 
-      // Increment retry count
-      request.retryCount++;
+      // Retries are now handled internally by connectionManager
+      // If we get here, all retries have been exhausted
+      console.error(`[QUEUE] Error after all retries exhausted by connectionManager for "${request.drawingName}": ${error.message}`);
 
-      if (request.retryCount <= this.connectionManager.getMaxRetries()) {
-        //console.log(`[QUEUE] Retrying request for "${request.drawingName}" (attempt ${request.retryCount} of ${this.connectionManager.getMaxRetries()})`);
-        // Put the request back at the front of the queue for retry
-        this.requestQueue.unshift(request);
-        //console.log(`[SENTREQUEST] CLEARED: "${request.drawingName}" (${request.requestType}) at ${new Date().toISOString()}`);
-        this.sentRequest = null;
-        setTimeout(() => {
-           this.processRequestQueue();
-        }, 10);
-        return;
+      // Display error message for main drawing or initial connection (null drawing name)
+      const currentDrawingName = this.shadowProcessing.shadowDrawingManager.getCurrentDrawingName();
+      const isMainOrInitial = (request.drawingName === null || request.drawingName === currentDrawingName);
 
+      if (isMainOrInitial) {
+        // Show alert dialog with Close button that reloads page
+        console.log(`[ALERT] Triggering No Connection alert for "${request.drawingName}" (main or initial connection)`);
+        this.showNoConnectionAlert();
       } else {
-        console.error(`[QUEUE] Maximum retries (${this.connectionManager.getMaxRetries()}) reached for "${request.drawingName}". Removing from queue.`);
+        // For inserted drawings, just log the error but continue processing
+        console.warn(`[QUEUE] ERROR: Failed to load inserted drawing "${request.drawingName}" - continuing without it`);
+      }
 
-        // Display error message for main drawing or initial connection (null drawing name)
-        const currentDrawingName = this.shadowProcessing.shadowDrawingManager.getCurrentDrawingName();
-        const isMainOrInitial = (request.drawingName === null || request.drawingName === currentDrawingName);
+      // Clear the failed request
+      console.log(`[SENTREQUEST] CLEARED: "${request.drawingName}" (${request.requestType}) at ${new Date().toISOString()}`);
+      this.sentRequest = null;
 
-        if (isMainOrInitial) {
-          // Show alert dialog with Close button that reloads page
-          console.log(`[ALERT] Triggering No Connection alert for "${request.drawingName}" (main or initial connection)`);
-          this.showNoConnectionAlert();
-        } else {
-          // For inserted drawings, just log the error but continue processing
-          console.warn(`[QUEUE] ERROR: Failed to load inserted drawing "${request.drawingName}" after ${this.connectionManager.getMaxRetries()} attempts - continuing without it`);
-        }
-
-        // Clear the failed request (it's already been removed from sentRequest)
-        console.log(`[SENTREQUEST] CLEARED: "${request.drawingName}" (${request.requestType}) at ${new Date().toISOString()}`);
-        this.sentRequest = null;
- //       setTimeout(() => {
- //          this.processRequestQueue();
- //       }, 10);
-
-        // For inserted drawings, if we're at the end of the queue, proceed with redraw
-        if (this.requestQueue.length === 0 && !this.sentRequest) {
-          console.log(`[QUEUE] Queue empty after failed requests. Drawing with available data.`);
-            this.setProcessingQueue(false);
-          this.redrawCanvas();
-          // Resume update scheduling after failed request cleanup
-          this.scheduleNextUpdate();
-
-        }
+      // For inserted drawings, if we're at the end of the queue, proceed with redraw
+      if (this.requestQueue.length === 0 && !this.sentRequest) {
+        console.log(`[QUEUE] Queue empty after failed request. Drawing with available data.`);
+        this.setProcessingQueue(false);
+        this.redrawCanvas();
+        // Resume update scheduling after failed request cleanup
+        this.scheduleNextUpdate();
       }
     } finally {
       // If there are more requests in the queue, continue processing
@@ -4711,6 +5079,11 @@ async function initializeApp() {
       validateConnectButton();
     }
     document.getElementById('connection-prompt').style.display = 'flex';
+    // Focus on IP address field for immediate input
+    // Use setTimeout to ensure focus happens after display is set
+    setTimeout(() => {
+      document.getElementById('prompt-ip').focus();
+    }, 0);
   }
 }
 
@@ -7634,10 +8007,10 @@ class DrawingMerger {
             transform: { x: 0, y: 0, scale: 1.0 }
         };
 
-        // Merge all drawing items
+        // Merge all drawing items - pass the main drawing's own width as parent width
         this.mergeDrawingItems(mainDwg, this.drawingManager.allUnindexedItems,
             this.drawingManager.allIndexedItemsByNumber, this.drawingManager.allTouchZonesByCmd,
-            processedDrawings, mainClipRegion);
+            processedDrawings, mainClipRegion, currentDrawingData.data.x);
 
         console.log(`[DRAWING_MERGER] Merge complete: ${this.drawingManager.allUnindexedItems.length} unindexed items, ${Object.keys(this.drawingManager.allIndexedItemsByNumber).length} different indices, ${Object.keys(this.drawingManager.allTouchZonesByCmd).length} touchZones`);
 
@@ -7687,7 +8060,7 @@ class DrawingMerger {
     **/
     // Merge drawing items from a specific drawing with transforms and clipping
     // dwgTransform is the parent transform and scaling for this deg
-    mergeDrawingItems(insertDwg, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, parentClipRegion = null) {
+    mergeDrawingItems(insertDwg, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, parentClipRegion, parentDrawingWidth) {
        // console.log(`[MERGE_DWG] Using parent transform: (${parentTransform.x}, ${parentTransform.y}, ${parentTransform.scale}) for drawing "${drawingName}"`);
         // parent transform is base offset + scale
         // all added item first have their offset scaled by scale and then base offset added
@@ -7725,6 +8098,7 @@ class DrawingMerger {
         
         // Calculate parent transform for this drawing
         const parentTransform = insertDwg.transform || { x: 0, y: 0, scale: 1.0 };
+        console.log(`[SCALE_MERGE_DWG]  parentTransform transform: ${JSON.stringify(parentTransform)}`);
 
         // Get drawing items
         const drawingUnindexedItems = this.drawingManager.unindexedItems[drawingName] || [];
@@ -7745,8 +8119,8 @@ class DrawingMerger {
         
         
         let dwgTransform = {...insertDwg.transform}; // the current parent transform
-        // adjust the scale by the ratio of the dwg.x to clip.width clip is the main dwg clip
-        dwgTransform.scale = dwgTransform.scale * drawingWidth/parentClipRegion.width;
+        // adjust the scale by the ratio of the dwg.x to parent drawing width
+        dwgTransform.scale = dwgTransform.scale;// * drawingWidth/parentDrawingWidth;
         
         console.log(`[SCALE_MERGE_DWG]  insertDwg transform: ${JSON.stringify(dwgTransform)}`);
         
@@ -7870,23 +8244,11 @@ class DrawingMerger {
               //  const itemTransform = {...parentTransform};
               //  processedInsertDwgItem.transform = itemTransform;
                 
-                // Add drawing bounds for clipping - use defaults if data not available
+                // Add drawing bounds for clipping
                 const nestedDrawingData = this.drawingManager.drawingsData[nestedDrawingName];
-                let drawingWidth = 50;  // Default width
-                let drawingHeight = 50; // Default height
-                
-                if (nestedDrawingData && nestedDrawingData.data) {
-                    drawingWidth = nestedDrawingData.data.x || drawingWidth;
-                    drawingHeight = nestedDrawingData.data.y || drawingHeight;
-                
-                    processedInsertDwgItem.drawingBounds = {
-                       width: drawingWidth,
-                      height: drawingHeight
-                    };
-                } else {
-                    console.warn(`[MERGE_DWG] insertDwg '${nestedDrawingName}' does not have sizes. Skipping`);
-                    continue;
-                }
+                const nestedDrawingWidth = nestedDrawingData.data.x;
+                const nestedDrawingHeight = nestedDrawingData.data.y;
+
                                 
                 // Add the nested insertDwg item to the list
                // allUnindexedItems.push(processedInsertDwgItem);
@@ -7910,7 +8272,7 @@ class DrawingMerger {
                     console.log(`[MERGE_DWG_NESTED] Composed transform for nested drawing "${nestedDrawingName}": parent=${JSON.stringify(dwgTransform)}, local=${JSON.stringify(item.transform)}, composed=${JSON.stringify(composedTransform)}`);
 
                     // Process the nested drawing with the intersection clip region
-                    this.mergeDrawingItems(composedItem, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion);
+                    this.mergeDrawingItems(composedItem, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion, drawingWidth);
                 } else if (nestedDrawingName) {
                     console.log(`[MERGE_DWG] Drawing "${nestedDrawingName}" already processed, skipping content processing`);
                 }
@@ -10478,6 +10840,9 @@ window.TouchZoneFilters = TouchZoneFilters;
 
 // Make pfodWebMouse available globally for browser use
 window.pfodWebMouse = {
+  // Flag to track if touchActionInput dialog is currently open
+  touchActionInputOpen: false,
+
   // Helper method to calculate scale factors based on actual rendered canvas size
   // This handles layout changes (like raw message view) that affect canvas display
   getCanvasScale: function() {
@@ -11424,8 +11789,17 @@ window.pfodWebMouse = {
       backgroundColor: touchActionInput.backgroundColor
     };
     console.log(`[TOUCH_ACTION_INPUT] Format options:`, formatOptions);
+
+    // Set flag to indicate touchActionInput dialog is open
+    window.pfodWebMouse.touchActionInputOpen = true;
+    console.log(`[TOUCH_ACTION_INPUT] Set touchActionInputOpen flag to true`);
+
     window.pfodWebMouse.showTextInputDialog.call(this, touchActionInput.prompt, initialText, formatOptions, (result, text) => {
       console.log(`[TOUCH_ACTION_INPUT] Dialog result: ${result}, text: "${text}"`);
+
+      // Clear the dialog flag now that dialog has closed and we're processing the result
+      window.pfodWebMouse.touchActionInputOpen = false;
+      console.log(`[TOUCH_ACTION_INPUT] Cleared touchActionInputOpen flag`);
 
       if (result === 'ok') {
         // Build command with the edited text included
@@ -11465,6 +11839,14 @@ window.pfodWebMouse = {
         window.pfodWebMouse.executeTouchAction.call(this, drawingName, cmd, col, row, touchType);
       } else {
         console.log(`[TOUCH_ACTION_INPUT] User cancelled text input, no request sent`);
+        // Resume refresh after dialog closes if mouse is not down
+        // The dialog closure does not trigger a mouse event, so we need to manually resume
+        if (!this.touchState.isDown) {
+          console.log(`[TOUCH_ACTION_INPUT] Resuming refresh after cancel (mouse not down)`);
+          this.scheduleNextUpdate();
+        } else {
+          console.log(`[TOUCH_ACTION_INPUT] Mouse still down after cancel - refresh will resume on mouse up`);
+        }
       }
     });
   },
@@ -11634,6 +12016,8 @@ window.pfodWebMouse = {
       document.body.removeChild(this.textInputDialog);
       this.textInputDialog = null;
     }
+    // DO NOT clear touchActionInputOpen flag here - it will be cleared in the callback handler
+    // This allows flag to remain true while switching between dialogs
   },
 
 
@@ -11658,7 +12042,7 @@ window.pfodWebMouse = {
 
 // DEBUG flag
 // any setting of DEBUG other then false or 'false' enables debug
-var DEBUG = false;
+var DEBUG = false
 if ((typeof DEBUG === 'undefined') || (DEBUG === false) || (DEBUG === 'false')) {
   if (typeof DEBUG === 'undefined') {
     console.log('[PFODWEB_DEBUG] DEBUG not defined.  Disabling logging');
@@ -11797,7 +12181,10 @@ window.addEventListener('DOMContentLoaded', async () => {
                     </select>
                 </div>
 
-                <button id="connect-button" onclick="connectWithPrompt()">Connect</button>
+                <div class="button-container">
+                    <button id="connect-button" onclick="connectWithPrompt()">Connect</button>
+                    <button id="clear-cache-button" onclick="clearCachedDrawings()">Clear Dwg Cache</button>
+                </div>
             </div>
         </div>
     </div>
@@ -11993,25 +12380,26 @@ window.addEventListener('DOMContentLoaded', async () => {
 
                 // Show error with Close button to return to connection setup
                 pfodAlert(error.message, () => {
-                    // Disable the unsupported protocol option
+                    // Keep the same protocol selected for retry
+                    // Don't switch protocols - user should be able to retry with same protocol or choose a different one
                     const radioButton = document.getElementById('prompt-protocol-' + protocol);
-                    /**
                     if (radioButton) {
-                        radioButton.disabled = true;
-                        const label = document.querySelector(`label[for="prompt-protocol-${protocol}"]`);
-                        if (label) {
-                            label.style.color = '#999';
-                            label.style.textDecoration = 'line-through';
-                        }
+                        radioButton.checked = true;
                     }
-                    **/
-
-                    // Switch to HTTP protocol as default
-                    document.getElementById('prompt-protocol-http').checked = true;
                     updatePromptUI();
 
                     // Show the connection prompt again
                     document.getElementById('connection-prompt').style.display = 'flex';
+
+                    // Set focus based on protocol for immediate retry
+                    if (protocol === 'http') {
+                        // For HTTP, focus on IP address field
+                        document.getElementById('prompt-ip').focus();
+                    } else if (protocol === 'serial') {
+                        // For Serial, focus on baud rate selector
+                        document.getElementById('prompt-baud').focus();
+                    }
+                    // For BLE, focus on connect button as there are no other settings
                 });
                 return;
             }
@@ -12022,6 +12410,17 @@ window.addEventListener('DOMContentLoaded', async () => {
             // Continue initialization with settings
             if (typeof continueInitialization === 'function') {
                 continueInitialization(connectionSettings);
+            }
+        }
+
+        // Clear cached drawings function
+        function clearCachedDrawings() {
+            try {
+                // Clear all localStorage for this page
+                localStorage.clear();
+                console.log('Local storage cleared');
+            } catch (error) {
+                console.error('Error clearing cache:', error);
             }
         }
     </script>

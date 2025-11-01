@@ -1,5 +1,7 @@
 // Shared constants to avoid circular dependencies
-  var JS_VERSION = "V2.0.2 -- 22nd October 2025";
+  var JS_VERSION = "V2.0.4 -- 24nd October 2025";
+// V2.0.4 fixed scaling for nested dwgs
+// V2.0.3 fixed transform for nested dwgs
 // V2.0.2 fixed transform pushZero for nested dwgs
 // V2.0.1 edit to .ino files
 // V2.0.0 removed nodejs server, bundled all files in single htmls

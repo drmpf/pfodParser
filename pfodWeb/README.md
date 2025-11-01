@@ -42,6 +42,10 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained.  
 
 # Revisions
+Version 2.0.4 fixed scaling for nested dwgs   
+Version 2.0.3 fixed transform for nested dwgs     
+Version 2.0.2 fixed transform pushZero for nested dwgs     
+Version 2.0.1 edit to .ino files   
 Version 2.0.0 removed nodejs server from pfodWebServer and bundled all files in single html files. Add Serial and BLE support    
 Version 1.1.5 used gzip files to reduce microprocessor file storage requirements  
 Version 1.1.3 drawing updates as response received and included dependent node packages and removed package install script from batch files  

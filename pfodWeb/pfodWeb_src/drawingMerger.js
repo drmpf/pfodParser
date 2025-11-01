@@ -48,10 +48,10 @@ class DrawingMerger {
             transform: { x: 0, y: 0, scale: 1.0 }
         };
 
-        // Merge all drawing items
+        // Merge all drawing items - pass the main drawing's own width as parent width
         this.mergeDrawingItems(mainDwg, this.drawingManager.allUnindexedItems,
             this.drawingManager.allIndexedItemsByNumber, this.drawingManager.allTouchZonesByCmd,
-            processedDrawings, mainClipRegion);
+            processedDrawings, mainClipRegion, currentDrawingData.data.x);
 
         console.log(`[DRAWING_MERGER] Merge complete: ${this.drawingManager.allUnindexedItems.length} unindexed items, ${Object.keys(this.drawingManager.allIndexedItemsByNumber).length} different indices, ${Object.keys(this.drawingManager.allTouchZonesByCmd).length} touchZones`);
 
@@ -101,7 +101,7 @@ class DrawingMerger {
     **/
     // Merge drawing items from a specific drawing with transforms and clipping
     // dwgTransform is the parent transform and scaling for this deg
-    mergeDrawingItems(insertDwg, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, parentClipRegion = null) {
+    mergeDrawingItems(insertDwg, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, parentClipRegion, parentDrawingWidth) {
        // console.log(`[MERGE_DWG] Using parent transform: (${parentTransform.x}, ${parentTransform.y}, ${parentTransform.scale}) for drawing "${drawingName}"`);
         // parent transform is base offset + scale
         // all added item first have their offset scaled by scale and then base offset added
@@ -139,6 +139,7 @@ class DrawingMerger {
         
         // Calculate parent transform for this drawing
         const parentTransform = insertDwg.transform || { x: 0, y: 0, scale: 1.0 };
+        console.log(`[SCALE_MERGE_DWG]  parentTransform transform: ${JSON.stringify(parentTransform)}`);
 
         // Get drawing items
         const drawingUnindexedItems = this.drawingManager.unindexedItems[drawingName] || [];
@@ -159,8 +160,8 @@ class DrawingMerger {
         
         
         let dwgTransform = {...insertDwg.transform}; // the current parent transform
-        // adjust the scale by the ratio of the dwg.x to clip.width clip is the main dwg clip
-        dwgTransform.scale = dwgTransform.scale * drawingWidth/parentClipRegion.width;
+        // adjust the scale by the ratio of the dwg.x to parent drawing width
+        dwgTransform.scale = dwgTransform.scale;// * drawingWidth/parentDrawingWidth;
         
         console.log(`[SCALE_MERGE_DWG]  insertDwg transform: ${JSON.stringify(dwgTransform)}`);
         
@@ -284,23 +285,11 @@ class DrawingMerger {
               //  const itemTransform = {...parentTransform};
               //  processedInsertDwgItem.transform = itemTransform;
                 
-                // Add drawing bounds for clipping - use defaults if data not available
+                // Add drawing bounds for clipping
                 const nestedDrawingData = this.drawingManager.drawingsData[nestedDrawingName];
-                let drawingWidth = 50;  // Default width
-                let drawingHeight = 50; // Default height
-                
-                if (nestedDrawingData && nestedDrawingData.data) {
-                    drawingWidth = nestedDrawingData.data.x || drawingWidth;
-                    drawingHeight = nestedDrawingData.data.y || drawingHeight;
-                
-                    processedInsertDwgItem.drawingBounds = {
-                       width: drawingWidth,
-                      height: drawingHeight
-                    };
-                } else {
-                    console.warn(`[MERGE_DWG] insertDwg '${nestedDrawingName}' does not have sizes. Skipping`);
-                    continue;
-                }
+                const nestedDrawingWidth = nestedDrawingData.data.x;
+                const nestedDrawingHeight = nestedDrawingData.data.y;
+
                                 
                 // Add the nested insertDwg item to the list
                // allUnindexedItems.push(processedInsertDwgItem);
@@ -324,7 +313,7 @@ class DrawingMerger {
                     console.log(`[MERGE_DWG_NESTED] Composed transform for nested drawing "${nestedDrawingName}": parent=${JSON.stringify(dwgTransform)}, local=${JSON.stringify(item.transform)}, composed=${JSON.stringify(composedTransform)}`);
 
                     // Process the nested drawing with the intersection clip region
-                    this.mergeDrawingItems(composedItem, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion);
+                    this.mergeDrawingItems(composedItem, allUnindexedItems, allIndexedItemsByNumber, allTouchZonesByCmd, processedDrawings, dwgClipRegion, drawingWidth);
                 } else if (nestedDrawingName) {
                     console.log(`[MERGE_DWG] Drawing "${nestedDrawingName}" already processed, skipping content processing`);
                 }

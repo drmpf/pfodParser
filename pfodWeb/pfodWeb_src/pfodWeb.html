@@ -220,6 +220,37 @@
         .hidden {
             display: none;
         }
+        .button-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #connect-button {
+            margin-bottom: 0;
+        }
+        #clear-cache-button {
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 10.6px;
+            border: 2px solid black;
+            cursor: pointer;
+            margin: 10px 5px;
+            margin-top: 20px;
+        }
+        #clear-cache-button:hover {
+            background-color: #f5f5f5;
+            border-color: #999;
+        }
+        #clear-cache-button:disabled {
+            background-color: #f0f0f0;
+            color: #999;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -320,7 +351,10 @@
                     </select>
                 </div>
 
-                <button id="connect-button" onclick="connectWithPrompt()">Connect</button>
+                <div class="button-container">
+                    <button id="connect-button" onclick="connectWithPrompt()">Connect</button>
+                    <button id="clear-cache-button" onclick="clearCachedDrawings()">Clear Dwg Cache</button>
+                </div>
             </div>
         </div>
     </div>
@@ -516,25 +550,26 @@
 
                 // Show error with Close button to return to connection setup
                 pfodAlert(error.message, () => {
-                    // Disable the unsupported protocol option
+                    // Keep the same protocol selected for retry
+                    // Don't switch protocols - user should be able to retry with same protocol or choose a different one
                     const radioButton = document.getElementById('prompt-protocol-' + protocol);
-                    /**
                     if (radioButton) {
-                        radioButton.disabled = true;
-                        const label = document.querySelector(`label[for="prompt-protocol-${protocol}"]`);
-                        if (label) {
-                            label.style.color = '#999';
-                            label.style.textDecoration = 'line-through';
-                        }
+                        radioButton.checked = true;
                     }
-                    **/
-
-                    // Switch to HTTP protocol as default
-                    document.getElementById('prompt-protocol-http').checked = true;
                     updatePromptUI();
 
                     // Show the connection prompt again
                     document.getElementById('connection-prompt').style.display = 'flex';
+
+                    // Set focus based on protocol for immediate retry
+                    if (protocol === 'http') {
+                        // For HTTP, focus on IP address field
+                        document.getElementById('prompt-ip').focus();
+                    } else if (protocol === 'serial') {
+                        // For Serial, focus on baud rate selector
+                        document.getElementById('prompt-baud').focus();
+                    }
+                    // For BLE, focus on connect button as there are no other settings
                 });
                 return;
             }
@@ -545,6 +580,17 @@
             // Continue initialization with settings
             if (typeof continueInitialization === 'function') {
                 continueInitialization(connectionSettings);
+            }
+        }
+
+        // Clear cached drawings function
+        function clearCachedDrawings() {
+            try {
+                // Clear all localStorage for this page
+                localStorage.clear();
+                console.log('Local storage cleared');
+            } catch (error) {
+                console.error('Error clearing cache:', error);
             }
         }
     </script>

@@ -30,6 +30,7 @@ const config = {
       scripts: [
         'version.js',
         'connectionManager.js',
+        'caching.js',
         'messageViewer.js',
         'pfodWebDebug.js',
         'DrawingManager.js',
@@ -48,6 +49,7 @@ const config = {
       scripts: [
         'version.js',
         'connectionManager.js',
+        'caching.js',
         'messageViewer.js',
         'pfodWebDebug.js',
         'DrawingManager.js',

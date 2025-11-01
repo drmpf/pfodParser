@@ -120,17 +120,22 @@ function pfodAlert(message, onClose = null) {
 /**
  * Shared dedup mechanism - used by all connection protocols
  * Rotating character prepended to commands to detect duplicates
- * Only increments on successful sends, not on retries
+ * Each send() call atomically gets a unique dedup character
+ * Retries reuse the same cached dedup for that send() call
  */
 let dedupCounter = 0;
 const dedupChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+/**
+ * Get next dedup character - increments atomically
+ * Each call guarantees a unique character for that send() call
+ * Retries must cache and reuse the returned character
+ * @returns {string} - The next dedup character
+ */
 function getCurrentDedupChar() {
-  return dedupChars[dedupCounter];
-}
-
-function advanceDedupChar() {
+  const char = dedupChars[dedupCounter];
   dedupCounter = (dedupCounter + 1) % dedupChars.length;
+  return char;
 }
 
 /**
@@ -201,7 +206,7 @@ class ConnectionManager {
     // HTTP = 0 (fail fast for network)
     // Serial = 1 (most reliable, allow one retry)
     const retryConfig = {
-      'ble': 0,
+      'ble': 1,
       'http': 2,
       'serial': 2
     };
@@ -339,14 +344,55 @@ class HTTPConnection {
   }
 
   /**
-   * Send a command via HTTP and return the response text
+   * Send a command via HTTP with internal retry logic
+   * Retries up to maxRetries times using the same dedup character
+   * Only advances dedup on final success
    * @param {string} cmd - The pfod command (e.g., "{.}" or "{dwgName}")
    * @returns {Promise<string>} - Response text
    */
   async send(cmd) {
-    // Prepend current dedup character to the command (don't advance yet - only advance on success)
+    // Get dedup character atomically - getCurrentDedupChar() increments for next call
     const cmdWithPrefix = getCurrentDedupChar() + cmd;
+    const maxRetries = this.connectionManager.getMaxRetries();
+    let lastError = null;
 
+    console.log(`[HTTP_CONNECTION] Allocated dedup='${cmdWithPrefix[0]}' for this send()`);
+
+    // Retry loop: attempt up to (maxRetries + 1) times
+    // All retries use the SAME cmdWithPrefix (dedup already captured)
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[HTTP_CONNECTION] Send attempt ${attempt + 1}/${maxRetries + 1}: ${cmdWithPrefix}`);
+
+        const responseText = await this.sendOnce(cmdWithPrefix, cmd);
+
+        // Success! Return response (dedup already allocated and advanced at start)
+        console.log(`[HTTP_CONNECTION] Success on attempt ${attempt + 1} with dedup='${cmdWithPrefix[0]}'`);
+        return responseText;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[HTTP_CONNECTION] Attempt ${attempt + 1}/${maxRetries + 1} failed: ${error.message}`);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries) {
+          console.error(`[HTTP_CONNECTION] All ${maxRetries + 1} attempts exhausted with dedup='${cmdWithPrefix[0]}'. Throwing error back to queue.`);
+          throw error;
+        }
+
+        // Otherwise, retry with same dedup character
+        console.log(`[HTTP_CONNECTION] Retrying with same dedup='${cmdWithPrefix[0]}'...`);
+      }
+    }
+
+    // Should not reach here, but just in case
+    throw lastError || new Error('HTTP send failed');
+  }
+
+  /**
+   * Single HTTP send attempt (no retries)
+   * @private
+   */
+  async sendOnce(cmdWithPrefix, originalCmd) {
     // Build endpoint from command with prefix
     const endpoint = this.baseURL + `/pfodWeb?cmd=${encodeURIComponent(cmdWithPrefix)}`;
     const options = this.buildFetchOptions();
@@ -369,7 +415,7 @@ class HTTPConnection {
 
       // Record the command being sent (with the dedup prefix)
       if (ConnectionManager.messageCollector) {
-        ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'http', cmd);
+        ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'http', originalCmd);
       }
 
       const response = await fetch(endpoint, {
@@ -398,7 +444,7 @@ class HTTPConnection {
         if (startBrace > 0) {
           const beforeText = responseText.substring(0, startBrace);
           if (beforeText.trim()) {
-            ConnectionManager.messageCollector.addMessage('received', beforeText, 'http', cmd);
+            ConnectionManager.messageCollector.addMessage('received', beforeText, 'http', originalCmd);
           }
         }
 
@@ -406,23 +452,20 @@ class HTTPConnection {
         const endBrace = startBrace >= 0 ? findMatchingClosingBrace(responseText, startBrace) : -1;
         if (startBrace !== -1 && endBrace !== -1) {
           const pfodMessage = responseText.substring(startBrace, endBrace + 1);
-          ConnectionManager.messageCollector.addMessage('received', pfodMessage, 'http', cmd);
+          ConnectionManager.messageCollector.addMessage('received', pfodMessage, 'http', originalCmd);
 
           // Find text after }
           const afterText = responseText.substring(endBrace + 1);
           if (afterText.trim()) {
-            ConnectionManager.messageCollector.addMessage('received', afterText, 'http', cmd);
+            ConnectionManager.messageCollector.addMessage('received', afterText, 'http', originalCmd);
           }
         } else if (startBrace === -1) {
           // No { found - record entire response as junk
           if (responseText.trim()) {
-            ConnectionManager.messageCollector.addMessage('received', responseText, 'http', cmd);
+            ConnectionManager.messageCollector.addMessage('received', responseText, 'http', originalCmd);
           }
         }
       }
-
-      // Advance dedup character only on successful response (not on retry/timeout)
-      advanceDedupChar();
 
       return responseText;
     } catch (error) {
@@ -780,8 +823,8 @@ class SerialConnection {
         this.timeoutId = null;
       }
 
-      // Advance dedup character only on successful response (not on retry/timeout)
-      advanceDedupChar();
+      // Don't advance dedup here - let send() handle it after successful response
+      // This allows retries to use the same dedup character
 
       this.responseResolve(jsonString);
       this.responseResolve = null;
@@ -793,9 +836,9 @@ class SerialConnection {
   }
 
   /**
-   * Send a command via serial and return the response
-   * For first request: starts with 1 second timeout, doubles on each timeout up to user-set timeout
-   * Logs warnings (not errors) for first request timeouts during auto-detection
+   * Send a command via serial with internal retry logic
+   * Retries up to maxRetries times using the same dedup character
+   * Only advances dedup on final success
    * @param {string} cmd - The pfod command (e.g., "{.}" or "{dwgName}")
    * @returns {Promise<string>} - Response text (usually JSON)
    */
@@ -812,32 +855,71 @@ class SerialConnection {
       console.warn(`[SERIAL_CONNECTION] This should not happen - queue protection may not be working`);
     }
 
-    // Cancel any previous timeout that might still be running
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-      console.log(`[SERIAL_CONNECTION] Cancelled previous timeout`);
-      this.timeoutId = null;
-    }
+    // Get dedup character atomically - getCurrentDedupChar() increments for next call
+    const cmdWithPrefix = getCurrentDedupChar() + cmd;
+    const maxRetries = this.connectionManager.getMaxRetries();
+    const isFirstRequest = this.firstRequest;
+    let lastError = null;
 
-    // Clear previous response state
+    console.log(`[SERIAL_CONNECTION] Allocated dedup='${cmdWithPrefix[0]}' for this send()`);
+
+    // Clear response state once at the start - keep accumulated data across retries
     this.readBuffer = '';
 
-    // For first request, implement progressive timeout doubling
-    if (this.firstRequest) {
-      this.firstRequest = false;
-      return this.sendWithProgressiveTimeout(cmd);
+    // Retry loop: attempt up to (maxRetries + 1) times
+    // Data continues to accumulate in readBuffer across retry attempts
+    // All retries use the SAME cmdWithPrefix (dedup already captured)
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[SERIAL_CONNECTION] Send attempt ${attempt + 1}/${maxRetries + 1}: ${cmdWithPrefix}`);
+
+        // Cancel any previous timeout
+        if (this.timeoutId) {
+          clearTimeout(this.timeoutId);
+          console.log(`[SERIAL_CONNECTION] Cancelled previous timeout`);
+          this.timeoutId = null;
+        }
+
+        let responseText;
+        // For first request, use progressive timeout
+        if (isFirstRequest && attempt === 0) {
+          this.firstRequest = false;
+          responseText = await this.sendOnceWithProgressiveTimeout(cmdWithPrefix, cmd);
+        } else {
+          // Normal send for subsequent requests or retries
+          // NOTE: readBuffer is NOT cleared here - it persists across retries
+          // This allows partial responses to accumulate if retries occur
+          responseText = await this.sendOnceInternal(cmdWithPrefix, cmd, this.connectionManager.getResponseTimeout());
+        }
+
+        // Success! Return response (dedup already allocated and advanced at start)
+        console.log(`[SERIAL_CONNECTION] Success on attempt ${attempt + 1} with dedup='${cmdWithPrefix[0]}'`);
+        return responseText;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[SERIAL_CONNECTION] Attempt ${attempt + 1}/${maxRetries + 1} failed: ${error.message}`);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries) {
+          console.error(`[SERIAL_CONNECTION] All ${maxRetries + 1} attempts exhausted with dedup='${cmdWithPrefix[0]}'. Throwing error back to queue.`);
+          throw error;
+        }
+
+        // Otherwise, retry with same dedup character
+        console.log(`[SERIAL_CONNECTION] Retrying with same dedup='${cmdWithPrefix[0]}'...`);
+      }
     }
 
-    // Normal send for subsequent requests
-    return this.sendOnce(cmd, this.connectionManager.getResponseTimeout());
+    // Should not reach here, but just in case
+    throw lastError || new Error('Serial send failed');
   }
 
   /**
    * Send with progressive timeout doubling for first request
-   * EVERY timeout throws error back to caller (pfodWebDebug queue) for retry
-   * Timeout doubles on each retry until user-set max or first response received
+   * Throws error on timeout to trigger retry loop in send()
+   * @private
    */
-  async sendWithProgressiveTimeout(cmd) {
+  async sendOnceWithProgressiveTimeout(cmdWithPrefix, originalCmd) {
     const maxTimeout = this.connectionManager.getResponseTimeout();
     const timeoutToUse = Math.min(this.firstRequestAttemptTimeout, maxTimeout);
     const isMaxTimeout = (timeoutToUse >= maxTimeout);
@@ -846,45 +928,39 @@ class SerialConnection {
 
     try {
       // Try to send with current timeout
-      const response = await this.sendOnce(cmd, timeoutToUse);
+      const response = await this.sendOnceInternal(cmdWithPrefix, originalCmd, timeoutToUse);
 
       // Success! Clear first request flag and return
-      this.firstRequest = false;
       console.error(`[SERIAL_CONNECTION] First request succeeded with ${timeoutToUse}ms timeout`);
       return response;
     } catch (error) {
       // Check if it was a timeout error
       if (error.message.includes('timeout')) {
-        // Double timeout for next retry (unless already at max)
-        if (!isMaxTimeout) {
-        //  this.firstRequestAttemptTimeout *= 2;
-        }
-
-        // Log and throw error back to queue for retry
+        // Log timeout error to trigger retry loop
         if (isMaxTimeout) {
           console.error(`[SERIAL_CONNECTION] First request timeout at ${maxTimeout}ms (max) - will retry`);
-          this.firstRequest = false;  // Clear flag when max reached
         } else {
-          console.error(`[SERIAL_CONNECTION] First request timeout at ${timeoutToUse}ms - next attempt will use ${this.connectionManager.getResponseTimeout()}ms`);
+          console.error(`[SERIAL_CONNECTION] First request timeout at ${timeoutToUse}ms - retry loop will attempt again`);
         }
 
-        // Throw error for EVERY timeout - let queue handle retry
+        // Throw error to trigger retry in send() method
         throw new Error('Serial response timeout - device may not be responding');
       } else {
         // Non-timeout error, propagate immediately
-        this.firstRequest = false;  // Clear flag on error
         throw error;
       }
     }
   }
 
   /**
-   * Send command once with specified timeout
-   * @param {string} cmd - The pfod command
+   * Send command once with specified timeout (internal - no retry)
+   * @param {string} cmdWithPrefix - The command with dedup prefix already applied
+   * @param {string} originalCmd - The original command without prefix
    * @param {number} timeout - Timeout in milliseconds
    * @returns {Promise<string>} - Response text
+   * @private
    */
-  async sendOnce(cmd, timeout) {
+  async sendOnceInternal(cmdWithPrefix, originalCmd, timeout) {
     // Record send time for performance measurement
     this.sendTime = Date.now();
     this.currentTimeout = timeout;
@@ -905,15 +981,12 @@ class SerialConnection {
       }, timeout);
     });
 
-    // Prepend current dedup character to the command (don't advance yet - only advance on success)
-    const cmdWithPrefix = getCurrentDedupChar() + cmd;
-
     // Send the command
     console.log(`[SERIAL_CONNECTION] Sending: ${cmdWithPrefix} at ${new Date(this.sendTime).toISOString()}`);
 
     // Record the command being sent (with the dedup prefix)
     if (ConnectionManager.messageCollector) {
-      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'serial', cmd);
+      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'serial', originalCmd);
     }
 
     const encoder = new TextEncoder();
@@ -1230,8 +1303,8 @@ class BLEConnection {
         this.timeoutId = null;
       }
 
-      // Advance dedup character only on successful response (not on retry/timeout)
-      advanceDedupChar();
+      // Don't advance dedup here - let send() handle it after successful response
+      // This allows retries to use the same dedup character
 
       this.responseResolve(jsonString);
       this.responseResolve = null;
@@ -1243,7 +1316,9 @@ class BLEConnection {
   }
 
   /**
-   * Send a command via BLE and return the response
+   * Send a command via BLE with internal retry logic
+   * Retries up to maxRetries times using the same dedup character
+   * Only advances dedup on final success
    * @param {string} cmd - The pfod command (e.g., "{.}" or "{dwgName}")
    * @returns {Promise<string>} - Response text (usually JSON)
    */
@@ -1260,16 +1335,62 @@ class BLEConnection {
       console.warn(`[BLE_CONNECTION] This should not happen - queue protection may not be working`);
     }
 
-    // Cancel any previous timeout that might still be running
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-      console.log(`[BLE_CONNECTION] Cancelled previous timeout`);
-      this.timeoutId = null;
-    }
+    // Get dedup character atomically - getCurrentDedupChar() increments for next call
+    const cmdWithPrefix = getCurrentDedupChar() + cmd;
+    const maxRetries = this.connectionManager.getMaxRetries();
+    let lastError = null;
 
-    // Clear previous response state
+    console.log(`[BLE_CONNECTION] Allocated dedup='${cmdWithPrefix[0]}' for this send()`);
+
+    // Clear response state once at the start - keep accumulated data across retries
     this.readBuffer = '';
 
+    // Retry loop: attempt up to (maxRetries + 1) times
+    // Data continues to accumulate in readBuffer across retry attempts
+    // All retries use the SAME cmdWithPrefix (dedup already captured)
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[BLE_CONNECTION] Send attempt ${attempt + 1}/${maxRetries + 1}: ${cmdWithPrefix}`);
+
+        // Cancel any previous timeout
+        if (this.timeoutId) {
+          clearTimeout(this.timeoutId);
+          console.log(`[BLE_CONNECTION] Cancelled previous timeout`);
+          this.timeoutId = null;
+        }
+
+        // NOTE: readBuffer is NOT cleared here - it persists across retries
+        // This allows partial responses to accumulate if retries occur
+
+        const responseText = await this.sendOnceInternal(cmdWithPrefix, cmd);
+
+        // Success! Return response (dedup already allocated and advanced at start)
+        console.log(`[BLE_CONNECTION] Success on attempt ${attempt + 1} with dedup='${cmdWithPrefix[0]}'`);
+        return responseText;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[BLE_CONNECTION] Attempt ${attempt + 1}/${maxRetries + 1} failed: ${error.message}`);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries) {
+          console.error(`[BLE_CONNECTION] All ${maxRetries + 1} attempts exhausted with dedup='${cmdWithPrefix[0]}'. Throwing error back to queue.`);
+          throw error;
+        }
+
+        // Otherwise, retry with same dedup character
+        console.log(`[BLE_CONNECTION] Retrying with same dedup='${cmdWithPrefix[0]}'...`);
+      }
+    }
+
+    // Should not reach here, but just in case
+    throw lastError || new Error('BLE send failed');
+  }
+
+  /**
+   * Send command once via BLE (no retries)
+   * @private
+   */
+  async sendOnceInternal(cmdWithPrefix, originalCmd) {
     // Record send time for performance measurement
     this.sendTime = Date.now();
 
@@ -1291,15 +1412,12 @@ class BLEConnection {
       }, timeout);
     });
 
-    // Prepend current dedup character to the command (don't advance yet - only advance on success)
-    const cmdWithPrefix = getCurrentDedupChar() + cmd;
-
     // Send the command
     console.log(`[BLE_CONNECTION] Sending: ${cmdWithPrefix} at ${new Date(this.sendTime).toISOString()}`);
 
     // Record the command being sent (with the dedup prefix)
     if (ConnectionManager.messageCollector) {
-      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'ble', cmd);
+      ConnectionManager.messageCollector.addMessage('sent', cmdWithPrefix, 'ble', originalCmd);
     }
 
     const encoder = new TextEncoder();

@@ -13,7 +13,7 @@
 
 // DEBUG flag
 // any setting of DEBUG other then false or 'false' enables debug
-var DEBUG = false;
+var DEBUG = false
 if ((typeof DEBUG === 'undefined') || (DEBUG === false) || (DEBUG === 'false')) {
   if (typeof DEBUG === 'undefined') {
     console.log('[PFODWEB_DEBUG] DEBUG not defined.  Disabling logging');
