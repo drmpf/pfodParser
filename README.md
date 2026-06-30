@@ -4,7 +4,7 @@ The pfodParser library serves user interfaces and handles user commands sent fro
 and the
 [Android pfodApp](https://www.forward.com.au/pfod/index.html).  
 
-![Europa Sampling Prototype](pfodWeb/docs/Europa_md.jpg) ![WeatherStation](pfodWeb/docs/WeatherStation_md.jpg) ![Chart](pfodWeb/docs/fieldsSet_md.jpg)
+![Europa Sampling Prototype](pfodWeb/docs/Europa_md.jpg) ![WeatherStation](pfodWeb/docs/WeatherStation_md.jpg) ![Chart](pfodWeb/docs/crosshairWithPanel_md.jpg)
 
 pfodWeb.html (included in this library) displays your GUI and runs in your off-line brower. The entire GUI is completely controlled by your micro's sketch.  
   pfodWeb.html connects to any Arduino or other micro board via Serial.
@@ -69,6 +69,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained. See pfodWeb/docs/pfodWeb_pfodProxy_License.html for the inherited licenses. 
 
 # Revisions 
+Version 5.0.3 Added mouser over data display to charts  
 Version 5.0.2 Revised pfodProxy connection  
 Version 5.0.1 Complete pfodWeb V4.0.0 and bug fixed located by claude  
 Version 5.0.0 Almost complete pfodWeb  
