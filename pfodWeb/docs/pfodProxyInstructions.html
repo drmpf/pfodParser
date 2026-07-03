@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pfodProxy/pfodWeb Startup Instructions</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 16px; max-width: 700px; margin: 0 auto; padding: 20px 24px 40px; color: #222; line-height: 1.5; }
+        h1 { font-size: 1.5em; color: #333; margin-bottom: 4px; }
+        h2 { font-size: 1.15em; margin-top: 24px; margin-bottom: 6px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+        .intro { background: #fff7e6; border: 1px solid #f0c050; border-radius: 6px; padding: 10px 14px; margin: 14px 0 20px; }
+        .links { margin: 0 0 20px; padding: 0; list-style: none; }
+        .links li { margin-bottom: 4px; }
+        .links a { color: #0066cc; }
+        .os { background: #f8f8f8; border: 1px solid #ddd; border-radius: 6px; padding: 12px 16px; margin-bottom: 14px; }
+        .os h2 { margin-top: 0; border-bottom: none; }
+        ol { margin: 6px 0 0; padding-left: 22px; }
+        li { margin-bottom: 6px; }
+        code { font-family: Consolas, "Courier New", monospace; background: #eee; padding: 1px 5px; border-radius: 3px; font-size: .95em; }
+        pre { background: #2b2b2b; color: #f8f8f2; padding: 10px 14px; border-radius: 5px; font-family: Consolas, "Courier New", monospace; font-size: .92em; overflow-x: auto; margin: 8px 0; }
+        .note { background: #e8f4e8; border: 1px solid #a0c8a0; border-radius: 5px; padding: 8px 12px; margin-top: 20px; font-size: .95em; }
+        a { color: #0066cc; }
+    </style>
+</head>
+<body>
+
+<h1>pfodWeb/pfodProxy Startup Instructions</h1>
+
+<div class="intro">
+    pfodProxy is the usual starting point for running pfodWeb.<br>
+    pfodWeb.html uses pfodProxy to bridge between it and devices connected via
+    <strong>Serial (USB/UART)</strong>, <strong>Classic Bluetooth</strong>,
+    <strong>BLE (Bluetooth Low Energy)</strong>, or <strong>TCP/IP</strong>.<br>
+    pfodProxy and pfodWeb.html are distributed separately.
+    Download pfodProxy for your OS (see links below)
+    then start pfodProxy and open pfodWeb.html.
+    Leave pfodProxy running in the background while pfodWeb is open.
+</div>
+
+<ul class="links">
+    <li><a href="#startup">Installation and Startup</a></li>
+    <ul>
+    <li><a href="#windows">Windows</a></li>
+    <li><a href="#macOS">MacOS</a></li>
+    <li><a href="#linux">Linux</a></li>    
+    </ul>
+    <li><a href="#closing-pfodProxy">Closing the pfodProxy</a></li>
+    <li><a href="#password">Setting a password</a></li>
+    <li><a href="#multiple-connections">Multiple Connections</a></li>
+    <li><a href="#classic-bt">How to connect a Classic Bluetooth device</a></li>
+    <li><a href="#custom-port">Using a custom port for pfodProxy</a></li>
+</ul>
+
+<h2 id="startup">Windows, MacOS and Linux Installation and Startup</h2>
+
+<div class="os"><h2 id="windows">Windows -- 2017 onwards</h2>
+    <p><strong>Download:</strong> <a href="https://www.forward.com.au/pfod/pfodWeb/pfodProxy/windows/pfodProxy.exe" target="_blank">pfodProxy.exe</a>
+    <a href="https://github.com/drmpf/pfodWeb_src/tree/main/windows" target="_blank">(also on Github)</a></p>
+    <ol>
+        <li>Double-click <strong>pfodProxy.exe</strong>. A command window opens and pfodProxy starts listening on port 4989.</li>
+        <li>Open <strong>pfodWeb.html</strong> in your browser.</li>
+        <li>Leave the pfodProxy window open while you use pfodWeb.</li>
+    </ol>
+</div>
+
+<div class="os"><h2 id="macOS">macOS -- 2017 onwards, Intel and Apple Silicon</h2>
+    <p><strong>Download:</strong> <a href="https://www.forward.com.au/pfod/pfodWeb/pfodProxy/macOS/pfodProxy-macOS.tar.gz" target="_blank">pfodProxy-macOS.tar.gz</a> 
+    <a href="https://github.com/drmpf/pfodWeb_src/tree/main/macOS" target="_blank">(also on Github)</a></p>
+    <ol>
+        <li>Double-click <code>pfodProxy-macOS.tar.gz</code> to extract the .app </li>
+        <li>Double-click <strong>pfodProxy.app</strong> to start pfodProxy in a Terminal window.</li>
+        <li>Open <strong>pfodWeb.html</strong> in your browser.</li>
+        <li>Leave pfodProxy running while you use pfodWeb.</li>
+    </ol>
+    <p><strong>macOS Gatekeeper:</strong> the first time you run pfodProxy.app, macOS will block it.
+    See <a href="https://www.forward.com.au/pfod/pfodWeb/pfodProxy/macOS/allow-pfodProxy-macOS.html" target="_blank">detailed macOS setup steps</a> 
+    for how to
+    allow pfodProxy through Privacy &amp; Security. This is only needed once.</p>
+    <p><strong>Terminal control permission:</strong> the first time pfodProxy.app runs, macOS will ask
+    <em>"pfodProxyLauncher wants to control Terminal"</em> — click <em>Allow</em>. This is only needed once.</p>
+</div>
+
+<div class="os"><h2 id="linux">Linux -- 2017 onwards</h2>
+    <p><strong>Download:</strong> <a href="https://www.forward.com.au/pfod/pfodWeb/pfodProxy/linux/pfodProxy" target="_blank">pfodProxy</a> 
+    <a href="https://github.com/drmpf/pfodWeb_src/tree/main/linux" target="_blank">(also on Github)</a></p>
+    <ol>
+        <li>Open a <strong>terminal</strong> in that folder.</li>
+        <li>Make it executable (first time only):
+            <pre>chmod +x pfodProxy</pre>
+        </li>
+        <li>Run it:
+            <pre>./pfodProxy</pre>
+            pfodProxy starts listening on port 4989.
+        </li>
+        <li>Open <strong>pfodWeb.html</strong> in your browser.</li>
+        <li>Leave the terminal open while you use pfodWeb.</li>
+    </ol>
+    <p><strong>Serial port access:</strong> add your user to the <code>dialout</code> group so pfodProxy can open
+    USB serial ports without sudo:</p>
+    <pre>sudo usermod -aG dialout $USER</pre>
+    <p>Log out and back in for the group change to take effect.</p>
+</div>
+
+<h2 id="closing-pfodProxy">Closing the pfodProxy</h2>
+<p>Close the pfodProxy manually or use the pfodWeb <strong>Close pfodProxy</strong> button.<br>
+That button will only show when the pfodProxy is running.
+</p>
+
+<h2 id="password">Setting a password</h2>
+<p>By default pfodProxy accepts requests from any pfodWeb.html on the same machine.
+If you're concerned about other software/webpages/scripts running on the same machine
+sending commands to your pfodDevices via the pfodProxy. You can
+optionally add a pfodProxy password as the second argument, after the port:</p>
+<pre># Windows
+pfodProxy.exe 4989 mypassword
+
+# macOS (from Terminal)
+pfodProxy.app/Contents/MacOS/pfodProxy 4989 mypassword
+
+# Linux
+./pfodProxy 4989 mypassword</pre>
+<p>Once the pfodProxy password is set, open pfodWeb.html with a matching <code>?pw=</code> on its own URL, e.g.:</p>
+<pre>file:///path/to/pfodWeb.html?pw=mypassword</pre>
+<p>The easiest way to use this day-to-day is to create a short cut that 
+launches <code>pfodProxy.exe 4989 mypassword</code>, and a bookmark that opens
+<code>pfodWeb.html?pw=mypassword</code>
+<p>pfodWeb will display error messages for miss-matching passwords.</p>
+
+<h2 id="multiple-connections">Multiple Connections</h2>
+
+<p>You can have more than one pfodWeb window open at once, each connected to a different device
+— for example one window talking to a serial-connected Arduino, another talking to a second serial pfodDevice, another to a TCP/IP ESP32, and
+another to a BLE device — all sharing the same pfodProxy running in the background.</p>
+
+<ol>
+    <li>To open another pfodWeb window, open <strong>pfodWeb.html</strong> again in your browser
+    (or open a new tab to it) — pfodProxy is already running and will handle the new window.</li>
+    <li>Only one pfodProxy ever actually runs at a time. If pfodProxy is already running, starting
+    it again doesn't start a second copy — it exits silently, leaving the already-running pfodProxy
+    in place.</li>
+    <li>Each pfodWeb window connects to its own device independently — connecting one window to a
+    device doesn't disconnect any other window's device, as long as they're different devices. Two
+    windows can't both connect to the <em>same</em> device at the same time; the second one gets a
+    "Connection Refused" message instead.</li>
+</ol>
+
+
+<h2 id="classic-bt">How to connect a Classic Bluetooth device</h2>
+
+<p>Classic Bluetooth devices (e.g. HC-05, HC-06) connect via the Serial transport.
+Pair the device with your computer first using the OS Bluetooth settings,
+then select the COM port / serial device it creates in pfodWeb.</p>
+
+<div class="os"><h2>Windows</h2>
+    <ol>
+        <li>Open <em>Settings &rarr; Bluetooth &amp; devices &rarr; Add device</em> and pair your Classic Bluetooth device.</li>
+        <li>After pairing, open <em>Device Manager &rarr; Ports (COM &amp; LPT)</em> to find the new COM port number (e.g. COM5).</li>
+        <li>In pfodWeb select <strong>Serial and Classic Bluetooth</strong>, click <strong>Select COM Port</strong> and choose that COM port.</li>
+    </ol>
+</div>
+
+<div class="os"><h2>macOS</h2>
+    <ol>
+        <li>Open <em>System Settings &rarr; Bluetooth</em> and pair your Classic Bluetooth device.</li>
+        <li>After pairing the device appears as <code>/dev/tty.DeviceName</code> in the serial port list.</li>
+        <li>In pfodWeb select <strong>Serial and Classic Bluetooth</strong>, click <strong>Select COM Port</strong> and choose that port.</li>
+    </ol>
+</div>
+
+<div class="os"><h2>Linux</h2>
+    <ol>
+        <li>Pair the device using <code>bluetoothctl</code>:
+            <pre>bluetoothctl
+pair XX:XX:XX:XX:XX:XX
+trust XX:XX:XX:XX:XX:XX</pre>
+        </li>
+        <li>Bind it to an rfcomm device (replace the address with your device):
+            <pre>sudo rfcomm bind 0 XX:XX:XX:XX:XX:XX</pre>
+        </li>
+        <li>This creates <code>/dev/rfcomm0</code> — select it in pfodWeb as a serial port.</li>
+        <li>To release it when done:
+            <pre>sudo rfcomm release 0</pre>
+        </li>
+    </ol>
+</div>
+
+<h2 id="custom-port">Using a custom port for pfodProxy</h2>
+<p>Pass the port number as an argument to change from the default 4989.
+Update the <em>via pfodProxy</em> host field in pfodWeb to match, e.g. <code>4990</code>.</p>
+<pre># Windows
+pfodProxy.exe 4990
+
+# macOS (from Terminal)
+pfodProxy.app/Contents/MacOS/pfodProxy 4990
+
+# Linux
+./pfodProxy 4990</pre>
+
+<h2 id="security">Security</h2>
+
+<ul>
+  <li><strong>Password secured pfodProxy</strong> — see <a href="#password">Setting a password</a> above. Recommended if
+      you're concerned about other software/webpages/scripts running on the same machine sending commands to your pfodDevices
+      via the pfodProxy. When secured with a password, every request must then carry a matching <code>&amp;pw=</code>,
+      checked with a constant-time comparison. A mismatched or missing password is rejected the
+      same way as any other malformed request — silently, with no distinguishing error — so it can't
+      be used for guessing the real password.</li>
+
+      <p><strong>The following security features are active even if a password has not been set</strong></p>
+  <li><strong>Host header filter</strong> — every request to the pfodProxy must carry a <code>Host</code> of
+      <code>localhost:&lt;port&gt;</code> or <code>127.0.0.1:&lt;port&gt;</code>. Any other value
+      (including an attacker's rebinding domain) is rejected with <code>403 Forbidden</code> before
+      any handler runs. This is the primary DNS-rebinding defence.</li>
+
+  <li><strong>Loopback-only bind</strong> — pfodProxy binds to <code>127.0.0.1</code> only, never
+      <code>0.0.0.0</code>. It is not reachable from other machines on the network.</li>
+
+
+  <li><strong>Origin filter</strong> — pfodWeb.html opened via <code>file://</code> (the normal case) sends
+      <code>Origin: null</code> on every request; an ordinary website has its own real origin instead.
+      Any request whose <code>Origin</code> is present and isn't <code>null</code> is rejected, blocking
+      the common case of some unrelated website's script probing <code>127.0.0.1</code> for a running
+      pfodProxy.</li>
+
+  <li><strong>Fixed TCP/IP device port</strong> — pfodProxy always connects to a pfod TCP/IP device on
+      port 4989 and never reads a caller-supplied port. This stops an un-secured pfodProxy (no password set) from
+      being usable as a general-purpose port scanner against other hosts on your LAN.</li>
+
+  <li><strong>Cmd syntax validation</strong> — every cmd written to a device (Serial, BLE, or TCP/IP) must
+      be a <code>{...}</code> pfod command, optionally preceded by a single dedup character, or it's
+      rejected. This stops pfodProxy being used to write arbitrary non-pfod data to a connected
+      device.</li>
+
+  <li><strong>No informative errors</strong> — any rejected or malformed request (bad password, bad cmd
+      syntax, wrong port, missing target, unrecognised shape) is met with silence rather than an error
+      response: pfodProxy just doesn't reply, the same as if nothing were listening. This is logged on
+      the pfodProxy console for your own troubleshooting, but nothing is ever sent back that could
+      confirm pfodProxy is running or hint at what failed.</li>
+</ul>
+
+<div class="note">
+    pfodProxy is a single statically-linked rust based binary — no Python, Node.js, or extra packages required.<br>
+    Source and licensing: <a href="https://www.forward.com.au/pfod/pfodWeb" target="_blank">https://www.forward.com.au/pfod/pfodWeb</a>
+</div>
+
+</body>
+</html>
