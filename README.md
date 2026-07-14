@@ -1,4 +1,4 @@
-# pfodParser
+# pfodParser / pfodWeb Client
 The pfodParser library serves user interfaces and handles user commands sent from 
 [pfodWeb](https://www.forward.com.au/pfod/pfodWeb/index.html)
 and the
@@ -6,16 +6,15 @@ and the
 
 ![Europa Sampling Prototype](pfodWeb/docs/Europa_md.jpg) ![WeatherStation](pfodWeb/docs/WeatherStation_md.jpg) ![Chart](pfodWeb/docs/crosshairWithPanel_md.jpg)
 
-pfodWeb.html (included in this library) displays your GUI and runs in your off-line brower. The entire GUI is completely controlled by your micro's sketch.  
+<strong>pfodWeb.html</strong> (included in this library) displays your GUI and runs in your off-line brower. The entire GUI is completely controlled by your micro's sketch.  
   pfodWeb.html connects to any Arduino or other micro board via Serial.
 It can also connect via BLE, TCP/IP Socket or HTTP. _Serial, BLE and TCP/IP connect via pfodProxy_.  
 See [pfodWeb Installation and Tutorials](https://www.forward.com.au/pfod/pfodWeb/index.html) 
 and the **pfodParser/examples/pfodWeb** Arduino examples in this library.
 
-pfodWeb.html also include a Designer that lets you create your own menus, sub-menus, charts, etc and then generate the complete Arduino code to compiles and upload.  
-See [pfodDesignerV3 tutorials and examples](https://www.forward.com.au/pfod/pfodDesigner/index.html).  
-The free [Android pfodDesignerV3](https://play.google.com/store/apps/details?id=au.com.forward.pfodDesignerV2) app, which Designer re-implements, currently covers more boards,
- but pfodWeb's Designer coverage will be expanded as time goes on.
+pfodWeb.html also include a <strong>Designer</strong> that lets you create your own menus, sub-menus, 
+charts, etc and then generate the complete Arduino code to compiles and upload. See [pfodDesignerV3 tutorials and examples](https://www.forward.com.au/pfod/pfodDesigner/index.html).  
+There is also a free [Android pfodDesignerV3](https://play.google.com/store/apps/details?id=au.com.forward.pfodDesignerV2) app, which Designer re-implements.
 
 The [pfodApp Android client](https://play.google.com/store/apps/details?id=au.com.forward.pfodApp) supports WiFi, BLE, Bluetooth and SMS connections.   
  
@@ -24,11 +23,12 @@ For non-Arduino based micros there is a trivial [pfodParserC](https://www.forwar
 which compiles to <2K on an ATtiny84, including the software serial implemenation,
 and much less on micros with UART support. This trivial C pfodParser lets you use **pfodWeb** on any brower to control, monitor and chart and capture data from
 any micro via Serial. 
-(see [pfodParser for Non-Arduino microprocessors](https://www.forward.com.au/pfod/PIC/index.html)
+(see [pfodParser for Non-Arduino microprocessors](https://www.forward.com.au/pfod/PIC/index.html))
 
 This library includes:-  
 * **pfodParser**, parses pfod commands and serves the GUI 
-* **pfodWeb**, browser version of pfodApp that connects via Serial, BLE, TCP/IP or HTTP to display interactive GUI's   
+* **pfodWeb**, browser version of pfodApp that connects via Serial, BLE, TCP/IP or HTTP to display interactive GUI's. 
+pfodWeb includes a Designer that generates complete sketches to control and monitor your Ardunio board.
 * **pfodSecurity**, alternative to pfodParser that adds 128bit sercuity   
 * **pfodDwgs**, classes for sending dwg commands to create interactive GUI's 
 
@@ -41,7 +41,7 @@ This library includes:-
 
 
 # pfodWeb
-The pfodWeb sub-directory contains the single page pfodWeb.html client that runs in all browsers since 2017.
+The pfodWeb sub-directory contains the single web page client, <strong>pfodWeb.html</strong>, that runs in all browsers since 2017.
 No local server is required. You can run pfodWeb on a completely isolated network with no internet access.  
 pfodWeb can also be served directly from your micro for a completely self-contained deployment. See the **pfodParser/examples/pfodWeb/demoScreens_http** Arduino example.  
 
