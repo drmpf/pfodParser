@@ -25,6 +25,8 @@ pfodCircularLineBuffer::pfodCircularLineBuffer(size_t bufferSize)
     , endLineCount(0)
     , readPos(0)
     , readEndPos(0)
+    , lineByteCount(0)
+    , prevByte(0)
 {
     buffer = new uint8_t[bufferSize];
 }

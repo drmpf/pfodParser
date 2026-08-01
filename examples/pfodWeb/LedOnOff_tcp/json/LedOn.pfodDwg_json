@@ -1,6 +1,10 @@
 {
-  "js_ver": "V1.1.0 -- 17th August 2025",
-  "version": "V1758327979030",
+  "format": "pfodDwgDesigner",
+  "schema": 1,
+  "savedAt": "2026-07-30T06:32:27.652Z",
+  "name": "LedOn",
+  "description": "",
+  "js_ver": "V4.1.2-- 27th July 2026",
   "x": 50,
   "y": 25,
   "color": 12,
@@ -10,7 +14,6 @@
       "type": "rectangle",
       "indexed": true,
       "idxName": "idx_1",
-      "idx": 653,
       "color": 10,
       "xSize": 18,
       "ySize": 7,
@@ -24,7 +27,6 @@
       "type": "label",
       "indexed": true,
       "idxName": "idx_2",
-      "idx": 654,
       "color": 9,
       "xOffset": 25,
       "yOffset": 12.5,
@@ -43,7 +45,6 @@
       "xOffset": 25,
       "yOffset": 12.5,
       "cmdName": "cmd_c1",
-      "cmd": "cmd_c519",
       "filter": 0,
       "centered": "true",
       "priority": 0
@@ -51,11 +52,9 @@
     {
       "type": "touchAction",
       "cmdName": "cmd_c1",
-      "cmd": "cmd_c519",
       "action": [
         {
           "type": "rectangle",
-          "idx": 653,
           "idxName": "idx_1",
           "color": 7,
           "xSize": 18,
@@ -68,6 +67,5 @@
         }
       ]
     }
-  ],
-  "name": "LedOn"
+  ]
 }

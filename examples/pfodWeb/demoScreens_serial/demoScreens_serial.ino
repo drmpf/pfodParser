@@ -7,8 +7,7 @@
  * Hardware: Arduino Uno (Serial TX=D1, RX=D0), Mega, etc.
  *
  * Required libraries (Arduino Library Manager):
- *   pfodParser V3.63+       -- pfodParser.h, pfodDwgs.h
- *   pfodDwgControls V1.0+   -- pfodDwgControls.h
+ *   pfodParser V5.1.0+       -- pfodParser.h, pfodDwgs.h
  *
  * Command hierarchy mirrors V3_DemoMsgProcessor.java exactly.
  * parser.getCmd() returns the full null-terminated command string;
@@ -19,8 +18,7 @@
  */
 
 #include <pfodParser.h>
-#include <pfodDwgControls.h>
-#include <millisDelay.h>
+#include <pfodDelay.h>
 
 
 pfodParser parser("V361");
@@ -33,7 +31,7 @@ void closeConnection(Stream* /*io*/);
 // emits one DateData row + one MotorData row every 800 ms thereafter.
 // Output goes outside any {...} pfod message, so the connected app sees
 // it as raw data (Section 9 streaming view in pfodWeb).
-millisDelay rawDataDelay;            // reused for initial 1 s delay then 800 ms cadence
+pfodDelay rawDataDelay;            // reused for initial 1 s delay then 800 ms cadence
 bool        rawDataArmed     = false; // first '{.}' has been seen, timer started
 
 // ---- Text input state ----

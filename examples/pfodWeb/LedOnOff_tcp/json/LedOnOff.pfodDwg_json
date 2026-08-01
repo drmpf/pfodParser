@@ -1,5 +1,10 @@
 {
+  "format": "pfodDwgDesigner",
+  "schema": 1,
+  "savedAt": "2026-07-30T06:32:27.652Z",
   "name": "LedOnOff",
+  "description": "",
+  "js_ver": "V4.1.2-- 27th July 2026",
   "x": 40,
   "y": 15,
   "color": 7,
@@ -16,8 +21,7 @@
       "drawingName": "LedOn",
       "cmdName": "dwg_LedOn",
       "xOffset": 0,
-      "yOffset": 0,
-      "cmd": "cmd_c493"
+      "yOffset": 0
     },
     {
       "type": "pushZero",
@@ -30,8 +34,7 @@
       "drawingName": "LedOff",
       "cmdName": "dwg_LedOff",
       "xOffset": 0,
-      "yOffset": 0,
-      "cmd": "cmd_c494"
+      "yOffset": 0
     },
     {
       "type": "popZero"
@@ -43,7 +46,6 @@
       "type": "label",
       "indexed": true,
       "idxName": "idx_1",
-      "idx": 622,
       "color": 0,
       "xOffset": 20,
       "yOffset": 11.5,
@@ -55,6 +57,5 @@
       "align": "center",
       "decimals": 2
     }
-  ],
-  "version": "V1763081885191"
+  ]
 }

@@ -4,7 +4,7 @@
  * Serves all demo screens via WiFi (pfodWeb over HTTP and pfodApp over TCP).
  *
  * Required libraries (Arduino Library Manager):
- *   pfodParser V3.63+       -- pfodParser.h, pfodDwgs.h
+ *   pfodParser V5.1.0+       -- pfodParser.h, pfodDwgs.h
  *
  *
  * (c)2026 Forward Computing and Control Pty. Ltd.
