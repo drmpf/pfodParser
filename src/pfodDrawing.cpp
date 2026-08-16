@@ -11,23 +11,22 @@
 
 pfodDrawing::pfodDrawing() {
   parserPtr = NULL;
-  //dwgsPtr = NULL;
+  dwgsPtr = NULL;
   // NOTE: each pfodDrawing allocates its own pfodDwgs (and a linked list node)
   // on the heap.  This heap usage is NOT included in the compiler's
   // "Global variables use ..." RAM report, so sketches with many drawings on
   // small AVR boards need to allow extra free RAM for it.
-  dwgsPtr = new pfodDwgs;
-  pfodParser::addDwg(this); // allocates pointer for linked list
+//  dwgsPtr = new pfodDwgs;
+ // pfodParser::addDwg(this); // allocates pointer for linked list
 }
 
-// deprecated now a no-op call
 void pfodDrawing::init() {
-//  if (initializedDrawing) {
-//    return;
-//  }
-//  initializedDrawing = true;
-//  dwgsPtr = new pfodDwgs;
-//  pfodParser::addDwg(this); // allocates pointer for linked list
+  if (initializedDrawing) {
+    return;
+  }
+  initializedDrawing = true;
+  dwgsPtr = new pfodDwgs;
+  pfodParser::addDwg(this); // allocates pointer for linked list
 }
 
 // deprecated use init() and setParser()

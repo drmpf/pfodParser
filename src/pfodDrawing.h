@@ -11,8 +11,15 @@
 
 /**
   How to use:
-  Create a pfodDrawing from the pfodParser ptr and a pfodDwgs ptr
-  This will automatically add that pfodDrawing to a linked list of dwg in the parser
+  Create a pfodDrawing, then call init() on it -- init() is what adds that
+  pfodDrawing to the linked list of dwgs in the parser AND allocates its
+  pfodDwgs.  The CONSTRUCTOR does neither.
+  !! A pfodDrawing you never call init() on is never registered, so it is
+     never sent and never receives touches -- and its dwgsPtr stays NULL, so
+     using it before init() dereferences NULL.
+  Registering in init() rather than the constructor means a drawing object
+  that is defined but never used (e.g. a generated default instance that a
+  subclass replaces) costs no list node and no pfodDwgs.
   Then when parser.parse( ) is called and finds a complete { .. } input
   it will automatically loop through the listOfDrawings and
   a) send that dwg if the cmd matches (the test is done in you implementation of sendDwg()
@@ -47,7 +54,11 @@ class pfodDwgs;
 class pfodDrawing : public pfodAutoCmd {
   public:
     pfodDrawing();
-    void init(); // deprecated now a no-op call
+    // init(), REQUIRED, call once before use -- allocates this drawing's pfodDwgs and
+    // adds it to pfodParser's list of drawings.  Idempotent: guarded by
+    // initializedDrawing, so a second call neither leaks a pfodDwgs nor
+    // double-adds. 
+    void init();
     void setParser(pfodParser* _parserPtr); // overrides the output stream
     virtual bool sendDwg(); // returns is dwg sent else false i.e. not this dwg's loadCmd
     virtual bool processDwgCmds(); // return true if handled else false
@@ -56,6 +67,11 @@ class pfodDrawing : public pfodAutoCmd {
  protected:
  	pfodParser *parserPtr;
     pfodDwgs *dwgsPtr;
+    // Guards init().  Initialised HERE, not just in the constructor, so a
+    // pfodDrawing on the stack or heap is as safe as a global -- a global
+    // would be zeroed by .bss, but an automatic one would start as garbage
+    // and could make init() early-return, leaving the drawing unregistered.
+    bool initializedDrawing = false;
  };
  
 #endif
