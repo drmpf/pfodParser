@@ -54,6 +54,10 @@ The **pfodWeb/docs** sub-directory contains the docs for pfodWeb.
 pfodWeb is open-source. The source is available from [pfodWeb_src.zip](https://www.forward.com.au/pfod/pfodWeb/pfodWeb_src.zip) 
 and github hosted at [pfodWeb_src](https://github.com/drmpf/pfodWeb_src) 
 
+# Using pfodParser/pfodWeb with AI
+The **pfodWeb/docs** sub-directory contains **pfodAI-guide.md** and two .md specifications for the menu and dwg json files, 
+**pfodMenu_json-format.md** and **pfodDwg_json-format.md**.  Point your AI at these three files and the pfodParser src to give it the context it needs to create pfod menus and dwgs
+and to add the logic to complete the program.
 
 # How-To
 See [pfodWeb Installation and Tutorials](https://www.forward.com.au/pfod/pfodWeb/index.html)  
@@ -69,6 +73,8 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained. See pfodWeb/docs/pfodWeb_pfodProxy_License.html for the inherited licenses. 
 
 # Revisions 
+Version 5.1.5 pfodWeb V4.1.7 breaking change, clear browser storage and reload all dwgs  
+Version 5.1.4 pfodWeb V4.1.6
 Version 5.1.2 pfodWeb V4.1.3  
 Version 5.1.1 pfodWeb V4.1.2, and bug fix in pfodCircularLineBuffer  
 Version 5.1.0 pfodWeb V4.1.0  

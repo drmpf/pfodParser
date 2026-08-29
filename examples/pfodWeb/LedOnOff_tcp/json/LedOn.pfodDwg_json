@@ -1,40 +1,38 @@
 {
   "format": "pfodDwgDesigner",
   "schema": 1,
-  "savedAt": "2026-07-30T06:32:27.652Z",
+  "savedAt": "2026-08-27T03:04:38.952Z",
   "name": "LedOn",
   "description": "",
-  "js_ver": "V4.1.2-- 27th July 2026",
+  "js_ver": "V4.1.7-- 23th August 2026",
   "x": 50,
   "y": 25,
   "color": 12,
-  "refresh": 0,
+  "dwgRefresh_ms": 0,
   "items": [
     {
       "type": "rectangle",
-      "indexed": true,
       "idxName": "idx_1",
       "color": 10,
       "xSize": 18,
       "ySize": 7,
       "xOffset": 25,
       "yOffset": 12.5,
-      "filled": "true",
-      "centered": "true",
-      "rounded": "true"
+      "filled": true,
+      "centered": true,
+      "rounded": true
     },
     {
       "type": "label",
-      "indexed": true,
       "idxName": "idx_2",
       "color": 9,
       "xOffset": 25,
       "yOffset": 12.5,
       "text": "Turn Led On",
       "fontSize": 0,
-      "bold": "true",
-      "italic": "false",
-      "underline": "false",
+      "bold": true,
+      "italic": false,
+      "underline": false,
       "align": "center",
       "decimals": 2
     },
@@ -46,8 +44,7 @@
       "yOffset": 12.5,
       "cmdName": "cmd_c1",
       "filter": 0,
-      "centered": "true",
-      "priority": 0
+      "centered": true
     },
     {
       "type": "touchAction",
@@ -61,9 +58,9 @@
           "ySize": 7,
           "xOffset": 25,
           "yOffset": 12.5,
-          "filled": "true",
-          "centered": "true",
-          "rounded": "false"
+          "filled": true,
+          "centered": true,
+          "rounded": false
         }
       ]
     }

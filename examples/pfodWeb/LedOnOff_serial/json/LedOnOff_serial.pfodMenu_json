@@ -1,9 +1,11 @@
 {
   "format": "pfodDesigner",
-  "schema": 11,
+  "schema": 12,
   "name": "LedOnOff_serial",
-  "savedAt": "2026-07-30T06:31:50.540Z",
-  "js_ver": "V4.1.2-- 27th July 2026",
+  "connection": "serial",
+  "boardName": "Arduino UNO",
+  "savedAt": "2026-08-27T03:01:40.783Z",
+  "js_ver": "V4.1.7-- 23th August 2026",
   "rootMenu": {
     "promptText": "",
     "promptFormat": {
@@ -31,6 +33,5 @@
       }
     ],
     "refresh_ms": 0
-  },
-  "connection": "serial"
+  }
 }

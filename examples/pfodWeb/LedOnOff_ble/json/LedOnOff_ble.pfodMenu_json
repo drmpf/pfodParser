@@ -1,9 +1,11 @@
 {
   "format": "pfodDesigner",
-  "schema": 11,
+  "schema": 12,
   "name": "LedOnOff_ble",
-  "savedAt": "2026-07-30T03:23:22.770Z",
-  "js_ver": "V4.1.2-- 27th July 2026",
+  "connection": "ble",
+  "boardName": "FireBeetle 2 ESP32-E",
+  "savedAt": "2026-08-27T02:29:05.703Z",
+  "js_ver": "V4.1.7-- 23th August 2026",
   "rootMenu": {
     "promptText": "",
     "promptFormat": {
@@ -31,6 +33,5 @@
       }
     ],
     "refresh_ms": 0
-  },
-  "connection": "ble"
+  }
 }

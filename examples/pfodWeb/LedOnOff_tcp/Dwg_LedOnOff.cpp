@@ -10,19 +10,21 @@
 
 #include "Dwg_LedOnOff.h"
 #include <pfodDebugPtr.h>
-extern bool isLedOn();
 
 //#define DEBUG
 static Print* debugPtr = NULL;  // local to this file
 
 Dwg_LedOnOff dwg_LedOnOff;
+// weak: defining this function in any other .cpp replaces it, which is
+// how a subclass takes over without editing this file -- see Dwg_LedOnOff.h
+Dwg_LedOnOff& __attribute__((weak)) get_dwg_LedOnOff() { return dwg_LedOnOff; }
 
 #include "Dwg_LedOn.h"
 #include "Dwg_LedOff.h"
 
 Dwg_LedOnOff::Dwg_LedOnOff() {
   initialized = false;
-  dwgRefresh = 2000;
+  dwgRefresh_ms = 2000;
 }
 
 void Dwg_LedOnOff::init() {
@@ -35,8 +37,8 @@ void Dwg_LedOnOff::init() {
   debugPtr = getDebugPtr();
 #endif
   pfodDrawing::init();
-  dwg_LedOn.init(); // initialize inserted drawing
-  dwg_LedOff.init(); // initialize inserted drawing
+  get_dwg_LedOn().init(); // initialize inserted drawing
+  get_dwg_LedOff().init(); // initialize inserted drawing
 }
 
 // return true if handled else false
@@ -62,21 +64,17 @@ bool Dwg_LedOnOff::sendDwg() {
 
 // all the indexed items are included here, edit as needed for updates
 void Dwg_LedOnOff::sendIndexedItems() {
-  if (isLedOn()) {
-    dwgsPtr->label().idx(idx_1).color(dwgsPtr->RED).text("Led is ON").bold().offset(20,11.5).center().decimals(2).send();
-  } else {
     dwgsPtr->label().idx(idx_1).color(dwgsPtr->BLACK).text("Led is Off").bold().offset(20,11.5).center().decimals(2).send();
-  }
 }
-        
+
 void Dwg_LedOnOff::sendFullDrawing() {
     // Start the drawing
     dwgsPtr->start(40, 15, dwgsPtr->SILVER);
-    parserPtr->sendRefreshAndVersion(dwgRefresh); // sets version and refresh time for dwg pfodWeb processes this
+    parserPtr->sendRefreshAndVersion(dwgRefresh_ms); // sets version and refresh time for dwg pfodWeb processes this
     dwgsPtr->pushZero(-8, -3, 0.7);
-    dwgsPtr->insertDwg().loadCmd(dwg_LedOn).offset(0,0).send();
+    dwgsPtr->insertDwg().loadCmd(get_dwg_LedOn()).offset(0,0).send();
     dwgsPtr->pushZero(29, 0, 1);
-    dwgsPtr->insertDwg().loadCmd(dwg_LedOff).offset(0,0).send();
+    dwgsPtr->insertDwg().loadCmd(get_dwg_LedOff()).offset(0,0).send();
     dwgsPtr->popZero();
     dwgsPtr->popZero();
     dwgsPtr->index().idx(idx_1).send(); // place holder for indexed item

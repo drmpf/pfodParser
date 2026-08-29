@@ -11,28 +11,27 @@
 #include "Dwg_LedOff.h"
 #include <pfodDebugPtr.h>
 
-extern void turnLedOff();
-
 //#define DEBUG
 static Print* debugPtr = NULL;  // local to this file
 
 Dwg_LedOff dwg_LedOff;
+// weak: defining this function in any other .cpp replaces it, which is
+// how a subclass takes over without editing this file -- see Dwg_LedOff.h
+Dwg_LedOff& __attribute__((weak)) get_dwg_LedOff() { return dwg_LedOff; }
 
 
 bool Dwg_LedOff::Dwg_LedOff_cmd_c1(int row, int col, uint8_t touchType, const byte* editedText) {
   (void)row; (void)col; (void)touchType; (void)editedText; // suppress warnings
-  turnLedOff();
   // sendUpdate from here
   // and return true,  if only this dwg needs updating
-  //  sendUpdate(); 
-  //  return true;
+  sendUpdate(); 
+  return true;
   // else return false to propagate upto the mainmenu to let it send the response.
-  return false;
 }
 
 Dwg_LedOff::Dwg_LedOff() {
   initialized = false;
-  dwgRefresh = 0;
+  dwgRefresh_ms = 0;
 }
 
 void Dwg_LedOff::init() {
@@ -80,7 +79,7 @@ void Dwg_LedOff::sendIndexedItems() {
 void Dwg_LedOff::sendFullDrawing() {
     // Start the drawing
     dwgsPtr->start(50, 25, dwgsPtr->BLUE);
-    parserPtr->sendRefreshAndVersion(dwgRefresh); // sets version and refresh time for dwg pfodWeb processes this
+    parserPtr->sendRefreshAndVersion(dwgRefresh_ms); // sets version and refresh time for dwg pfodWeb processes this
     dwgsPtr->index().idx(idx_1).send(); // place holder for indexed item
     dwgsPtr->index().idx(idx_2).send(); // place holder for indexed item
     dwgsPtr->touchZone().cmd(cmd_c1).centered().size(18,7).offset(25,12.5).send();
