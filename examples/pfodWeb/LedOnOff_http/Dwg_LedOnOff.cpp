@@ -37,6 +37,17 @@ void Dwg_LedOnOff::init() {
   debugPtr = getDebugPtr();
 #endif
   pfodDrawing::init();
+  // Forces this dwg's own pfodAutoIdx/pfodAutoCmd to a fixed,
+  // deterministic value at boot instead of leaving it lazily assigned by
+  // client request order -- sent to a local discard sink
+  // (default-constructed pfodParser leaves io=NULL, so its write()s
+  // silently no-op), never a real client. Runs BEFORE the drawings
+  // inserted below, so this dwg takes the lower idx values and each
+  // child it inserts takes higher ones.
+  pfodParser primingSink;
+  setParser(&primingSink);
+  sendFullDrawing();  // before any included dwgs to match later gets higher idx
+
   get_dwg_LedOn().init(); // initialize inserted drawing
   get_dwg_LedOff().init(); // initialize inserted drawing
 }

@@ -12,7 +12,8 @@ It can also connect via BLE, TCP/IP Socket or HTTP. _Serial, BLE and TCP/IP conn
 See [pfodWeb Installation and Tutorials](https://www.forward.com.au/pfod/pfodWeb/index.html) 
 and the **pfodParser/examples/pfodWeb** Arduino examples in this library.
 
-pfodWeb.html also include a <strong>Designer</strong> that lets you create your own menus, sub-menus, 
+pfodWeb.html also include a <strong>Designer</strong> that has been optimized for 
+use by AI coding assistants. The Designer that lets you create your own menus, sub-menus, 
 charts, etc and then generate the complete Arduino code to compiles and upload. See [pfodDesignerV3 tutorials and examples](https://www.forward.com.au/pfod/pfodDesigner/index.html).  
 There is also a free [Android pfodDesignerV3](https://play.google.com/store/apps/details?id=au.com.forward.pfodDesignerV2) app, which Designer re-implements.
 
@@ -31,6 +32,26 @@ This library includes:-
 pfodWeb includes a Designer that generates complete sketches to control and monitor your Ardunio board.
 * **pfodSecurity**, alternative to pfodParser that adds 128bit sercuity   
 * **pfodDwgs**, classes for sending dwg commands to create interactive GUI's 
+
+## Using pfodParser/pfodWeb with an AI assistant
+
+ In the pfodParser library under ***pfodParser/pfodWeb/docs*** are
+ three .md files for the AI assistant to consume.  
+
+**pfodAI-guide.md** -- an guide for the AI assistant on how to turn a user's design request in to a UI.  
+**pfodMenu_json-format.md** -- an AI guide on how to create valid json definitions for pfod menus.  
+**pfodDwg_json-format.md** -- an AI guide on how to create valid json definitions for pfod drawings.  
+
+Point the AI at those three files and describe the contents of the UI you want to build. Tell the AI to pause after each
+interation so you can make your own edits/modification to the UI using pfodWeb's UI preview and editing capabilities.  
+While the AI can create the general design, the fine adjustment to make it look just right are often easier done by hand
+using the preview/edit features.  For changes that effect multiple similar items, use the pfodWeb editor to determine the exact
+change required and then ask AI to implement it for the all the effected items. 
+
+If you use Claude-in-Chrome or similar, your AI can drive
+the entire interation from creating the json files to loading them into pfodWeb's desinger for you to preview.
+  Ask claude to save the main dwg at each iteration. This gives you a snapshot of the json files of the design at that stage.
+If you make changes yourself, save the main dwg and point the AI at it to pickup your edits.
 
 # Quick Start
 
@@ -54,10 +75,6 @@ The **pfodWeb/docs** sub-directory contains the docs for pfodWeb.
 pfodWeb is open-source. The source is available from [pfodWeb_src.zip](https://www.forward.com.au/pfod/pfodWeb/pfodWeb_src.zip) 
 and github hosted at [pfodWeb_src](https://github.com/drmpf/pfodWeb_src) 
 
-# Using pfodParser/pfodWeb with AI
-The **pfodWeb/docs** sub-directory contains **pfodAI-guide.md** and two .md specifications for the menu and dwg json files, 
-**pfodMenu_json-format.md** and **pfodDwg_json-format.md**.  Point your AI at these three files and the pfodParser src to give it the context it needs to create pfod menus and dwgs
-and to add the logic to complete the program.
 
 # How-To
 See [pfodWeb Installation and Tutorials](https://www.forward.com.au/pfod/pfodWeb/index.html)  
@@ -73,6 +90,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained. See pfodWeb/docs/pfodWeb_pfodProxy_License.html for the inherited licenses. 
 
 # Revisions 
+Version 5.1.7 pfodWeb V4.1.9 made indices statble on reboot, added more AI restictions to assisted UI coding, fixed code generation bug when menu had two dwg menu items  
 Version 5.1.5 pfodWeb V4.1.7 breaking change, clear browser storage and reload all dwgs  
 Version 5.1.4 pfodWeb V4.1.6
 Version 5.1.2 pfodWeb V4.1.3  

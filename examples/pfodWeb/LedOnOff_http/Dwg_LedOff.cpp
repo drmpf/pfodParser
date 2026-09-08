@@ -44,6 +44,13 @@ void Dwg_LedOff::init() {
   debugPtr = getDebugPtr();
 #endif
   pfodDrawing::init();
+  // Forces this dwg's own pfodAutoIdx to a fixed, deterministic value at
+  // boot instead of leaving it lazily assigned by client request order --
+  // sent to a local discard sink (default-constructed pfodParser leaves
+  // io=NULL, so its write()s silently no-op), never a real client.
+  pfodParser primingSink;
+  setParser(&primingSink);
+  sendFullDrawing();
 }
 
 // return true if handled else false
