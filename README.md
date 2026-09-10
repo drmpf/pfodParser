@@ -90,6 +90,7 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained. See pfodWeb/docs/pfodWeb_pfodProxy_License.html for the inherited licenses. 
 
 # Revisions 
+Version 5.1.8 added pfodParserAI-guide.md for pfodDelay usage  
 Version 5.1.7 pfodWeb V4.1.9 made indices statble on reboot, added more AI restictions to assisted UI coding, fixed code generation bug when menu had two dwg menu items  
 Version 5.1.5 pfodWeb V4.1.7 breaking change, clear browser storage and reload all dwgs  
 Version 5.1.4 pfodWeb V4.1.6
