@@ -5,7 +5,12 @@
 
 #include <Arduino.h>
 #include <pfodParser.h>
-/*   
+#ifdef ESP8266
+#include <ESP8266WebServer.h>
+#else
+#include <WebServer.h>
+#endif
+/*
    ESP_PicoW_pfodWebServer.h
  * (c)2025 Forward Computing and Control Pty. Ltd.
  * NSW Australia, www.forward.com.au
@@ -13,7 +18,7 @@
  * This generated code may be freely used for both private and commercial use
  * provided this copyright is maintained.
  */
- 
+
 typedef  void (*handle_mainMenuFnPtr)(pfodParser &parser);
 
  // default serverFromLittleFS == false, need to use pfodWebServer to request dwg
@@ -24,6 +29,15 @@ void start_pfodWebServer(const char* version, bool serverFromLittleFS = false, u
 void handle_pfodWebServer();                   // call this each loop()
 void pfodWeb_setVersion(const char* version);  // this is called from start_pfodWebServer()
 Print& getRawDataWriter();  // this is for use when there is not pfodApp server included
+
+// Access to the underlying web server instance, so a sketch can register its
+// own additional server.on(...) handlers (e.g. for its own dynamically
+// generated pages) on the same server/port. Call after start_pfodWebServer().
+#ifdef ESP8266
+ESP8266WebServer& getPfodHttpServer();
+#else
+WebServer& getPfodHttpServer();
+#endif
 
 // Optional hooks, called immediately before / after the server streams
 // a static file from LittleFS (the heavy, radio- and RAM-bound part of

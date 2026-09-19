@@ -344,6 +344,16 @@ void handle_pfodWebServer() {
   server.handleClient();
 }
 
+#ifdef ESP8266
+ESP8266WebServer& getPfodHttpServer() {
+  return server;
+}
+#else
+WebServer& getPfodHttpServer() {
+  return server;
+}
+#endif
+
 static void redirect(const char* url) {
   if (debugPtr) {
     debugPtr->print("Redirect to: ");
