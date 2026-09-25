@@ -1,9 +1,9 @@
-# pfodParser — AI Guide to Timers and Delays (`pfodDelay` / `millisDelay`)
+# pfodParser — AI Guide to Utility Classes (`pfodDelay`/`millisDelay`, `pfodCircularLineBuffer`)
 
 Audience: an AI writing or reviewing Arduino/C++ sketch code against this
-library, that needs a non-blocking "is it time yet?" timer — a poll
-interval, a retry backoff, an LED flash, a debounce window — anything that
-would otherwise be a hand-rolled `millis()` comparison.
+library, that needs either of two small, general-purpose utility classes
+this library bundles: a non-blocking "is it time yet?" timer (§1-5), or a
+rolling/line-aware byte buffer with a `Stream`/`Print` interface (§6).
 
 **This is not the library's design/generate/complete guide.** For building
 a pfod menu/dwg design, running the pfodWeb Designer, and completing the
@@ -11,17 +11,19 @@ generated `pfodMainMenu`/`Dwg_<Name>` code, read
 [`pfodWeb/docs/pfodAI-guide.md`](pfodWeb/docs/pfodAI-guide.md) instead —
 that document covers the whole three-stage workflow and its own rules
 (never modify library code, ask before adding a dependency, build only what
-was asked). This guide covers one narrow, frequently-needed piece that
-document doesn't: **timing**. The same "never modify library code" rule
-applies here too — see the last section.
+was asked). This guide covers two narrow, frequently-needed pieces that
+document doesn't: **timing** (§1-5) and **rolling/streamed byte buffering**
+(§6). The same "never modify library code" rule applies to both — see §7.
 
-Everything below is drawn from the actual sources in this repository:
-`src/pfodDelay.h/.cpp` and the four worked sketches in
+§1-5 are drawn from `src/pfodDelay.h/.cpp` and the four worked sketches in
 `examples/pfodDelay_Examples/`. The canonical write-up, with more worked
 examples than either of those, is Forward Computing's own tutorial:
 <https://www.forward.com.au/pfod/ArduinoProgramming/TimingDelaysInArduino.html>
 — read it if anything here is ambiguous; this guide's API and idiom follow
-it exactly.
+it exactly. §6 is drawn from `src/pfodCircularLineBuffer.h/.cpp` and a real
+worked consumer, `BatterySolarMonitor/DebugLogBuffer.h/.cpp` (a separate
+project in this same workspace, not part of this library, but the concrete
+case the resumable-cursor API in §6.5 was built to solve).
 
 ---
 
@@ -291,13 +293,257 @@ branch needed at the call site that reacts to it.
 
 ---
 
-## 6. Never modify `pfodDelay.h`/`.cpp`
+## 6. `pfodCircularLineBuffer` — a rolling, line-aware byte buffer
 
-Same rule as every other file under `src/` in this library (see
-`pfodWeb/docs/pfodAI-guide.md` §"Both: never modify the pfodParser
-library"): `pfodDelay` is shared across every sketch on the machine, gets
-overwritten by the next library update, and a sketch that depends on a
-locally-patched copy is not portable. If the class is genuinely missing
-something, use it as-is and build the missing behaviour in your own code
-(a wrapper, an extra flag beside your `pfodDelay` instance), or report the
-gap rather than patching the library file.
+### 6.1 What it's for
+
+`pfodCircularLineBuffer` (`src/pfodCircularLineBuffer.h/.cpp`) is a
+fixed-size ring buffer, allocated once at construction
+(`new uint8_t[bufferSize]`, freed only in the destructor — never resized),
+that implements Arduino's `Stream` **and** `Print` interfaces. Two things
+make it more than a plain byte ring:
+
+- **Line-aware eviction.** When it's full and a new byte needs room, it
+  never leaves a truncated partial line at the start — it discards whole
+  lines at a time (up to and including the next `\n` byte), so a reader
+  never sees a line missing its first few characters.
+- **Two independent ways to read it** (§6.3): a one-shot "give me
+  everything currently held" snapshot, and a genuinely resumable cursor
+  that can come back later, across arbitrarily many separate calls over
+  time, and continue exactly where it left off.
+
+Real uses in this workspace: `pfodParser/src/ESP_PicoW_pfodWebServer.cpp`'s
+`httpRawData` (a 4K instance, the live "raw data" relay pfodWeb screens
+poll) and `BatterySolarMonitor/DebugLogBuffer.cpp`'s `debugLogBuffer` (a
+16K instance capturing every debug line the sketch logs, drained into the
+smaller relay above via the resumable cursor — §6.7 walks through this
+exact pattern (§6.6 has a simpler, single-task version first).
+
+### 6.2 Writing: `write()`/`addLine()`, and what counts as a line ending
+
+```cpp
+#include <pfodCircularLineBuffer.h>
+pfodCircularLineBuffer myBuffer(8192); // size fixed at construction, default 4096
+```
+
+Being a `Print`, anything that writes text can target it directly —
+`myBuffer.print(...)`, `myBuffer.println(...)`, or plain
+`myBuffer.write(uint8_t)`/`write(buffer, size)` — as well as the two
+`addLine()` overloads (`const char*`/`const String&`), which are just a
+`print()` call under another name.
+
+**A line ends on `\n`** — bare, or as the second byte of a `\r\n` pair
+(either way counted as exactly one line, never two). **A lone `\r`, not
+immediately followed by `\n`, is not treated as a line ending at all** —
+it's just an ordinary byte. This covers both Unix/macOS-style bare `\n`
+text and Windows/network-protocol-style `\r\n` text identically; it does
+not support the old Classic-Mac-OS convention of a lone `\r` as its own
+line ending, since that convention is legacy-only today (fixed
+2026-09-21 — an earlier version of this class only recognised `\r\n`,
+which meant `getLineCount()`/`getRange(fromLineCount, ...)` silently never
+advanced at all against bare-`\n` data, the common case for Arduino
+`println()`-style output; both the write-side counting and
+`findNextLine()`, which the by-line-number lookup uses internally, were
+fixed together so they agree).
+
+### 6.3 Two ways to read
+
+**A. One-shot: read everything currently held, right now.**
+
+```cpp
+myBuffer.resetForRead();          // read range = [oldest held byte, current newest byte]
+while (myBuffer.available()) {
+  out.write((uint8_t)myBuffer.read());
+}
+```
+
+`resetForRead()` is `getAllRange(range); setReadRange(range);` under the
+hood — it always starts from the buffer's current oldest byte. Calling it
+again later does **not** mean "give me what's new since last time" — it
+means "start over from the oldest byte still held," which on a buffer
+that's been running long enough to be full again will re-deliver almost
+everything, not just the new part. Use this mode only for a genuine
+one-off "dump everything, once" (e.g. `httpRawData`'s own per-poll drain in
+`ESP_PicoW_pfodWebServer.cpp`, which reads it all and immediately
+`clear()`s it every time).
+
+**B. Resumable: come back later and continue exactly where you left off.**
+
+```cpp
+static pfodReadCursor myCursor = PFOD_CURSOR_START; // persisted across calls
+
+myBuffer.setReadCursor(myCursor);          // resume from myCursor, extended to current newest byte
+while (myBuffer.available() /* && whatever other budget applies */) {
+  out.write((uint8_t)myBuffer.read());
+}
+myCursor = myBuffer.getReadCursor();       // save progress for next time -- ALWAYS, even if you read 0 bytes
+```
+
+`pfodReadCursor` is an opaque value (internally an absolute write-count,
+not a raw buffer index, added 2026-09-21 specifically so a stale cursor
+can be told apart from a fresh one *exactly*, not by guessing from wrapped
+positions). `PFOD_CURSOR_START` is the sentinel for "nothing read yet" —
+pass it the first time, or any time you want to force a restart from the
+oldest held byte (see §6.7's button-press example). If the data at a
+remembered cursor has genuinely been evicted since it was captured,
+`setReadCursor()` falls back to the oldest still-held byte automatically —
+it never reads stale or out-of-range memory.
+
+### 6.4 API reference
+
+| Method | Does |
+|---|---|
+| `write(uint8_t)` / `write(buf, size)` / `print(...)` family | Appends bytes (`Print` interface); evicts whole oldest lines to make room when full. |
+| `addLine(const char*)` / `addLine(const String&)` | `print()` under another name — line must include its own terminator. |
+| `available()` / `read()` / `peek()` | `Stream` interface — operate on whatever the *current read range* is, set by whichever of §6.3's two modes you last called. |
+| `resetForRead()` | One-shot: read range = everything currently held, starting from the oldest byte. See §6.3A. |
+| `getAllRange(range)` / `setReadRange(range)` / `getRange(fromLineCount, range)` | Lower-level range primitives `resetForRead()`/line-numbered lookups build on; `getRange` walks forward by line count using whatever counts as a line ending (§6.2). |
+| `setReadCursor(cursor)` / `getReadCursor()` | Resumable read pair. See §6.3B and the contract in §6.5. |
+| `getUsedBytes()` / `getAvailableBytes()` / `getBufferSize()` / `isEmpty()` | Capacity queries — none of these mutate state. |
+| `clear()` | Resets to empty. Does not free/reallocate memory. |
+| `debugBufferRange(Print*)` | Dumps internal head/tail/read-position/line-count state for debugging — pass `nullptr` to no-op. |
+
+### 6.5 The cursor contract (§6.3B) — get this wrong and it silently misbehaves
+
+> **Every `setReadCursor()` call must be followed by a `getReadCursor()`
+> call before you do anything else with that cursor variable — even if you
+> read zero bytes that round.** Never mix cursor-based reads (§6.3B) with
+> `resetForRead()`/`setReadRange()` (§6.3A) on the *same instance* for two
+> different logical read sequences — both write the same internal
+> position fields, and whichever call happened most recently wins.
+
+Why the pairing matters: `setReadCursor()` keeps its own internal
+bookkeeping bounded by periodically rebasing it (see the class's own doc
+comment on `pfodReadCursor` for the exact mechanism) — that rebase is only
+ever transparent to a caller that refreshes its stored cursor every single
+round-trip. A cursor value held across many `setReadCursor()` calls without
+an intervening `getReadCursor()` isn't a supported usage pattern.
+
+Also: like every class in this library, **there is no internal locking**.
+If more than one task can touch the same instance — writing from a
+background task while another task reads it, say — you must serialize
+that access yourself (a mutex around every `write()` and every
+`setReadCursor()`/`read()`/`getReadCursor()` sequence). `debugLogLineMutex()`
+in `BatterySolarMonitor/DebugLogBuffer.cpp` is a worked example of exactly
+this.
+
+### 6.6 Recipe: a minimal resumable log drain (the typical case)
+
+The simplest realistic use of §6.3B, with no locking or second buffer
+involved — one task both writes and reads, and just wants a rolling log it
+can drain incrementally instead of re-reading the whole thing every time:
+
+```cpp
+#include <pfodCircularLineBuffer.h>
+
+// 8K rolling buffer capturing everything logged via logLine() below.
+static pfodCircularLineBuffer logBuffer(8192);
+
+// Persisted across calls -- this is the whole trick. Starts at the
+// sentinel so the very first drain reads from the oldest held byte.
+static pfodReadCursor cursor = PFOD_CURSOR_START;
+
+// Call this instead of Serial.println() for anything you want captured.
+// println() (Print's own default) appends '\r\n' -- fine here, §6.2's
+// fix means the class treats that exactly the same as a bare '\n'.
+void logLine(const String &line) {
+  logBuffer.println(line);
+}
+
+// Call this every loop() -- delivers whatever's newly available in
+// logBuffer to Serial, picking up exactly where it left off last time.
+void drainNewLogLines() {
+  logBuffer.setReadCursor(cursor);
+  while (logBuffer.available()) {
+    Serial.write((uint8_t)logBuffer.read());
+  }
+  cursor = logBuffer.getReadCursor(); // ALWAYS save progress, even if nothing was read
+}
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  static unsigned long lastLog = 0;
+  if (millis() - lastLog >= 1000) {
+    lastLog = millis();
+    logLine("tick at " + String(millis()));
+  }
+  drainNewLogLines();
+}
+```
+
+`logLine()` is the producer — called at whatever rate, from wherever,
+accumulating in `logBuffer`. `drainNewLogLines()` is the consumer, called
+unconditionally every `loop()`: the `setReadCursor(cursor)`/
+`getReadCursor()` pair means each call only sees bytes written since the
+*last* call, forever, without re-reading the whole buffer each time. To
+force a full re-show of the backlog (e.g. a client just connected and
+wants history, not just new lines from now on), reset
+`cursor = PFOD_CURSOR_START;` once, right before the next
+`drainNewLogLines()` call — that's the only other thing ever done with the
+cursor. No locking needed here specifically because one single task does
+both the writing and the reading — see §6.7 for the case where that's not
+true.
+
+### 6.7 Recipe: draining a big rolling buffer into a small relay, forever
+
+The concrete problem `pfodReadCursor` exists for: you have a big rolling
+buffer (say 16K of captured history) that needs to reach a client through
+a much smaller live relay buffer (say 4K), and delivery needs to keep
+working indefinitely — not just once — as new data keeps arriving, and
+(unlike §6.6) the writer and the reader are on different tasks. Ground
+truth: `BatterySolarMonitor/DebugLogBuffer.cpp`.
+
+```cpp
+static pfodCircularLineBuffer bigBuffer(16384);
+static pfodReadCursor cursor = PFOD_CURSOR_START;
+static const size_t HEADROOM = 100; // leave this much room in the relay for OTHER writers, if any
+
+// Call every loop(), unconditionally, forever -- not just until some
+// initial delivery finishes. A no-op call (nothing new, or the relay's
+// already full up to the headroom) costs almost nothing.
+void pump(pfodCircularLineBuffer &relay) {
+  bigBuffer.setReadCursor(cursor);
+  size_t room = relay.getAvailableBytes();
+  while (room > HEADROOM && bigBuffer.available()) {
+    relay.write((uint8_t)bigBuffer.read());
+    room--;
+  }
+  cursor = bigBuffer.getReadCursor(); // ALWAYS, even if the while loop above did nothing
+}
+
+// Call when a client explicitly asks to see the full history again
+// (e.g. a button press opening a fresh view) -- forces a restart instead
+// of "only what's new since last time":
+void onViewerOpened() {
+  cursor = PFOD_CURSOR_START;
+  pump(relay);
+}
+```
+
+The `HEADROOM` margin matters if the relay could ever have more than one
+writer: `pfodCircularLineBuffer::write()`, asked to write into an
+already-full buffer, evicts whatever's currently oldest to make room —
+if this pump filled the relay to 0 available bytes, ANY other writer
+landing before the relay is next drained would evict this pump's own
+just-written, not-yet-delivered bytes. Leaving headroom means another
+writer always has somewhere to go without clawing back space from data
+that hasn't reached its destination yet. If the relay genuinely has only
+one writer (this pump), the margin is just cheap insurance, not an active
+requirement.
+
+---
+
+## 7. Never modify library source files
+
+Same rule for both classes in this guide, and every other file under
+`src/` in this library (see `pfodWeb/docs/pfodAI-guide.md` §"Both: never
+modify the pfodParser library"): `pfodDelay.h/.cpp` and
+`pfodCircularLineBuffer.h/.cpp` are shared across every sketch on the
+machine, get overwritten by the next library update, and a sketch that
+depends on a locally-patched copy is not portable. If either class is
+genuinely missing something, use it as-is and build the missing behaviour
+in your own code (a wrapper, an extra field beside your instance), or
+report the gap rather than patching the library file.

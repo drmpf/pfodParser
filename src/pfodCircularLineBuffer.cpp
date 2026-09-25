@@ -26,7 +26,7 @@ pfodCircularLineBuffer::pfodCircularLineBuffer(size_t bufferSize)
     , readPos(0)
     , readEndPos(0)
     , lineByteCount(0)
-    , prevByte(0)
+    , totalBytesWritten(0)
 {
     buffer = new uint8_t[bufferSize];
 }
@@ -39,11 +39,12 @@ pfodCircularLineBuffer::~pfodCircularLineBuffer() {
 }
 
 /**
- * Adds a complete line to the buffer (must include \r\n terminator).
- * Uses Print interface write() methods. Automatically manages wrapping
- * by checking after each byte if old data was overwritten.
+ * Adds a complete line to the buffer (must include its own '\n' or
+ * '\r\n' terminator). Uses Print interface write() methods. Automatically
+ * manages wrapping by checking after each byte if old data was
+ * overwritten.
  *
- * @param line C-string containing complete line with \r\n terminator
+ * @param line C-string containing complete line with '\n' or '\r\n' terminator
  * @return Number of bytes written
  */
 size_t pfodCircularLineBuffer::addLine(const char* line) {
@@ -51,11 +52,12 @@ size_t pfodCircularLineBuffer::addLine(const char* line) {
 }
 
 /**
- * Adds a complete line to the buffer (must include \r\n terminator).
- * Uses Print interface write() methods. Automatically manages wrapping
- * by checking after each byte if old data was overwritten.
+ * Adds a complete line to the buffer (must include its own '\n' or
+ * '\r\n' terminator). Uses Print interface write() methods. Automatically
+ * manages wrapping by checking after each byte if old data was
+ * overwritten.
  *
- * @param line Arduino String containing complete line with \r\n terminator
+ * @param line Arduino String containing complete line with '\n' or '\r\n' terminator
  * @return Number of bytes written
  */
 size_t pfodCircularLineBuffer::addLine(const String& line) {
@@ -64,8 +66,11 @@ size_t pfodCircularLineBuffer::addLine(const String& line) {
 
 /**
  * Write single byte to buffer. Automatically wraps around buffer end.
- * When \r\n sequence is detected, increments line count and adjusts
- * start position if current line wrapped over the tail.
+ * A line ends on '\n' -- whether that '\n' is bare or the second byte of
+ * a '\r\n' pair -- which increments the line count and adjusts the
+ * start position if the current line wrapped over the tail. A lone '\r'
+ * (not followed by '\n') is NOT treated as a line ending -- see the
+ * class's own top-of-file comment for why.
  *
  * @param c Byte to write
  * @return 1 if written
@@ -73,6 +78,7 @@ size_t pfodCircularLineBuffer::addLine(const String& line) {
 size_t pfodCircularLineBuffer::write(uint8_t c) {
     buffer[head] = c;
     head = (head + 1) % bufferSize;
+    totalBytesWritten++; // used only by getReadCursor()/setReadCursor() -- see pfodReadCursor's doc comment
     lineByteCount++;
 
     if (head == tail) {
@@ -95,7 +101,7 @@ size_t pfodCircularLineBuffer::write(uint8_t c) {
         } while (tail != head);
     }
 
-    if (prevByte == '\r' && c == '\n') {
+    if (c == '\n') {
         endLineCount++;
 
         if (lineByteCount > bufferSize - 1) {
@@ -108,7 +114,6 @@ size_t pfodCircularLineBuffer::write(uint8_t c) {
         lineByteCount = 0;
     }
 
-    prevByte = c;
     return 1;
 }
 
@@ -210,6 +215,44 @@ void pfodCircularLineBuffer::resetForRead() {
 }
 
 /**
+ * Resumes reading from `cursor` through to the current head -- see
+ * the header's doc comment for the full fallback contract and for why
+ * rebasing totalBytesWritten here is safe.
+ */
+void pfodCircularLineBuffer::setReadCursor(pfodReadCursor cursor) {
+    size_t usedBytes = getUsedBytes();
+    if (cursor == PFOD_CURSOR_START || cursor > totalBytesWritten) {
+        readPos = tail; // sentinel, or a corrupt/foreign value -- never trust it
+    } else {
+        size_t bytesBehindHead = totalBytesWritten - cursor;
+        if (bytesBehindHead > usedBytes) {
+            readPos = tail; // that data has genuinely been evicted since -- fall back
+        } else {
+            readPos = (head + bufferSize - bytesBehindHead) % bufferSize;
+        }
+    }
+    readEndPos = head;
+
+    // Keep totalBytesWritten bounded rather than growing forever -- safe
+    // here because `cursor` (above) has already been resolved against
+    // the PRE-rebase value; the next getReadCursor() call (the caller's
+    // required next step) computes fresh from whatever totalBytesWritten
+    // is AFTER this, so the rebase is invisible to a caller that follows
+    // that pairing. See pfodReadCursor's own doc comment.
+    while (totalBytesWritten > 2 * bufferSize) {
+        totalBytesWritten -= bufferSize;
+    }
+}
+
+/**
+ * Captures the current read position, expressed as an absolute
+ * write-count value -- see header doc comment.
+ */
+pfodReadCursor pfodCircularLineBuffer::getReadCursor() const {
+    return totalBytesWritten - bytesInRange(readPos, head);
+}
+
+/**
  * Returns number of bytes available to read from current read range.
  * Implements Stream::available()
  *
@@ -275,7 +318,6 @@ void pfodCircularLineBuffer::clear() {
     readPos = 0;
     readEndPos = 0;
     lineByteCount = 0;
-    prevByte = 0;
 }
 
 /**
@@ -371,23 +413,22 @@ void pfodCircularLineBuffer::debugBufferRange(Print* outPtr) {
 }
 
 /**
- * Finds the next complete line starting from given position.
- * Searches for \r\n terminator in circular buffer.
+ * Finds the next complete line starting from given position. A line
+ * ends on '\n' -- whether bare or the second byte of a '\r\n' pair; a
+ * lone '\r' is not a line ending (matches write()'s own rule -- see
+ * that function's and the class's own top-of-file comment).
  *
  * @param fromPos Starting position to search
- * @param lineEnd Output parameter for position after \r\n
- * @return true if complete line found, false if no \r\n found
+ * @param lineEnd Output parameter for position after the '\n'
+ * @return true if a complete line was found, false if no '\n' found
  */
 bool pfodCircularLineBuffer::findNextLine(size_t fromPos, size_t& lineEnd) {
     size_t pos = fromPos;
 
     while (pos != head) {
-        if (buffer[pos] == '\r') {
-            size_t nextPos = (pos + 1) % bufferSize;
-            if (nextPos != head && buffer[nextPos] == '\n') {
-                lineEnd = (nextPos + 1) % bufferSize;
-                return true;
-            }
+        if (buffer[pos] == '\n') {
+            lineEnd = (pos + 1) % bufferSize;
+            return true;
         }
         pos = (pos + 1) % bufferSize;
     }
