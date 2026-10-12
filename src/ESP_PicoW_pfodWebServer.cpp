@@ -44,8 +44,171 @@ static char cacheControlStr[25];// = "max-age=..." uint32_t max 10digits
 // Create a StringPrint object to capture JSON/text output
 static pfodStreamString httpCapture;
 
-// Create a Print object to capture raw data
-pfodCircularLineBuffer httpRawData; // default 4K buffer // for raw data
+// The raw-data relay -- getRawDataWriter()/writeHttpRawData() write into
+// this; handle_pfodWeb() drains whatever's newly available (per the
+// requesting client's OWN read cursor -- see rawDataClients[] below) into
+// each poll's http reply. A pointer, not a plain global object, since its
+// size is only known once start_pfodWebServer()'s own rawDataBufferSize
+// argument is read -- a C++ global object's constructor args have to be
+// fixed at compile time, which a runtime function argument can't feed.
+// Allocated once, in start_pfodWebServer(), and never freed (this server
+// runs for the lifetime of the sketch).
+static pfodCircularLineBuffer *httpRawDataPtr = NULL;
+
+// Guards httpRawDataPtr's own read/write access (writeHttpRawData() below,
+// and the per-client drain in handle_pfodWeb()) -- added 2026-09-26,
+// alongside the multi-client cursor support below. Needed because a
+// sketch's own raw-data producer (e.g. a rolling debug-log capture) may
+// call writeHttpRawData()/getRawDataWriter() from a DIFFERENT thread of
+// execution than the one running handle_pfodWebServer() (this file's own
+// server.handleClient() call, always from whichever task/core calls that)
+// -- pfodCircularLineBuffer has no locking of its own (by design -- see
+// its own header comment), so two genuinely concurrent accesses to the
+// same instance is a real, not hypothetical, corruption risk.
+//
+// ESP32: a real FreeRTOS mutex -- a background FreeRTOS task calling
+// writeHttpRawData() can genuinely preempt/run concurrently with
+// handle_pfodWebServer()'s own task on the other core.
+//
+// RP2040 (arduino-pico core): also a real lock, via pico/mutex.h's
+// mutex_t -- a plain Pico SDK primitive, available with or without
+// FreeRTOS. Confirmed 2026-09-26 by reading that core's own
+// cores/rp2040/main.cpp: it unconditionally calls
+// multicore_launch_core1() whenever a sketch defines setup1()/loop1(),
+// running that loop in genuine hardware parallel with core 0's loop() --
+// with or without the optional __FREERTOS build flag. So there is no
+// "single cooperative thread" guarantee on this platform the way there
+// is on ESP8266; a no-op lock here would be a real race for any RP2040
+// sketch that writes raw data from its own core1 while core 0 runs
+// handle_pfodWebServer() (this corrects an earlier, wrong assumption in
+// this same comment that non-FreeRTOS RP2040 was single-threaded like
+// ESP8266).
+//
+// ESP8266 / any other plain (non-FreeRTOS, non-RP2040) Arduino core:
+// genuinely single-threaded/cooperative -- no task or core can interrupt
+// a write -- so locking is a real no-op there, not an unavailable API.
+#ifdef ESP32
+static SemaphoreHandle_t rawDataMutex = NULL;
+static void lockRawData() {
+  if (rawDataMutex == NULL) {
+    rawDataMutex = xSemaphoreCreateMutex();
+  }
+  xSemaphoreTake(rawDataMutex, portMAX_DELAY);
+}
+static void unlockRawData() {
+  if (rawDataMutex) {
+    xSemaphoreGive(rawDataMutex);
+  }
+}
+#elif defined(ARDUINO_ARCH_RP2040)
+#include <pico/mutex.h>
+static mutex_t rawDataMutex;
+static bool rawDataMutexInitialized = false;
+static void lockRawData() {
+  if (!rawDataMutexInitialized) {
+    mutex_init(&rawDataMutex);
+    rawDataMutexInitialized = true;
+  }
+  mutex_enter_blocking(&rawDataMutex);
+}
+static void unlockRawData() {
+  if (rawDataMutexInitialized) {
+    mutex_exit(&rawDataMutex);
+  }
+}
+#else
+static void lockRawData() {}
+static void unlockRawData() {}
+#endif
+
+// Per-client (by IP) read cursor into httpRawDataPtr -- added 2026-09-26,
+// fixing a real bug: with a single shared read position (the old
+// resetForRead()/clear()-every-poll design), whichever client's poll
+// happened to run first drained and cleared the WHOLE relay for itself,
+// leaving any other simultaneously-polling client (a different browser
+// tab, or a second device) with nothing -- raw data effectively got
+// arbitrarily split between clients instead of each seeing the full
+// stream. Each client now gets its own pfodReadCursor (pfodCircularLineBuffer.h),
+// resumed and saved back on every poll, same idea as
+// pfodCircularLineBuffer's own cursor API was built for. A brand new
+// client (never seen before) starts at PFOD_CURSOR_START, so a first poll
+// still sees "whatever's currently queued", matching the single-client
+// behaviour this replaces.
+struct RawDataClientCursor {
+  IPAddress ip;
+  bool used = false;
+  pfodReadCursor cursor = PFOD_CURSOR_START;
+  unsigned long lastSeenMs = 0;
+};
+static const uint8_t MAX_RAW_DATA_CLIENTS = 4;
+static RawDataClientCursor rawDataClients[MAX_RAW_DATA_CLIENTS];
+// A slot idle this long is assumed abandoned (tab closed, device gone)
+// and is reclaimed for a new client rather than permanently exhausting
+// the small fixed table.
+static const unsigned long RAW_DATA_CLIENT_TIMEOUT_MS = 5UL * 60UL * 1000UL;
+
+// Upper bound on how many raw-data bytes handle_pfodWeb() drains for ONE
+// client in ONE response -- see that function's own comment for why: a
+// client whose cursor is far behind (e.g. a large rawDataBufferSize
+// backlog just replayed via resetCurrentRawDataCursor()) must not have
+// all of it appended into httpCapture (a String, only pre-reserve()'d for
+// the ordinary small menu/json case) in a single go -- confirmed, in this
+// project's own history, as a real memory-fragmentation risk from the
+// resulting near-one-reallocation-per-byte growth, not a hypothetical
+// one. Left at less than half of httpCapture's own 4096-byte reservation
+// so there's still comfortable room for the menu/json content sharing
+// the same response.
+static const size_t MAX_RAW_DATA_PER_RESPONSE = 2048;
+
+// Index into rawDataClients[] for whichever client handle_pfodWeb() is
+// CURRENTLY servicing -- valid only for the duration of one such call
+// (set right before handle_mainMenuPtr() runs, cleared after the raw-data
+// drain that follows it). Lets resetCurrentRawDataCursor() below (called
+// from a menu/dwg command handler running INSIDE that same call, e.g. a
+// "replay my rolling log from the start" button) act on the right
+// client's own slot without that handler needing to know about IP
+// addresses or this table at all.
+static int currentRawDataClientIdx = -1;
+
+// Finds this IP's existing slot, or claims one for it (an empty slot if
+// any is free, otherwise the least-recently-seen slot -- which, if it's
+// still actually in use by some other slow client, just means THAT
+// client's own next poll starts fresh from PFOD_CURSOR_START too, the
+// same graceful "cursor's data has been evicted" fallback
+// setReadCursor() already provides, not a crash or wrong data).
+static int findOrClaimRawDataClientSlot(const IPAddress &ip) {
+  unsigned long nowMs = millis();
+  int freeIdx = -1;
+  int oldestIdx = 0;
+  unsigned long oldestSeenMs = 0xFFFFFFFFUL;
+  for (uint8_t i = 0; i < MAX_RAW_DATA_CLIENTS; i++) {
+    if (rawDataClients[i].used && rawDataClients[i].ip == ip) {
+      return i;
+    }
+    if (rawDataClients[i].used && (nowMs - rawDataClients[i].lastSeenMs) > RAW_DATA_CLIENT_TIMEOUT_MS) {
+      rawDataClients[i].used = false; // stale -- reclaim outright
+    }
+    if (!rawDataClients[i].used && freeIdx < 0) {
+      freeIdx = i;
+    }
+    if (rawDataClients[i].lastSeenMs < oldestSeenMs) {
+      oldestSeenMs = rawDataClients[i].lastSeenMs;
+      oldestIdx = i;
+    }
+  }
+  int idx = (freeIdx >= 0) ? freeIdx : oldestIdx;
+  rawDataClients[idx].ip = ip;
+  rawDataClients[idx].used = true;
+  rawDataClients[idx].cursor = PFOD_CURSOR_START;
+  rawDataClients[idx].lastSeenMs = nowMs;
+  return idx;
+}
+
+void resetCurrentRawDataCursor() {
+  if (currentRawDataClientIdx >= 0) {
+    rawDataClients[currentRawDataClientIdx].cursor = PFOD_CURSOR_START;
+  }
+}
 
 void handle_pfodMainMenu(pfodParser& parser)  __attribute__((weak));
 void handle_pfodMainMenu(pfodParser& parser) {
@@ -103,7 +266,16 @@ Print& getRawDataWriter() {
 }
 
 void writeHttpRawData(uint8_t c) {
-  httpRawData.write(c); // put in circular buffer
+  // NULL until start_pfodWebServer() has run -- e.g. very early boot-time
+  // debug output logged before setup() gets to calling it. Silently
+  // dropped rather than crashing; nothing can read it back before the
+  // server exists to serve it anyway.
+  if (!httpRawDataPtr) {
+    return;
+  }
+  lockRawData();
+  httpRawDataPtr->write(c); // put in circular buffer
+  unlockRawData();
 }
 
 void pfodWeb_setVersion(const char* version) {
@@ -230,19 +402,47 @@ static void handle_pfodWeb() {
       debugPtr->println("'");
     }
 
-    handle_mainMenuPtr(webParser);  // capture parser output as json/text
-//    if (debugPtr) {
-//      debugPtr->print(" buffer used: ");
-//      httpRawData.debugBufferRange(debugPtr);
-//      debugPtr->println();
-//    }
-    httpRawData.resetForRead(); // need to do this here to set up available()
-    if (httpRawData.available()) { // add raw data
-      while(httpRawData.available()) {
-        httpCapture.print((char)httpRawData.read());
+    // Resolved BEFORE handle_mainMenuPtr() runs, not after -- a command
+    // handler it calls into (e.g. a "replay my rolling log from the
+    // start" button) may call resetCurrentRawDataCursor(), which needs
+    // this client's slot to already be the one about to be used for the
+    // drain just below, not a stale/absent one.
+    currentRawDataClientIdx = findOrClaimRawDataClientSlot(server.client().remoteIP());
+    rawDataClients[currentRawDataClientIdx].lastSeenMs = millis();
+
+    handle_mainMenuPtr(webParser);  // capture parser output as json/text -- may also call resetCurrentRawDataCursor()
+
+    // Per-client cursor, not resetForRead()/clear() -- see rawDataClients[]'s
+    // own comment for the multi-client bug this fixes. Never .clear()s the
+    // relay: another client may not have caught up to bytes still sitting
+    // in it, and clearing here would silently drop them for that client
+    // too, exactly the bug this replaces.
+    //
+    // Capped at MAX_RAW_DATA_PER_RESPONSE per poll, NOT drained to
+    // exhaustion in one go -- a client whose cursor is far behind (e.g.
+    // right after resetCurrentRawDataCursor() rewinds it to replay a large
+    // backlog) would otherwise dump everything currently available
+    // straight into httpCapture in a single response. httpCapture is a
+    // String pre-reserve()'d for the ordinary (small) menu/json case; a
+    // large uncapped append past that reservation means a real
+    // reallocation on close to every byte -- confirmed, in this exact
+    // codebase's own history, as a real fragmentation risk, not a
+    // hypothetical one. What doesn't fit this poll stays in httpRawDataPtr
+    // for THIS client's own cursor to pick up on their next one -- same
+    // "spread a large backlog over several polls" idea the old pump used,
+    // just per-client instead of via one shared pump.
+    if (httpRawDataPtr) {
+      lockRawData();
+      httpRawDataPtr->setReadCursor(rawDataClients[currentRawDataClientIdx].cursor);
+      size_t sent = 0;
+      while (sent < MAX_RAW_DATA_PER_RESPONSE && httpRawDataPtr->available()) {
+        httpCapture.print((char)httpRawDataPtr->read());
+        sent++;
       }
+      rawDataClients[currentRawDataClientIdx].cursor = httpRawDataPtr->getReadCursor();
+      unlockRawData();
     }
-    httpRawData.clear();
+    currentRawDataClientIdx = -1; // done servicing this client for this request
     if (httpCapture.length() == 0) {
       httpCapture+=" ";
     }
@@ -264,15 +464,19 @@ static void handle_pfodWeb() {
 
 
 
-void start_pfodWebServer(const char* version, bool _serverFromLittleFS, uint32_t cacheSec, handle_mainMenuFnPtr fnPtr) {
+void start_pfodWebServer(const char* version, bool _serverFromLittleFS, uint32_t cacheSec, handle_mainMenuFnPtr fnPtr, uint32_t rawDataBufferSize) {
   if (serverStarted) {
     return;
   }
-  
+
   (void)debugPtr;  // suppress unused warning
 #ifdef DEBUG
   debugPtr = getDebugPtr();
 #endif
+  // Sized from the caller's own argument, not fixed at compile time --
+  // see httpRawDataPtr's own comment for why this has to be a pointer,
+  // allocated here, rather than a plain global object.
+  httpRawDataPtr = new pfodCircularLineBuffer(rawDataBufferSize);
   pfodWeb_setVersion(version);
   if (fnPtr) {
     handle_mainMenuPtr = fnPtr;

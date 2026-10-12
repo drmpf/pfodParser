@@ -45,32 +45,83 @@ struct BufferRange {
  * fabricate one, and never reuse a cursor captured from a different
  * instance.
  *
- * Internally an absolute (never-wrapping-in-the-caller-visible-sense)
- * write-count value, not a raw buffer index -- this is what makes
- * setReadCursor() able to tell EXACTLY whether a cursor's data has since
- * been evicted, rather than guessing from wrapped positions alone (an
- * earlier version of this API used a raw wrapped index and could, in
- * principle, alias a stale cursor with a fresh one after exactly one
- * bufferSize of untracked traffic -- replaced 2026-09-21).
+ * A struct, not a single size_t (changed 2026-09-26, after this buffer
+ * gained multi-client support -- see ESP_PicoW_pfodWebServer.cpp's
+ * rawDataClients[], where several independently-polling clients each
+ * hold their own pfodReadCursor into the SAME buffer instance, at their
+ * own separate cadences):
+ *   pos               -- absolute (never-wrapping-in-the-caller-visible-
+ *                         sense) write-count position, not a raw buffer
+ *                         index -- this is what makes setReadCursor()
+ *                         able to tell EXACTLY whether a cursor's data
+ *                         has since been evicted, rather than guessing
+ *                         from wrapped positions alone (an earlier
+ *                         version of this API used a raw wrapped index
+ *                         and could, in principle, alias a stale cursor
+ *                         with a fresh one after exactly one bufferSize
+ *                         of untracked traffic -- replaced 2026-09-21).
+ *   totalBytesWritten -- a copy of the buffer's own running write
+ *                         counter at the exact moment this cursor was
+ *                         captured. Carried explicitly, per cursor,
+ *                         since an earlier version (2026-09-21 to
+ *                         2026-09-26) kept ONLY that counter, privately,
+ *                         inside the buffer itself, and periodically
+ *                         rebased it down (subtracting bufferSize once
+ *                         it grew past double that) to keep it
+ *                         "bounded" -- safe for a single owner that
+ *                         always refreshes its cursor same-call, but a
+ *                         real, reproducible bug once several
+ *                         independent clients each hold a cursor across
+ *                         separate round trips at different cadences:
+ *                         a rebase triggered by one (active) client's
+ *                         call silently shifted the numbering every
+ *                         OTHER client's still-outstanding, nowhere-
+ *                         near-actually-evicted cursor was measured
+ *                         against, spuriously invalidating it and
+ *                         redelivering already-seen data. Now that the
+ *                         counter is never rebased -- see
+ *                         setReadCursor()'s own comment -- there is no
+ *                         shared epoch left to alias against, so this
+ *                         bug class cannot recur; the field is kept
+ *                         explicit (rather than folded back into a
+ *                         single opaque number) so this invariant --
+ *                         nothing may ever again rebase this counter
+ *                         out from under an outstanding cursor -- stays
+ *                         visible to whoever next reads this class.
  *
  * Contract: call getReadCursor() again immediately after every
- * setReadCursor() (the same pairing already required so no read
- * progress is lost) -- setReadCursor() keeps its own internal counter
- * bounded by periodically rebasing it down once it exceeds double
- * bufferSize, and that rebase is only ever transparent to a caller that
- * refreshes its stored cursor every round-trip; one that holds onto an
- * old cursor value across many setReadCursor() calls without an
- * intervening getReadCursor() is not following the contract this class
- * requires anyway (see setReadCursor()'s own comment).
+ * setReadCursor() so no read progress is lost.
+ *
+ * `totalBytesWritten` is free to overflow (wrap around 0) over a long
+ * enough lifetime -- unsigned overflow is well-defined in C++, not
+ * undefined behaviour -- and setReadCursor() handles that correctly
+ * (2026-09-26): eviction is decided from `totalBytesWritten_now -
+ * cursor.pos`, plain unsigned subtraction, which naturally yields the
+ * true elapsed byte count across a SINGLE wraparound without any special
+ * casing, the same technique TCP uses for its own wrapping sequence
+ * numbers. (This is NOT the periodic, artificial "subtract bufferSize"
+ * rebase an earlier, 2026-09-21 to 2026-09-26 version of this class did
+ * -- that rebased a SHARED counter far more often than any real overflow
+ * risk required, which is what caused the multi-client bug described
+ * above. Real wraparound, at the counter's own natural width, is
+ * astronomically rarer -- billions of bytes -- and, handled this way,
+ * safe for every outstanding cursor without exception.) `valid` exists
+ * only so PFOD_CURSOR_START can never be confused with a real captured
+ * cursor, including the one-in-2^size_t_bits case where a genuine
+ * capture happens to land exactly on the sentinel's own field values.
  */
-typedef size_t pfodReadCursor;
+struct pfodReadCursor {
+    size_t pos;
+    size_t totalBytesWritten;
+    bool valid; // false only for PFOD_CURSOR_START
+};
 
 /**
  * Sentinel pfodReadCursor value meaning "no previous cursor" -- pass
  * this to setReadCursor() to start reading from the current oldest
  * available byte (the same starting point resetForRead() uses).
  */
-static const pfodReadCursor PFOD_CURSOR_START = (pfodReadCursor)-1;
+static const pfodReadCursor PFOD_CURSOR_START = { 0, 0, false };
 
 /**
  * pfodCircularLineBuffer - Line-aware circular buffer for CSV data streaming
@@ -168,17 +219,14 @@ public:
      * no already-delivered data is skipped, though some of it may be
      * redelivered if eviction happened while nobody was reading.
      *
-     * Also rebases the internal absolute write-count back down once it
-     * exceeds double bufferSize, keeping it bounded indefinitely rather
-     * than growing forever -- safe because this call has already
-     * resolved `cursor` against the PRE-rebase numbering above before
-     * the rebase happens, and any cursor value handed back out via the
-     * next getReadCursor() call is computed fresh from the (possibly
-     * just-rebased) current numbering. This is transparent to a caller
-     * that follows the required getReadCursor()-right-after-
-     * setReadCursor() pairing (see below); it is NOT safe to hold a
-     * cursor value across many setReadCursor() calls without an
-     * intervening getReadCursor() refresh.
+     * Never artificially rebases totalBytesWritten (unlike an earlier,
+     * 2026-09-21 to 2026-09-26 version of this class -- see
+     * pfodReadCursor's own doc comment for the real, reproducible
+     * multi-client bug that caused). It's left to grow -- and, given
+     * enough lifetime, to overflow -- naturally instead; see
+     * pfodReadCursor's own doc comment for why that's handled correctly
+     * here (plain unsigned wraparound, not undefined behaviour) rather
+     * than needing to be avoided.
      *
      * Shares the same underlying read-position state as
      * setReadRange()/resetForRead() -- do not mix cursor-based and
@@ -321,12 +369,16 @@ private:
     size_t readEndPos;        // End position of current read range
     size_t lineByteCount;
 
-    // Absolute (never wraps in the sense a raw buffer index would) count
-    // of every byte ever written, used ONLY by getReadCursor()/
-    // setReadCursor() to give pfodReadCursor an exact, non-aliasing
-    // representation -- see pfodReadCursor's own doc comment. Kept
-    // bounded (rebased down by bufferSize once past double that) inside
-    // setReadCursor() rather than left to grow forever.
+    // Absolute (does not wrap every bufferSize bytes the way a raw buffer
+    // index would) count of every byte ever written, used ONLY by
+    // getReadCursor()/setReadCursor() to give pfodReadCursor an exact,
+    // non-aliasing representation -- see pfodReadCursor's own doc comment.
+    // Deliberately NEVER artificially rebased (see setReadCursor()'s own
+    // comment for why an earlier, periodically-rebased version of this
+    // counter was a real multi-client bug) -- left to grow, and eventually
+    // wrap at size_t's own natural width, on its own; that wrap is plain
+    // unsigned overflow (well-defined, not undefined behaviour) and is
+    // handled correctly by setReadCursor()'s wraparound-safe subtraction.
     size_t totalBytesWritten;
 
 

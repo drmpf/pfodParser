@@ -216,15 +216,22 @@ void pfodCircularLineBuffer::resetForRead() {
 
 /**
  * Resumes reading from `cursor` through to the current head -- see
- * the header's doc comment for the full fallback contract and for why
- * rebasing totalBytesWritten here is safe.
+ * the header's doc comment for the full fallback contract. Does not
+ * rebase totalBytesWritten (see pfodReadCursor's own doc comment for
+ * why) -- `bytesBehindHead` below is plain unsigned subtraction, which
+ * is wraparound-safe on its own (correctly yields the true elapsed byte
+ * count even across totalBytesWritten's own eventual overflow, same
+ * technique as TCP sequence number comparisons), so no explicit
+ * "cursor.pos > totalBytesWritten" ordering check is needed or wanted --
+ * that check is exactly what would misfire the one time in every
+ * 2^(bits in size_t) bytes that totalBytesWritten legitimately wraps.
  */
 void pfodCircularLineBuffer::setReadCursor(pfodReadCursor cursor) {
     size_t usedBytes = getUsedBytes();
-    if (cursor == PFOD_CURSOR_START || cursor > totalBytesWritten) {
-        readPos = tail; // sentinel, or a corrupt/foreign value -- never trust it
+    if (!cursor.valid) {
+        readPos = tail; // sentinel -- never trust an unset cursor
     } else {
-        size_t bytesBehindHead = totalBytesWritten - cursor;
+        size_t bytesBehindHead = totalBytesWritten - cursor.pos;
         if (bytesBehindHead > usedBytes) {
             readPos = tail; // that data has genuinely been evicted since -- fall back
         } else {
@@ -232,24 +239,17 @@ void pfodCircularLineBuffer::setReadCursor(pfodReadCursor cursor) {
         }
     }
     readEndPos = head;
-
-    // Keep totalBytesWritten bounded rather than growing forever -- safe
-    // here because `cursor` (above) has already been resolved against
-    // the PRE-rebase value; the next getReadCursor() call (the caller's
-    // required next step) computes fresh from whatever totalBytesWritten
-    // is AFTER this, so the rebase is invisible to a caller that follows
-    // that pairing. See pfodReadCursor's own doc comment.
-    while (totalBytesWritten > 2 * bufferSize) {
-        totalBytesWritten -= bufferSize;
-    }
 }
 
 /**
- * Captures the current read position, expressed as an absolute
- * write-count value -- see header doc comment.
+ * Captures the current read position -- see header doc comment.
  */
 pfodReadCursor pfodCircularLineBuffer::getReadCursor() const {
-    return totalBytesWritten - bytesInRange(readPos, head);
+    pfodReadCursor cursor;
+    cursor.pos = totalBytesWritten - bytesInRange(readPos, head);
+    cursor.totalBytesWritten = totalBytesWritten;
+    cursor.valid = true;
+    return cursor;
 }
 
 /**
