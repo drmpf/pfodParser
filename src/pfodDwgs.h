@@ -37,7 +37,7 @@ class pfodDwgs : public pfodDwgsBase {
     void start(int cols, int rows, int backgroundColor = WHITE, uint8_t moreData = 0);
     void startUpdate(uint8_t moreData = 0);
     void end();
-    void pushZero(double col, double row = 0.0, double scale = 1.0);
+    void pushZero(float col, float row = 0.0, float scale = 1.0);
     void popZero(); // restore previous zero
     pfodRectangle& rectangle();
     pfodCircle& circle();

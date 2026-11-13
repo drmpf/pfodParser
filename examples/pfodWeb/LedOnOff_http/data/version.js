@@ -3,7 +3,13 @@
 // Depends on: nothing
 // Called by:  pfodWeb.js (reads window.JS_VERSION on load and stores in this.js_ver,
 //             logs version after bundle load)
-  var JS_VERSION = "V4.1.13-- 20th Sept 2026";  
+  var JS_VERSION = "V4.1.19-- 12th Nov 2026";
+// V4.1.19 make pfodWeb error handling match pfodApp's for invalid responses
+// V4.1.18 fixed touchZone cmd row/col numbers to include touchzone offset as per pfodApp, show unversioned touchActions
+// V4.1.17 fixed missing version no from touch cmds
+// V4.1.16 added url option enlargeTouchZones to show actual mouse active area
+// V4.1.15 fixed return from numeric input screen and parsing of <bg 006600> in dwgs, fixed Minimal C Code generator: charts/pulse outputs now compile (missing forward declarations, sendDataFlag visibility)
+// V4.1.14 added support for ~m for large dwgs, fixed parsing of formatting tags, added pfodParserCPP support, increaased msgs to 5000 lines
 // V4.1.13 limited raw data screen to last 500 lines. Raw Message View limit is also 500 line (pfod+raw msgs)    
 // V4.1.12 minor designer fix for /urls, improved MVC separation  
 // V4.1.11 supports .md style urls [..](..) in prompts and labels (not in dwgs)    

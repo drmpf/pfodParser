@@ -14,4 +14,15 @@
 #include <Stream.h>
 #endif
 
+// Common names shared with the plain C++ pfodParserCPP library, so the same
+// (e.g. pfodWeb generated) code compiles against both libraries.
+// These are typedefs, i.e. other names for the same Arduino types, so
+// pfodPrint* and Print* (pfodStream* and Stream*) are interchangeable and
+// existing code using Print*, Stream*, Printable is unaffected.
+// NOTE: a typedef cannot be forward declared, so do not write
+// class pfodPrint; / class pfodStream; -- #include "pfodStream.h" instead.
+typedef Print pfodPrint;
+typedef Stream pfodStream;  // on MBED, Stream is #defined to WStream above
+typedef Printable pfodPrintable;
+
 #endif //pfodStream_h

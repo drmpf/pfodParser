@@ -13,12 +13,12 @@
 
 #include "pfodDebugPtr.h"
 
-static Stream* debugPtr = NULL;
-Stream* getDebugPtr() {
+static Print* debugPtr = NULL;
+Print* getDebugPtr() {
     return debugPtr;
 }
 
-void setDebugPtr(Stream *outPtr) {
+void setDebugPtr(Print *outPtr) {
     debugPtr = outPtr;
 }
     

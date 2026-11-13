@@ -217,7 +217,7 @@ void pfodDwgsBase::printFloatDecimals(Print* out, float f, int decPlaces) {
     unsigned long iValue = (unsigned long ) f;
     if ((f - iValue) != 0) {
       // round
-      iValue = (unsigned long) (f + 0.5);
+      iValue = (unsigned long) (f + 0.5f);
     }
     if (decPlaces == 0) {
       out->print(iValue);
@@ -259,7 +259,7 @@ void pfodDwgsBase::printFloatNumber(float f) {
   if (f < 1) { // i.e 0.9xx
     // only print at most 3 decimals
     // round
-    f = f + 0.0005;
+    f = f + 0.0005f;
     unsigned long intPart = (unsigned long)(f * 1000);
     // 1.234 => 1234
     int fraction = intPart % 1000; // 1234 -> 234
@@ -279,8 +279,8 @@ void pfodDwgsBase::printFloatNumber(float f) {
         }
       }
     }
-  } else if (f < 10.0) { // i.e. 9.xx
-    f = f + 0.005; // round to 2 decimal
+  } else if (f < 10.0f) { // i.e. 9.xx
+    f = f + 0.005f; // round to 2 decimal
     unsigned long intPart = (unsigned long)(f * 100);
     // 1.234 => 123.4
     int fraction = intPart % 100; // 123.4 -> 23
@@ -298,8 +298,8 @@ void pfodDwgsBase::printFloatNumber(float f) {
     }
 
   } else { // i.e. 10.x and higher
-    f = f + 0.05; // round to 1dec place
-    unsigned long intPart = (unsigned long)(f * 10.0);
+    f = f + 0.05f; // round to 1dec place
+    unsigned long intPart = (unsigned long)(f * 10.0f);
     // 1.2 => 12
     int fraction = intPart % 10; // 12 -> 2
     // no decimals

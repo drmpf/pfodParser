@@ -431,13 +431,32 @@ static void handle_pfodWeb() {
     // for THIS client's own cursor to pick up on their next one -- same
     // "spread a large backlog over several polls" idea the old pump used,
     // just per-client instead of via one shared pump.
+    //
+    // Whole lines only: a line is only sent if all of it fits
+    // in this response, otherwise it waits for the next poll, so a client
+    // never gets part of a (CSV) line. A line longer than
+    // MAX_RAW_DATA_PER_RESPONSE can never fit, so it is skipped and
+    // PFOD_LINE_DROPPED_MARKER is sent in its place (otherwise this client
+    // would be stuck on it forever).
     if (httpRawDataPtr) {
       lockRawData();
       httpRawDataPtr->setReadCursor(rawDataClients[currentRawDataClientIdx].cursor);
       size_t sent = 0;
-      while (sent < MAX_RAW_DATA_PER_RESPONSE && httpRawDataPtr->available()) {
-        httpCapture.print((char)httpRawDataPtr->read());
-        sent++;
+      size_t lineLen;
+      while ((lineLen = httpRawDataPtr->nextLineLength()) > 0) {
+        if (lineLen > MAX_RAW_DATA_PER_RESPONSE) { // too long for any response
+          if (sent + PFOD_LINE_DROPPED_MARKER_LEN > MAX_RAW_DATA_PER_RESPONSE) {
+            break; // no room for the marker this time, next poll
+          }
+          httpRawDataPtr->skipLine();
+          httpCapture.print(PFOD_LINE_DROPPED_MARKER);
+          sent += PFOD_LINE_DROPPED_MARKER_LEN;
+          continue;
+        }
+        if (sent + lineLen > MAX_RAW_DATA_PER_RESPONSE) {
+          break; // does not fit in this response, next poll
+        }
+        sent += httpRawDataPtr->readLine(httpCapture);
       }
       rawDataClients[currentRawDataClientIdx].cursor = httpRawDataPtr->getReadCursor();
       unlockRawData();

@@ -27,7 +27,7 @@ pfodBufferedStream::pfodBufferedStream(const uint32_t _baudRate, uint8_t *_buf, 
   debugOut = NULL;
   blocking = _blocking; // default true is not passed in call.
   baudRate = _baudRate;
-  uS_perByte = ((unsigned long)(13000000.0 / (float)baudRate)) + 1; // 1sec / (baud/13) in uS  baud is in bits
+  uS_perByte = ((unsigned long)(13000000.0f / (float)baudRate)) + 1; // 1sec / (baud/13) in uS  baud is in bits
   // => ~13bits/byte, i.e. start+8+parity+2stop+1  may be less if no parity and only 1 stop bit
   ringBuffer.init(_buf, _bufferSize);
   sendTimerStart = 0;
@@ -175,8 +175,21 @@ int pfodBufferedStream::peek() {
   return stream->peek();
 }
 
+/**
+  flush -- blocks until all the buffered bytes have been released to the connected stream.
+  Bytes are released at the baudRate set in the constructor, one per sendNextByte() call.
+  While bytes remain, delay(1) is called between sends so the board's background tasks run:
+  on ESP8266 delay() lets the SDK / WiFi run (yield() would also, but panics if called from an SDK callback),
+  on ESP32 delay() is vTaskDelay() which lets lower priority tasks, including the IDLE task
+  that resets the task watchdog, run (yield() there only lets equal or higher priority tasks run).
+  As in write(), this limits the release rate to at most one byte per mS while flushing.
+  Must only be called from loop() (not from callbacks / ISRs).
+*/
 void pfodBufferedStream::flush() {
   while (ringBuffer.available() != 0) {
     sendNextByte();
+    if (ringBuffer.available() != 0) {
+      delay(1); // let WiFi (ESP8266) and the IDLE task (ESP32) run
+    }
   }
 }

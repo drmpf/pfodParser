@@ -1,0 +1,25 @@
+#ifndef pfodTouchAction_h
+#define pfodTouchAction_h
+/*
+ * (c)2014-2026 Forward Computing and Control Pty. Ltd.
+ * NSW Australia, www.forward.com.au
+ * This code is not warranted to be fit for any purpose. You may only use it at your own risk.
+ * This code may be freely used for both private and commercial use
+ * Provided this copyright is maintained.
+ */
+#include <stdint.h>
+#include "pfodDwgsBase.h"
+
+class pfodTouchAction : public pfodDwgsBase {
+  public:
+    pfodTouchAction();
+    pfodTouchAction &action(pfodDwgsBase &_action); 
+    pfodTouchAction &cmd(const char _cmd); // default ' ' not set
+    pfodTouchAction &cmd(const char* _cmdStr);
+    pfodTouchAction &cmd(pfodAutoCmd &a_Cmd);
+    void init(pfodPrint *out, struct pfodDwgVALUES* _values);
+    void send(char _startChar = '|');
+  private:
+
+};
+#endif // pfodTouchAction_h

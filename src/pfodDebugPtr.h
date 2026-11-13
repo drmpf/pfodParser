@@ -12,7 +12,7 @@
 */
 
 #include <pfodStream.h>
-Stream* getDebugPtr();
-void setDebugPtr(Stream *outPtr);
+Print* getDebugPtr();
+void setDebugPtr(Print *outPtr);
 
 #endif

@@ -1,11 +1,25 @@
 /**
  * pfodCircularLineBuffer.h
  *
- * Line-aware circular buffer that stores complete lines only.
- * When wrapping, automatically adjusts to maintain line boundaries.
+ * Circular buffer of complete lines, e.g. CSV lines, where a partial line is wrong data.
+ *  - A line is only available to read once it is complete (its '\n' has been written).
+ *    Readers (range or cursor) only see data up to the end of the last complete line.
+ *  - When the buffer is full, the oldest complete line is dropped as a whole.
+ *  - A line too long for the buffer (more than bufferSize - 1 bytes, including its '\n')
+ *    is never served: once it fills the buffer its bytes are discarded, and the rest of
+ *    it, up to and including its '\n', is ignored. The line PFOD_LINE_DROPPED_MARKER
+ *    ("**line_dropped**\r\n") is stored in its place, so readers can see a line was
+ *    lost. Older lines dropped to make room for it while it was being written are not
+ *    restored.
+ *  - The buffer size is at least PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE, so it can always
+ *    hold the marker line.
+ * Readers should read whole lines, with nextLineLength() / readLine() / skipLine(), so
+ * they never read part of a line. A reader that cannot store the next line (too long for
+ * its own buffer) should skipLine() it and write PFOD_LINE_DROPPED_MARKER instead.
+ * The Stream methods available() / read() / peek() still read byte by byte.
  * Implements Stream interface for reading data.
  *
- * Default buffer size: 8KB (configurable)
+ * Default buffer size: 4096 (configurable)
  * Line terminators: '\n' (bare) or '\r\n' -- a '\r\n' pair counts as ONE
  * line ending, never two. A lone '\r' (not immediately followed by '\n')
  * is NOT treated as a line ending at all -- it's just an ordinary byte,
@@ -25,6 +39,15 @@
 
 #include <Arduino.h>
 
+// The line stored, or written by a reader, in place of a line that was dropped
+// because it was too long for the buffer it was going into.
+#define PFOD_LINE_DROPPED_MARKER "**line_dropped**\r\n"
+// Its length in bytes, 18
+#define PFOD_LINE_DROPPED_MARKER_LEN (sizeof(PFOD_LINE_DROPPED_MARKER) - 1)
+// The smallest buffer size allowed. The buffer holds bufferSize - 1 bytes, so this
+// holds more than the marker line.
+#define PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE (PFOD_LINE_DROPPED_MARKER_LEN + 2)
+
 /**
  * Structure representing a range of bytes in the circular buffer.
  * Used to specify data positions without copying.
@@ -32,8 +55,6 @@
 struct BufferRange {
     size_t startPos;      // Starting byte position in buffer
     size_t endPos;        // Ending byte position in buffer (exclusive)
-    size_t startLine;     // Line number at start position
-    size_t endLine;       // Line number at end position
 };
 
 /**
@@ -126,9 +147,8 @@ static const pfodReadCursor PFOD_CURSOR_START = { 0, 0, false };
 /**
  * pfodCircularLineBuffer - Line-aware circular buffer for CSV data streaming
  *
- * Maintains complete lines only, automatically adjusting start position
- * when buffer wraps to ensure no partial lines. Tracks line counts for
- * efficient retrieval by line number.
+ * Only complete lines are served, the oldest complete line is dropped when full,
+ * see the top of this file.
  *
  * Implements Arduino Stream interface for reading data.
  */
@@ -136,10 +156,12 @@ class pfodCircularLineBuffer : public Stream {
 public:
     /**
      * Constructor - Initializes empty circular buffer with specified size.
-     * buffersize must be > line lenght, 
-     * if buffersize is < line length no data will be available to read
+     * It holds at most bufferSize - 1 bytes. bufferSize should be larger than the
+     * longest line; longer lines are never served (see the top of this file).
      *
-     * @param bufferSize Size of buffer in bytes (default: 4096)
+     * @param bufferSize Size of buffer in bytes (default: 4096). A size less than
+     *                   PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE is increased to that size,
+     *                   see getBufferSize().
      */
     pfodCircularLineBuffer(size_t bufferSize = 4096);
 
@@ -151,8 +173,8 @@ public:
     /**
      * Adds a complete line to the buffer (must include its own '\n' or
      * '\r\n' terminator). Uses Print interface to write characters. If
-     * wrapping occurs and overwrites start position, adjusts start to
-     * next complete line.
+     * the buffer fills, the oldest complete line is dropped, see the top
+     * of this file.
      *
      * @param line String containing complete line with '\n' or '\r\n' terminator
      * @return Number of bytes written
@@ -162,8 +184,8 @@ public:
     /**
      * Adds a complete line to the buffer (must include its own '\n' or
      * '\r\n' terminator). Uses Print interface to write characters. If
-     * wrapping occurs and overwrites start position, adjusts start to
-     * next complete line.
+     * the buffer fills, the oldest complete line is dropped, see the top
+     * of this file.
      *
      * @param line String containing complete line with '\n' or '\r\n' terminator
      * @return Number of bytes written
@@ -171,19 +193,9 @@ public:
     size_t addLine(const String& line);
 
     /**
-     * Gets buffer range starting from specified line number.
-     * Returns data from that line until end of buffer.
-     * If requested line is older than available, returns from earliest line.
+     * Gets buffer range for all available data, i.e. all the complete lines.
      *
-     * @param fromLineCount Line number to start from
-     * @param range Output parameter filled with start/end byte positions and line counts
-     */
-    void getRange(size_t fromLineCount, BufferRange& range);
-
-    /**
-     * Gets buffer range for all available data.
-     *
-     * @param range Output parameter filled with start/end byte positions and line counts
+     * @param range Output parameter filled with start/end byte positions
      */
     void getAllRange(BufferRange& range);
 
@@ -203,9 +215,39 @@ public:
     void resetForRead();
 
     /**
+     * Length of the next complete line in the current read range, including its
+     * '\n' (and '\r' for '\r\n'), so a reader can check it has room for the whole
+     * line before reading it. Does not move the read position.
+     * If something has already read part of the line with read(), this is the length
+     * of the rest of it.
+     *
+     * @return the length of the next line, or 0 if there is no complete line to read
+     */
+    size_t nextLineLength();
+
+    /**
+     * Reads the next complete line, whole, writing it to out, and moves the read
+     * position past it. Check nextLineLength() first if out has limited room.
+     *
+     * @param out where to write the line
+     * @return the length of the line read, or 0 if there is no complete line to read
+     */
+    size_t readLine(Print& out);
+
+    /**
+     * Moves the read position past the next complete line without reading it, e.g.
+     * for a line too long for the reader's own buffer. The reader should then write
+     * PFOD_LINE_DROPPED_MARKER in its place.
+     *
+     * @return the length of the line skipped, or 0 if there is no complete line to read
+     */
+    size_t skipLine();
+
+    /**
      * Resumes reading from a previously-captured cursor, through to
-     * whatever is CURRENTLY the newest data (the buffer's current
-     * head) -- "catch me up from where I left off". Safe to call
+     * the end of the CURRENTLY newest complete line (a partial line
+     * being written is not served) -- "catch me up from where I left
+     * off". Safe to call
      * repeatedly, forever, even across long gaps during which
      * eviction may have discarded some of the data that was available
      * when `cursor` was captured -- the comparison is EXACT (an
@@ -251,27 +293,6 @@ public:
     pfodReadCursor getReadCursor() const;
 
     /**
-     * Gets the current start line number (oldest available line).
-     *
-     * @return Line number of first available line in buffer
-     */
-    size_t getStartLineCount() const { return startLineCount; }
-
-    /**
-     * Gets the current end line number (newest line + 1).
-     *
-     * @return Line number after last line in buffer
-     */
-    size_t getEndLineCount() const { return endLineCount; }
-
-    /**
-     * Gets total number of lines currently in buffer.
-     *
-     * @return Number of complete lines stored
-     */
-    size_t getLineCount() const { return endLineCount - startLineCount; }
-
-    /**
      * Gets the configured buffer size.
      *
      * @return Total buffer size in bytes
@@ -279,34 +300,38 @@ public:
     size_t getBufferSize() const { return bufferSize; }
 
     /**
-     * Gets number of bytes currently used in buffer.
+     * Gets number of bytes currently used in buffer, including any partial
+     * line being written (which is not yet available to read).
      *
      * @return Bytes of data stored
      */
     size_t getUsedBytes() const;
 
     /**
-     * Gets number of bytes available in buffer.
+     * Gets number of bytes that can be written without dropping any data.
+     * The buffer holds at most bufferSize - 1 bytes (head == tail means empty),
+     * so this is bufferSize - 1 - getUsedBytes(). A line of this many bytes,
+     * including its '\n', fits without dropping the oldest line.
      *
      * @return Bytes available for new data
      */
-    size_t getAvailableBytes() const { return bufferSize - getUsedBytes(); }
+    size_t getAvailableBytes() const { return bufferSize - 1 - getUsedBytes(); }
 
     /**
-     * Checks if buffer is empty.
+     * Checks if buffer has no complete lines to read.
      *
-     * @return true if buffer contains no data
+     * @return true if buffer contains no complete lines
      */
-    bool isEmpty() const { return head == tail; }
+    bool isEmpty() const { return tail == lineEndPos; }
 
     /**
-     * Clears all data from buffer and resets line counts.
+     * Clears all data from buffer, including any partial line being written.
      */
     void clear();
 
     /**
      * Prints debug information about buffer state and positions.
-     * Outputs buffer range, stream positions, line counts, and usage stats.
+     * Outputs buffer range, stream positions, and usage stats.
      *
      * @param outPtr Pointer to Print object for output (e.g., &Serial). Returns silently if null.
      */
@@ -339,8 +364,10 @@ public:
 
     /**
      * Write single byte to buffer. Used by addLine() via Print interface.
-     * Automatically wraps and adjusts start position when a line ending
-     * ('\n', bare or as the second byte of '\r\n') is detected.
+     * A line ending ('\n', bare or as the second byte of '\r\n') makes the
+     * line available to read. If the buffer is full, first drops the oldest
+     * complete line; if the line being written fills the buffer by itself it
+     * is discarded (see the top of this file).
      *
      * @param c Byte to write
      * @return 1 if written, 0 if failed
@@ -361,13 +388,12 @@ private:
     uint8_t* buffer;          // Circular buffer storage
     size_t head;              // Write position (next byte to write)
     size_t tail;              // Read position (first byte to read)
-    size_t startLineCount;    // Line number at tail position
-    size_t endLineCount;      // Line number at head position (next line to write)
+    size_t lineEndPos;        // Position after the last complete line, readers only see up to here
+    bool discardingLine;      // true while ignoring the rest of a line too long for the buffer
 
     // Current read range for Stream interface
     size_t readPos;           // Current read position within readRange
     size_t readEndPos;        // End position of current read range
-    size_t lineByteCount;
 
     // Absolute (does not wrap every bufferSize bytes the way a raw buffer
     // index would) count of every byte ever written, used ONLY by
@@ -379,19 +405,25 @@ private:
     // wrap at size_t's own natural width, on its own; that wrap is plain
     // unsigned overflow (well-defined, not undefined behaviour) and is
     // handled correctly by setReadCursor()'s wraparound-safe subtraction.
+    // The one exception: when write() discards a line too long for the
+    // buffer it moves head back to lineEndPos and takes those discarded
+    // bytes off again, so totalBytesWritten always matches head. That
+    // cannot affect any outstanding cursor, as readers never see past
+    // lineEndPos, so no cursor points into the discarded bytes.
     size_t totalBytesWritten;
 
+    /**
+     * Stores PFOD_LINE_DROPPED_MARKER as a complete line. Only called when the buffer
+     * has just been emptied of a too long line, so there is always room.
+     */
+    void storeDroppedMarker();
 
     /**
-     * Finds the next complete line starting from given position. A line
-     * ends on '\n' (bare, or the second byte of a '\r\n' pair) -- see
-     * write()'s own comment for the full rule.
-     *
-     * @param fromPos Starting position to search
-     * @param lineEnd Output parameter for position after the '\n'
-     * @return true if a complete line was found, false if no '\n' found
+     * Drops the oldest complete line, from tail up to and including its '\n',
+     * moving any read positions on the dropped bytes along with tail.
+     * Only call when there is a complete line (tail != lineEndPos).
      */
-    bool findNextLine(size_t fromPos, size_t& lineEnd);
+    void dropOldestLine();
 
 
     /**

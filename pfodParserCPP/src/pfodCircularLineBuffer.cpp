@@ -1,0 +1,441 @@
+/**
+ * pfodCircularLineBuffer.cpp
+ *
+ * Implementation of line-aware circular buffer for ESP32.
+ *
+ * (c)2014-2026 Forward Computing and Control Pty. Ltd.
+ * NSW Australia, www.forward.com.au
+ * This code is not warranted to be fit for any purpose. You may only use it at your own risk.
+ * This code may be freely used for both private and commercial use
+ * Provided this copyright is maintained.
+ */
+
+#include "pfodCircularLineBuffer.h"
+
+/**
+ * Constructor - Allocates buffer memory and initializes state.
+ * It holds at most bufferSize - 1 bytes. bufferSize should be larger than the
+ * longest line; longer lines are never served (see the header).
+ *
+ * @param bufferSize Size of buffer in bytes (default: 4096), increased to
+ *                   PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE if less, so the buffer can
+ *                   always hold the PFOD_LINE_DROPPED_MARKER line
+ */
+pfodCircularLineBuffer::pfodCircularLineBuffer(size_t bufferSize)
+    : bufferSize((bufferSize < PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE) ? PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE : bufferSize)
+    , buffer(nullptr)
+    , head(0)
+    , tail(0)
+    , lineEndPos(0)
+    , discardingLine(false)
+    , readPos(0)
+    , readEndPos(0)
+    , totalBytesWritten(0)
+{
+    buffer = new uint8_t[this->bufferSize];
+}
+
+/**
+ * Destructor - Frees buffer memory.
+ */
+pfodCircularLineBuffer::~pfodCircularLineBuffer() {
+    delete[] buffer;
+}
+
+/**
+ * Adds a complete line to the buffer (must include its own '\n' or '\r\n'
+ * terminator). Uses pfodPrint interface write() methods.
+ *
+ * @param line C-string containing complete line with '\n' or '\r\n' terminator
+ * @return Number of bytes written
+ */
+size_t pfodCircularLineBuffer::addLine(const char* line) {
+    return print(line);
+}
+
+/**
+ * Write single byte to buffer. Automatically wraps around buffer end.
+ * A line ends on '\n' (bare, or the second byte of '\r\n'). When it does, the line
+ * becomes available to read (lineEndPos moves to head).
+ * If the buffer is full (bufferSize - 1 bytes) before the byte is stored:
+ *  - if there is a complete line, the oldest one is dropped as a whole, to make room
+ *  - otherwise the buffer holds only the line being written, which is then too long for
+ *    the buffer. It is never served: its bytes are discarded (head moves back to
+ *    lineEndPos, and totalBytesWritten back with it), PFOD_LINE_DROPPED_MARKER is
+ *    stored in its place, and the rest of it, up to and including its '\n', is ignored.
+ * While a too long line is being ignored, bytes are accepted (returns 1) but not stored.
+ *
+ * @param c Byte to write
+ * @return 1, the byte has been accepted
+ */
+size_t pfodCircularLineBuffer::write(uint8_t c) {
+    if (discardingLine) {
+        if (c == '\n') {
+            discardingLine = false; // end of the too long line, start storing again
+        }
+        return 1;
+    }
+
+    if (getUsedBytes() == bufferSize - 1) { // full
+        if (tail != lineEndPos) {
+            dropOldestLine();
+        } else {
+            // only the line being written is in the buffer and it fills it, too long.
+            // Discard its bytes. No reader can be in them (readers never see past
+            // lineEndPos), so taking them off totalBytesWritten affects no cursor.
+            totalBytesWritten -= bytesInRange(lineEndPos, head);
+            head = lineEndPos; // discard its bytes, the buffer is now empty
+            storeDroppedMarker(); // in its place
+            discardingLine = (c != '\n'); // ignore the rest of it, unless this is its end
+            return 1;
+        }
+    }
+
+    buffer[head] = c;
+    head = (head + 1) % bufferSize;
+    totalBytesWritten++; // used only by getReadCursor()/setReadCursor() -- see pfodReadCursor's doc comment
+    if (c == '\n') {
+        lineEndPos = head; // this line is complete, available to read
+    }
+    return 1;
+}
+
+/**
+ * Write buffer of bytes. Calls write(uint8_t) for each byte.
+ *
+ * @param buffer Data to write
+ * @param size Number of bytes
+ * @return Number of bytes written
+ */
+size_t pfodCircularLineBuffer::write(const uint8_t *buffer, size_t size) {
+    size_t written = 0;
+    for (size_t i = 0; i < size; i++) {
+        written += write(buffer[i]);
+    }
+    return written;
+}
+
+/**
+ * Gets buffer range for all available data, i.e. all the complete lines.
+ * Returns the buffer contents from tail to the end of the last complete line.
+ *
+ * @param range Output parameter filled with start/end byte positions
+ */
+void pfodCircularLineBuffer::getAllRange(BufferRange& range) {
+    range.startPos = tail;
+    range.endPos = lineEndPos;
+}
+
+/**
+ * Sets the current read position to a specific buffer range.
+ * Subsequent pfodStream read operations will read from this range.
+ *
+ * @param range BufferRange specifying what to read
+ */
+void pfodCircularLineBuffer::setReadRange(const BufferRange& range) {
+    readPos = range.startPos;
+    readEndPos = range.endPos;
+}
+
+/**
+ * Resets read position to beginning of all available data.
+ * Convenience method that calls getAllRange() and setReadRange().
+ * Subsequent pfodStream read operations will read from start of buffer.
+ */
+void pfodCircularLineBuffer::resetForRead() {
+    BufferRange range;
+    getAllRange(range);
+    setReadRange(range);
+}
+
+/**
+ * Resumes reading from `cursor` through to the end of the newest complete line
+ * (lineEndPos, not head, so a partial line is not read) -- see the header's doc
+ * comment for the fallback contract. Does not rebase totalBytesWritten --
+ * `bytesBehindHead` below is plain unsigned subtraction, which gives the true
+ * elapsed byte count even across totalBytesWritten's own eventual overflow, so
+ * no "cursor.pos > totalBytesWritten" ordering check is needed (it would misfire
+ * when totalBytesWritten legitimately wraps).
+ *
+ * @param cursor from getReadCursor() on this instance, or PFOD_CURSOR_START
+ */
+void pfodCircularLineBuffer::setReadCursor(pfodReadCursor cursor) {
+    size_t usedBytes = getUsedBytes();
+    if (!cursor.valid) {
+        readPos = tail; // sentinel -- never trust an unset cursor
+    } else {
+        size_t bytesBehindHead = totalBytesWritten - cursor.pos;
+        if (bytesBehindHead > usedBytes) {
+            readPos = tail; // that data has been dropped since -- fall back to the oldest
+        } else {
+            readPos = (head + bufferSize - bytesBehindHead) % bufferSize;
+        }
+    }
+    readEndPos = lineEndPos; // complete lines only, not a partial line being written
+}
+
+/**
+ * Captures the current read position as an absolute write count, so it stays
+ * valid however far head moves on before it is passed back to setReadCursor().
+ *
+ * @return the cursor for the current read position
+ */
+pfodReadCursor pfodCircularLineBuffer::getReadCursor() const {
+    pfodReadCursor cursor;
+    cursor.pos = totalBytesWritten - bytesInRange(readPos, head);
+    cursor.totalBytesWritten = totalBytesWritten;
+    cursor.valid = true;
+    return cursor;
+}
+
+/**
+ * Length of the next complete line in the current read range, including its '\n'.
+ * Scans from readPos for a '\n' before readEndPos. Does not move readPos.
+ *
+ * @return the length of the next line, or 0 if there is no complete line to read
+ */
+size_t pfodCircularLineBuffer::nextLineLength() {
+    size_t len = 0;
+    for (size_t pos = readPos; pos != readEndPos; pos = (pos + 1) % bufferSize) {
+        len++;
+        if (buffer[pos] == '\n') {
+            return len;
+        }
+    }
+    return 0; // no '\n', no complete line
+}
+
+/**
+ * Reads the next complete line, whole, writing it to out, and moves readPos past it.
+ *
+ * @param out where to write the line
+ * @return the length of the line read, or 0 if there is no complete line to read
+ */
+size_t pfodCircularLineBuffer::readLine(pfodPrint& out) {
+    size_t len = nextLineLength();
+    for (size_t i = 0; i < len; i++) {
+        out.write(buffer[readPos]);
+        readPos = (readPos + 1) % bufferSize;
+    }
+    return len;
+}
+
+/**
+ * Moves readPos past the next complete line without reading it.
+ *
+ * @return the length of the line skipped, or 0 if there is no complete line to read
+ */
+size_t pfodCircularLineBuffer::skipLine() {
+    size_t len = nextLineLength();
+    readPos = (readPos + len) % bufferSize;
+    return len;
+}
+
+/**
+ * Returns number of bytes available to read from current read range.
+ * Implements pfodStream::available()
+ *
+ * @return Number of bytes available in current read range
+ */
+int pfodCircularLineBuffer::available() {
+    return (int)bytesInRange(readPos, readEndPos);
+}
+
+/**
+ * Reads one byte from current read range without advancing position.
+ * Implements pfodStream::peek()
+ *
+ * @return Byte value (0-255) or -1 if no data available
+ */
+int pfodCircularLineBuffer::peek() {
+    if (readPos == readEndPos) {
+        return -1;
+    }
+
+    return buffer[readPos];
+}
+
+/**
+ * Reads one byte from current read range and advances position.
+ * Implements pfodStream::read()
+ *
+ * @return Byte value (0-255) or -1 if no data available
+ */
+int pfodCircularLineBuffer::read() {
+    if (readPos == readEndPos) {
+        return -1;
+    }
+
+    uint8_t byte = buffer[readPos];
+    readPos = (readPos + 1) % bufferSize;
+
+    return byte;
+}
+
+/**
+ * Gets number of bytes currently used in buffer, including any partial line
+ * being written (which is not yet available to read).
+ * Handles wraparound case where head < tail.
+ *
+ * @return Bytes of data stored
+ */
+size_t pfodCircularLineBuffer::getUsedBytes() const {
+    if (head >= tail) {
+        return head - tail;
+    }
+    return bufferSize - tail + head;
+}
+
+/**
+ * Clears all data from buffer, including any partial line being written.
+ * Does not free memory, just resets pointers.
+ */
+void pfodCircularLineBuffer::clear() {
+    // a partial line being written is cut by clear(), so ignore the rest of it,
+    // otherwise its end would be stored as if it were a complete line
+    discardingLine = discardingLine || (head != lineEndPos);
+    head = 0;
+    tail = 0;
+    lineEndPos = 0;
+    readPos = 0;
+    readEndPos = 0;
+}
+
+/**
+ * Prints debug information about buffer state and positions.
+ * Outputs buffer range, stream positions, and usage stats.
+ *
+ * @param outPtr Pointer to pfodPrint object for output. Returns silently if null.
+ */
+void pfodCircularLineBuffer::debugBufferRange(pfodPrint* outPtr) {
+    if (!outPtr) {
+        return;
+    }
+
+    outPtr->println("=== pfodCircularLineBuffer Debug ===");
+
+    outPtr->print("Buffer size: ");
+    outPtr->println(bufferSize);
+
+    outPtr->print("Used bytes: ");
+    outPtr->print(getUsedBytes());
+    outPtr->print(" / Available: ");
+    outPtr->println(getAvailableBytes());
+
+    outPtr->println();
+    outPtr->println("Buffer positions:");
+    outPtr->print("  head (write): ");
+    outPtr->println(head);
+    outPtr->print("  tail (read):  ");
+    outPtr->println(tail);
+    outPtr->print("  lineEndPos:   ");
+    outPtr->println(lineEndPos);
+    outPtr->print("  discardingLine: ");
+    outPtr->println(discardingLine ? "true" : "false");
+    outPtr->print("  isEmpty: ");
+    outPtr->println(isEmpty() ? "true" : "false");
+
+    outPtr->println();
+    outPtr->println("pfodStream read positions:");
+    outPtr->print("  readPos:    ");
+    outPtr->println(readPos);
+    outPtr->print("  readEndPos: ");
+    outPtr->println(readEndPos);
+    outPtr->print("  available:  ");
+    outPtr->println(available());
+
+    outPtr->println();
+    outPtr->print("Buffer contents from tail(");
+    outPtr->print(tail);
+    outPtr->print(") to head-1(");
+    outPtr->print((head > 0) ? head - 1 : bufferSize - 1);
+    outPtr->println(") [decimal]:");
+
+    if (head == tail) {
+        outPtr->println("  (empty)");
+    } else {
+        size_t pos = tail;
+        size_t count = 0;
+
+        while (pos != head) {
+            if (count % 20 == 0) {
+                if (count > 0) {
+                    outPtr->println();
+                }
+                outPtr->print("  [");
+                outPtr->print(pos);
+                outPtr->print("]: ");
+            }
+
+            outPtr->print(buffer[pos]);
+
+            if (buffer[pos] == 13) {
+                outPtr->print("(\\r)");
+            } else if (buffer[pos] == 10) {
+                outPtr->print("(\\n)");
+            }
+
+            outPtr->print(" ");
+
+            count++;
+            pos = (pos + 1) % bufferSize;
+        }
+        outPtr->println();
+        outPtr->print("  Total bytes: ");
+        outPtr->println(count);
+    }
+
+    outPtr->println("====================================");
+}
+
+/**
+ * Stores PFOD_LINE_DROPPED_MARKER as a complete line, and makes it available to read.
+ * Only called just after a too long line has been discarded, when the buffer is
+ * empty, and the buffer always holds more than the marker
+ * (PFOD_CIRCULAR_LINE_BUFFER_MIN_SIZE), so there is always room.
+ */
+void pfodCircularLineBuffer::storeDroppedMarker() {
+    const char* marker = PFOD_LINE_DROPPED_MARKER;
+    for (size_t i = 0; i < PFOD_LINE_DROPPED_MARKER_LEN; i++) {
+        buffer[head] = (uint8_t)marker[i];
+        head = (head + 1) % bufferSize;
+        totalBytesWritten++; // as write() does, so cursors stay in step with head
+    }
+    lineEndPos = head;
+}
+
+/**
+ * Drops the oldest complete line, from tail up to and including its '\n'.
+ * Only called when there is a complete line (tail != lineEndPos), so a '\n' is
+ * always found before lineEndPos.
+ * Read positions on dropped bytes are moved along with tail, so a reader
+ * part way through the dropped line continues from the next line.
+ */
+void pfodCircularLineBuffer::dropOldestLine() {
+    uint8_t droppedC;
+    do {
+        if (readPos == tail) {
+            readPos = (tail + 1) % bufferSize;
+        }
+        if (readEndPos == tail) {
+            readEndPos = (tail + 1) % bufferSize;
+        }
+        droppedC = buffer[tail];
+        tail = (tail + 1) % bufferSize;
+    } while (droppedC != '\n');
+}
+
+/**
+ * Calculates number of bytes between two positions, handling wraparound.
+ * If end < start, assumes buffer has wrapped around.
+ *
+ * @param start Starting position
+ * @param end Ending position
+ * @return Number of bytes from start to end
+ */
+size_t pfodCircularLineBuffer::bytesInRange(size_t start, size_t end) const {
+    if (end >= start) {
+        return end - start;
+    }
+    return bufferSize - start + end;
+}

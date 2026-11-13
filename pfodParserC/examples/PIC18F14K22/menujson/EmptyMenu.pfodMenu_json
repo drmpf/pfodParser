@@ -1,0 +1,51 @@
+{
+  "format": "pfodDesigner",
+  "schema": 12,
+  "name": "EmptyMenu",
+  "connection": "serial",
+  "boardName": "Minimal C code no Dwgs\nfor small memory non-Arduino uC",
+  "savedAt": "2026-11-07T06:01:03.537Z",
+  "js_ver": "V4.1.14-- 6th Nov 2026",
+  "rootMenu": {
+    "refresh_ms": 0,
+    "promptText": "Initial Empty Menu",
+    "promptFormat": {
+      "fontSize": 0,
+      "bold": false,
+      "italic": false,
+      "underline": false,
+      "flash": false,
+      "sound": false,
+      "disabled": false,
+      "fontColour": null,
+      "bgColour": null
+    },
+    "items": [
+      {
+        "type": "onoff",
+        "autoCmd": "onoff_RC0_Cmd",
+        "text": "RC0 ",
+        "trailingText": "",
+        "lowText": "0",
+        "highText": "1",
+        "current": 0,
+        "pulse": "none",
+        "pulse_ms": 1000,
+        "displayFormat": "both",
+        "formats": {
+          "fontSize": 0,
+          "bold": false,
+          "italic": false,
+          "underline": false,
+          "flash": false,
+          "sound": false,
+          "disabled": false,
+          "fontColour": null,
+          "bgColour": null
+        },
+        "pin": null,
+        "ccodeCmd": "A"
+      }
+    ]
+  }
+}

@@ -14,14 +14,18 @@ pfodDwgs::pfodDwgs() {
 }
 
 // the x position at the end of this radius at this angle (in degrees)
+// float maths only: Arduino's DEG_TO_RAD is a double constant, cast to float at
+// compile time, and cosf() is single precision (hardware FPU on Cortex-M4F / M33 /
+// ESP32, no double soft-float code; on AVR cosf is cos, double is float there)
 float pfodDwgs::xRadius(float angle, float radius) {
-	return radius*cos(angle*DEG_TO_RAD);
+	return radius*(float)cosf(angle*(float)DEG_TO_RAD); // (float), AVR cosf is cos returning double
 }
 
 // the y position at the end of this radius at this angle (in degrees)
 // note y goes down for +ve values so need to return -ve here
+// float maths only, see xRadius()
 float pfodDwgs::yRadius(float angle, float radius) {
-  return -radius*sin(angle*DEG_TO_RAD);
+  return -radius*(float)sinf(angle*(float)DEG_TO_RAD); // (float), AVR sinf is sin returning double
 }
 
 pfodCircle& pfodDwgs::circle() {
@@ -112,7 +116,7 @@ void pfodDwgs::end() {
 }
 
 
-void pfodDwgs::pushZero(double col, double row, double scale) {
+void pfodDwgs::pushZero(float col, float row, float scale) {
   out->print('|'); out->print('z');
   printFloat((float)col); printFloat((float)row);
   if (scale != 1) {
