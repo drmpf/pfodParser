@@ -34,7 +34,7 @@ Dwg_LedOff::Dwg_LedOff() {
   dwgRefresh_ms = 0;
 }
 
-void Dwg_LedOff::init() {
+void Dwg_LedOff::init(pfodParser& primingParser) {
   if (initialized) {
     return;
   }
@@ -44,13 +44,13 @@ void Dwg_LedOff::init() {
   debugPtr = getDebugPtr();
 #endif
   pfodDrawing::init();
-  // Forces this dwg's own pfodAutoIdx to a fixed, deterministic value at
-  // boot instead of leaving it lazily assigned by client request order --
-  // sent to a local discard sink (default-constructed pfodParser leaves
-  // io=NULL, so its write()s silently no-op), never a real client.
-  pfodParser primingSink;
-  setParser(&primingSink);
+  // Primes this dwg's pfodAutoIdx values by sending it once to primingParser,
+  // muted with setStream(NULL) so nothing reaches a client, then the stream is restored.
+  pfodStream* savedStream = primingParser.getPfodAppStream();
+  primingParser.setStream(NULL);  // priming output is discarded
+  setParser(&primingParser);
   sendFullDrawing();
+  primingParser.setStream(savedStream);
 }
 
 // return true if handled else false

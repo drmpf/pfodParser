@@ -166,6 +166,20 @@ pfodStream* pfodParser::getPfodAppStream() {
   return io;
 }
 
+/**
+ * Replace the stream this parser reads from and writes to, WITHOUT resetting
+ * any parser state -- unlike connect(), which calls init() and clears the msg
+ * sequence numbers.
+ * setStream(NULL) makes every write() a no-op (write() returns at once when io
+ * is NULL), which is how generated init() code primes menus and drawings
+ * through an already-connected parser:
+ *   pfodStream* saved = p->getPfodAppStream(); p->setStream(NULL); ...prime... p->setStream(saved);
+ * @param ioPtr the new stream, may be NULL
+ */
+void pfodParser::setStream(pfodStream* ioPtr) {
+  io = ioPtr;
+}
+
 size_t pfodParser::write(uint8_t c) {
   if (!io) {
     return 1; // cannot write if io null but just pretend to
@@ -583,6 +597,13 @@ byte pfodParser::parse() { // called often
         closeConnection();
       } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
         parseDwgCmd(); // do once here for all the dwg cmds
+        // Point EVERY registered dwg at this parser before dispatching, not just the ones
+        // walked until one claims the msg. A touch handler may send a different dwg's
+        // update (e.g. get_dwg_LedOnOff().sendUpdate()); that dwg must reply through THIS
+        // parser, not whichever parser (another connection) last reached it.
+        for (pfodDrawing *p = pfodParser::listOfDrawings().getFirst(); p; p = pfodParser::listOfDrawings().getNext()) {
+          p->setParser(this);
+        }
         pfodDrawing *dwgPtr = pfodParser::listOfDrawings().getFirst();
       	while (dwgPtr) {
            dwgPtr->setParser(this); // make this parser the output stream

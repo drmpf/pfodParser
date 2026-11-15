@@ -371,29 +371,36 @@ that takes every touch), so the user retypes it. If a menu will be seen in
 pfodApp, keep such URLs short and typeable, and let the link *text* carry
 the meaning (`[setup guide](/setup.html)`, not `[/setup.html](/setup.html)`).
 
-**One naming decision made at design time drives everything in stage 3:**
-`autoCmd` (menu items), `cmdName` (dwg touch zones / inserted dwgs) and
-`idxName` (dwg indexed items) become **literal C++ identifiers** in the
-generated code:
+**Drawing names drive the C++ identifiers in stage 3:** a dwg's `name`, its
+`cmdName` (touch zones / inserted dwgs) and its `idxName` (indexed items)
+become **literal C++ identifiers** in the generated code. **Menu items are
+different**: their identifiers are chosen by the generator from the item's
+*type* plus a per-type number, not from `autoCmd` (see the menu rows below).
+Always read them from the generated files.
 
 | JSON | Becomes, in generated code |
 |---|---|
 | dwg `name: "LedOn"` | class `Dwg_LedOn`, global instance `dwg_LedOn`, files `Dwg_LedOn.h/.cpp` |
 | dwg item `idxName: "idx_1"` | member `pfodAutoIdx idx_1;` in the `Dwg_<Name>` class |
 | dwg `touchZone.cmdName: "cmd_c1"` | member `pfodAutoCmd cmd_c1;` **and** a virtual hook `bool Dwg_<Name>_cmd_c1(...)` you override in a stage-3 subclass |
-| menu item `autoCmd: "button_Start_Cmd"` | cmd stem `button_Start_Cmd`; no `_pin` (a `button` has no I/O value), but its displayed text is a variable, `button_Start_var` (same for a sub-menu-opening button — confirmed generated shape in §6.3a), and it still gets a dedicated hook for the press itself: `on<Text>Pressed(pfodParser&)` (confirmed generated shape in §6.5) |
-| menu item `autoCmd: "onoff_LED_is_Cmd"` | cmd stem `onoff_LED_is_Cmd`; because this type carries a value and (optionally) a pin, also `onoff_LED_is_var` and, if a `pin` was set, `onoff_LED_is_Cmd_pin` (menu format §5.1; confirmed generated shape in §6.3) |
-| menu item `autoCmd: "label_Status_Cmd"` | cmd stem `label_Status_Cmd`; no hook, but its displayed text is a variable, `label_Status_var` (and a menu/sub-menu's own `promptText` likewise gets `mainMenuPromptText_var` / `SubMenu_<ident>_promptText_var`) — confirmed generated shape in §6.3a |
+| menu item, any type | a base name from the item's type — `onoff` → `onOffOut`, `onoffdisplay` → `onOffIn`, `pwm` → `sliderIO`, `datadisplay` → `sliderDisplay`, `chart` → `chart`, `button` → `button`, `label` → `label`, `drawing` → `dwg`, `submenu` → `submenu` — with `_2`, `_3`, … for the second, third, … item of the same type in the design. From it: cmd member `<base>_Cmd`, value/text variable `<base>_var`, pin constant `<base>_pin` (only if a `pin` was set) |
+| menu `button` (e.g. base `button`) | `button_Cmd`, displayed text `button_var` (same for a sub-menu-opening button — §6.3a), and a hook for the press: `button_Pressed(pfodParser&)` (§6.5) |
+| menu `onoff` (e.g. base `onOffOut`) | `onOffOut_Cmd`, `onOffOut_var`, `onOffOut_pin`, and a hook `onOffOut_Changed(int)` (§6.3) |
+| menu `label` (e.g. base `label`) | `label_Cmd`; no hook, but its displayed text is a variable, `label_var` (and a menu/sub-menu's own `promptText` likewise gets `mainMenuPromptText_var` / `SubMenu_<ident>_promptText_var`) — §6.3a |
 
-So: **pick short, descriptive `cmdName`/`idxName`/`autoCmd` values at design
+The menu-item names in this guide's examples are what the generator produced
+for `examples/pfodWeb/Menu_1`; for any other design **read the names from the
+generated files**, never derive them from `autoCmd` or the item text. For
+drawings, **pick short, descriptive `cmdName`/`idxName` values at design
 time** — `cmd_setRelay`, `idx_tempLabel` — not the designer's auto-suggested
 `cmd_c1`, `idx_1`, if you want the generated code to read sensibly. Both are
 valid; only the human-readability differs.
 
 **Keep the wire message a device sends under 1024 bytes.** A drawing with
-many indexed items, several nested `insertDwg` levels, or long label/units
-text all add to the size of the single `{...}` message `sendFullDrawing()`
-produces — see §7 rule 11 for the exact limits.
+many items, many indexed items, or long label/units text all add to the
+size of the single `{...}` message `sendFullDrawing()` produces. An
+`insertDwg` adds only its short reference; the child is sent separately.
+See §7 rule 11 for the exact limits.
 
 Going over does not fail loudly. The receiver auto-closes the message at the
 cap, so the item spanning the cut arrives in half and everything after it is
@@ -403,6 +410,88 @@ screen is simply missing its tail. The Dwg Controls Panel measures each
 drawing before you ever send it and shows the name and byte count in red,
 with *"This dwg too large to send without truncation"*, so the usual way to
 meet this is in the designer rather than on the wire.
+
+**A drawing too big for one message: split it into inserted dwgs.** Move
+groups of items into child drawings and `insertDwg` them into the parent.
+Each inserted dwg is fetched with its own request and sent as its own
+`{...}` message. The parent carries only the short `insertDwg` reference,
+so each child has its own 1023-byte budget, both for its full load and for
+its update. That second point is the advantage over the legacy method below.
+
+**When you create a dwg, check both its sizes, and split it yourself if
+either is over 1023 bytes.** Do this without waiting to be asked:
+
+1. **The full load.** This is the `{+…}` message `sendFullDrawing()` sends:
+   the header plus every item. Count it in UTF-8 bytes, not characters. The
+   Dwg Controls Panel shows this count, and only this one.
+2. **The update.** This is the `{+|…}` message `sendUpdate()` sends: every
+   indexed item, re-sent on each refresh. Nothing measures it for you.
+   Measure it with the longest values the items can carry at run time: the
+   longest label text, the widest number, the units. Do not use the
+   placeholder values in the json. A `{+|…}` update that fits with `0`
+   can overflow with `-1234.56`.
+3. **If either is over 1023 bytes,** move groups of items into new child
+   dwgs and `insertDwg` each one into the parent. Keep going until every
+   drawing, parent and children, is under the limit for both its full load
+   and its update. Keep the refresh interval on the top-level dwg (see the
+   refresh trap above). Keep `cmdName`/`idxName` unique per the dwg doc
+   §5.2. Tell the user which drawings you created and why.
+
+When you split, follow these rules so the drawing still displays as designed:
+
+* **Keep the items in order.** Cut the item list into consecutive runs and
+  keep each run in its original order. A child's un-indexed items are drawn
+  at its `insertDwg`'s place in the parent's list. Its indexed items are
+  different: they always paint above **all** of the parent's indexed items,
+  wherever the `insertDwg` sits, and siblings stack in `insertDwg` order
+  (dwg doc §6.1). So the parent keeps only the **first** run, followed by
+  one `insertDwg` per later run, in order. Never leave parent items after an
+  `insertDwg`: an indexed one would drop beneath the children's indexed
+  items. Split this way, both un-indexed and indexed items stack exactly as
+  they did in the single drawing.
+* **Never separate a `touchZone` from its `touchAction`s and
+  `touchActionInput`s.** They must immediately follow their touchZone in the
+  same drawing, or the loader deletes them (dwg doc §6). Move the whole group
+  into the same run.
+* **Keep every `idxName` reference in the same drawing as its target.** An
+  `idxName` resolves only inside its own drawing (dwg doc §5.3). A
+  `touchAction`, `touchActionInput` or `hide`/`unhide`/`erase` that names an
+  indexed item must go in the same run as that item. So must an `index`
+  placeholder for it, and every other item sharing that `idxName` (dwg doc
+  §5.2): split across drawings, they become different indices. A
+  `hide`/`unhide`/`erase` that names a touchZone's `cmdName` must likewise
+  go in that touchZone's run. The run must also put any
+  `hide`/`unhide`/`erase` after its target, as before.
+* **Leave no `pushZero` open at the end of a drawing.** If a run ends inside a
+  `pushZero` … `popZero` block, end that child with a `popZero` for each
+  `pushZero` still open. Then start the next child with the same `pushZero`s,
+  in the same order, before its first item, so its items keep the same
+  origin and scale. Every drawing must have as many `popZero`s as
+  `pushZero`s.
+* **Put each `insertDwg` at the parent's base transform**, outside any
+  `pushZero`, with `xOffset`/`yOffset` of `0`. A child inherits the
+  transform in force at its `insertDwg`, so an open `pushZero` there would be
+  applied twice: once in the parent and once by the child's own reopened
+  `pushZero`.
+* **Move the stage-3 code with the items.** Each moved `cmdName`/`idxName`
+  becomes a member of the child's `Dwg_<Child>` class. A hook for a moved
+  touchZone becomes `Dwg_<Child>_<cmdName>()`, and any override for it
+  moves to a subclass of the child.
+
+**Do not use the `~m` multi-part load.** pfod also has an older way to send a
+large drawing. The initial load cmd for a drawing always asks for the first
+part: ``{<loadCmd>`0}``, or ``{<version>:<loadCmd>`0}`` when the client has a
+cached version. If the response carries the `~m` option, the client asks for
+the next part, ``{<loadCmd>`1}``, then ``{<loadCmd>`2}`` and so on. Each later
+part is an update, `{+~m|…}` while more parts follow. The client stops at an
+empty response `{}`, or at a part without `~m`. The full load can then span
+several messages, but the drawing's **update** (the refresh reply) is still
+one response under 1023 bytes for the whole drawing, and it may not carry
+`~m`. This method is **deprecated**. pfodWeb still follows it when a device
+sends it. The pfodWeb Designer does not generate it, and generated code never
+sends `~m`. The `moreData` argument of `pfodDwgs::start()` and
+`pfodDwgs::startUpdate()` exists only for this method: always leave it at its
+default of `0`. Use inserted dwgs instead.
 
 ---
 
@@ -664,6 +753,17 @@ instead of needing a per-drawing route:
 > wiping the library in one press is not something to leave in the UI beside
 > Create Dwg. It returns the names it removed, so log them; it is
 > idempotent, so calling it on an empty library is a harmless `[]`.
+>
+> **Before the FIRST load, ask the user.** The browser's library persists
+> between sessions, so it usually already holds drawings from earlier work —
+> look at the Dwg Controls Panel's list (or `DwgLibrary`) before arming
+> anything. If it is not empty, stop and ask the user, yes or no, whether
+> to clear it with `deleteAllDwgs()` first, naming a few of the drawings
+> found and saying that a snapshot of them all is saved to the download
+> folder before anything is removed. Do not decide this yourself in either
+> direction: those drawings are the user's own, and leaving them in place
+> mixes earlier work into this session's design. Only reloads after the
+> first need no question — the rule above already says clear.
 >
 > **It saves a snapshot first.** Before anything is removed, every drawing
 > in the library goes into one `AllDwgs_<stamp>_menuJson.zip` in your
@@ -1055,8 +1155,8 @@ void setup() {
   Serial.begin(115200);        // or the BLE/WiFi/TCP setup block, for other connections
   ...
   parser.setVersion(version);
-  parser.connect(&Serial);     // or the connection-specific stream
-  handle_mainMenu = init_pfodMainMenu(closeConnection);
+  parser.connect(&Serial);     // or the connection-specific stream -- BEFORE init_pfodMainMenu
+  handle_mainMenu = init_pfodMainMenu(closeConnection, parser); // parser primes the menu tree (§5.2)
   // <<<<<<<<< Your extra setup code goes here
   //   ^^^ EXTENSION POINT 1: pinMode() calls, sensor init, hardware defaults
 }
@@ -1065,6 +1165,14 @@ void loop() {
   handle_mainMenu(parser); // handle i/o via this parser
 }
 ```
+
+The Serial and BLE `.ino` pass the sketch's own `parser` to
+`init_pfodMainMenu()`, which uses it to *prime* the menu and every drawing
+(§5.2) — muted, so nothing reaches the client. The HTTP and TCP `.ino` have no
+parser of their own at init time and call `init_pfodMainMenu()` /
+`init_pfodMainMenu(closeConnection_pfodAppServer)` instead; the generated code
+then creates one temporary priming parser for the whole init tree. Leave
+either call exactly as generated.
 
 **That's the whole `.ino` loop — there is no marked extension point in
 `loop()`.** Do not confuse it with the similarly-worded
@@ -1091,22 +1199,21 @@ on a second port, or startup work not tied to any one menu/drawing.
 ### 5.2 `pfodMainMenu.h` / `.cpp` — the top of the menu tree, and how to subclass it
 
 One pair of files always, regardless of how many sub-menus/drawings exist.
-Every method is `virtual`, and (as of the generator that produced
-`examples/pfodWeb/LedOnOff_serial` in this repo, pfodWeb V4.1.7) the single
-`mainMenu` instance is reached everywhere else through an accessor, not
-directly:
+Every method is `virtual`, and the single `mainMenu` instance is reached
+everywhere else through an accessor, not directly:
 
 ```cpp
 class pfodMainMenu {
   public:
     pfodMainMenu();
-    virtual void init(pfodCloseConnectionPtr _closeConnectionFnPtr = NULL);
+    virtual void init(pfodParser& primingParser);   // registers + primes the menu tree
+    virtual void init(pfodCloseConnectionPtr _closeConnectionFnPtr,
+                      pfodParser& primingParser);   // sets closeFn, then calls init(parser)
     virtual void sendMainMenu(pfodParser &parser);       // full menu, on first connect
     virtual void sendMainMenuUpdate(pfodParser &parser); // cheap refresh of a cached menu
     virtual void handle(pfodParser &parser);              // called every loop() via the fn pointer
   protected:
-    pfodAutoCmd dwgMenuItem_LedOnOff_Cmd;  // one per top-level drawing item,
-                                           // named from that item's own autoCmd
+    pfodAutoCmd dwg_Cmd;  // one per top-level drawing item (dwg, dwg_2, ... — §3)
   ...
 };
 
@@ -1114,10 +1221,30 @@ class pfodMainMenu {
 pfodMainMenu mainMenu;                                                     // the default instance
 pfodMainMenu& __attribute__((weak)) get_pfodMainMenu() { return mainMenu; } // weak — replace THIS, not mainMenu
 
-// and both entry points the .ino calls go through the accessor, not `mainMenu` directly:
-handle_mainMenuFnPtr init_pfodMainMenu(pfodCloseConnectionPtr p) { get_pfodMainMenu().init(p); return handle_pfodMainMenu; }
+// and the entry points the .ino calls go through the accessor, not `mainMenu` directly
+// (simplified — the generated versions also handle a NULL closeFn):
+handle_mainMenuFnPtr init_pfodMainMenu(pfodCloseConnectionPtr closeFn) {      // HTTP/TCP: no parser yet
+  init_pfodMainMenuWithTempParser(closeFn);  // primes via one temporary parser
+  return handle_pfodMainMenu;
+}
+handle_mainMenuFnPtr init_pfodMainMenu(pfodCloseConnectionPtr closeFn, pfodParser& primingParser) { // Serial/BLE
+  get_pfodMainMenu().init(closeFn, primingParser);  // primes via the sketch's own parser
+  return handle_pfodMainMenu;
+}
 void handle_pfodMainMenu(pfodParser& parser) { get_pfodMainMenu().handle(parser); }
 ```
+
+**Priming.** `init(primingParser)` sends the menu once to
+`primingParser` and passes the same parser to every drawing and sub-menu's
+`init()`. That fixes their auto-assigned values in a deterministic order:
+parent first, then what it contains. Each level mutes the parser with
+`setStream(NULL)` while it sends, then restores the stream, so a connected
+parser never sends priming output to the client. No generated `init()` creates
+a `pfodParser` of its own (on an UNO each one costs 296 bytes of stack). The
+only one is made in `init_pfodMainMenuWithTempParser()`, used by the
+no-parser `init_pfodMainMenu()` overload, which the linker drops for
+Serial/BLE sketches. `init()` takes the parser by reference, so there is no
+NULL / "not primed" case: every `init()` is always given a parser.
 
 **This is the mechanism the whole of stage 3 now runs on — read it once here,
 it applies identically to every `Dwg_<Name>` in §5.3 and every `SubMenu_<Name>`
@@ -1131,16 +1258,24 @@ to change. To take over:
 // in YOUR OWN new file, e.g. LedOnOffApp.cpp — nothing here touches a generated file
 class MyMainMenu : public pfodMainMenu {
   public:
-    virtual void init(pfodCloseConnectionPtr _closeConnectionFnPtr = NULL);  // override only what you need
+    using pfodMainMenu::init;                                   // keep init(closeFn, parser) visible
+    void init(pfodParser& primingParser) override;    // override ONLY the one-arg init
 };
-void MyMainMenu::init(pfodCloseConnectionPtr _closeConnectionFnPtr) {
-  pfodMainMenu::init(_closeConnectionFnPtr);   // ALWAYS chain to the base first — it registers the drawing tree
+void MyMainMenu::init(pfodParser& primingParser) {
+  pfodMainMenu::init(primingParser);   // ALWAYS chain first, WITH the parser — registers and primes the tree
   pinMode(ledPin, OUTPUT);
   turnLedOff();
 }
 MyMainMenu myMainMenu;
 pfodMainMenu& get_pfodMainMenu() { return myMainMenu; }   // replaces the weak default sketch-wide
 ```
+
+Override only the one-arg `init(pfodParser*)`. The generated
+`init(closeFn, parser)` sets the close-connection callback and then calls it
+through the vtable, so yours runs. `override` turns a stale signature (e.g. the
+old `init(pfodCloseConnectionPtr)`) into a compile error instead of an
+override that is silently never called. `using pfodMainMenu::init;` keeps the
+two-arg overload visible on your class.
 
 This is `examples/pfodWeb/LedOnOff_serial/LedOnOffApp.cpp`, verbatim in
 substance (its own comment: *"Re-generating from the pfodWeb Designer
@@ -1162,7 +1297,7 @@ void pfodMainMenu::handle(pfodParser& parser) {
     } else if ('@' == cmd) {         // standard chart/time-sync handshake — leave as generated
       plot_msOffset = millis(); clearPlot = true;
       parser.print(F("{@`0}"));
-    } else if (parser.cmdEquals(dwgMenuItem_LedOnOff_Cmd)) {
+    } else if (parser.cmdEquals(dwg_Cmd)) {
       // a touch INSIDE this drawing that no dwg's processDwgCmds() claimed (returned false) —
       // see the return-value contract in §6.1. Generic fallback: refresh the drawing.
       sendMainMenuUpdate(parser);
@@ -1179,7 +1314,7 @@ void pfodMainMenu::handle(pfodParser& parser) {
 **This trailing marker is the real "runs every `loop()`" extension point — and
 it's inside a generated file.** (`Menu_1`'s own `handle()` — not reproduced
 here, see §6.3 for its `onoff` branch — also calls
-`onoff_LED_is_Cmd_checkPulse()`, an ADC poll and `tickCharts()` right before
+`onOffOut_Cmd_checkPulse()`, an ADC poll and `tickCharts()` right before
 this same marker, unconditionally, every loop; this is where per-loop
 servicing that isn't any one item's job already lives.) Don't hand-edit it in
 place; reach it the same regeneration-safe way as everything else — override
@@ -1200,7 +1335,7 @@ void MyMainMenu::handle(pfodParser &parser) {
 For each additional top-level menu item type, expect one more `else if`
 branch here following the same `parser.cmdEquals(<autoCmd member>)` pattern.
 For an `onoff`/`pwm` item this branch already calls a **named protected
-virtual hook** (`onLedIsChanged(value)`, `onPwmSettingChanged(value)`, ...) —
+virtual hook** (`onOffOut_Changed(value)`, `sliderIO_Changed(value)`, ...) —
 see §6.3, that's the hook you override, not `handle()` itself. A `submenu`
 branch opens a separate `SubMenu_<Name>` object (its own class, own weak
 accessor, own `sendMenu()`/`sendMenuUpdate()` pair) — see §6.5 for the full
@@ -1221,7 +1356,8 @@ This applies whenever *you* change what `sendMainMenu()` or any
 class Dwg_LedOn : public pfodDrawing {
   public:
     Dwg_LedOn();
-    virtual void init();          // idempotent; registers with pfodParser's drawing list
+    virtual void init(pfodParser& primingParser); // idempotent; registers with pfodParser's
+                                    //   drawing list and primes this dwg + its inserted dwgs
     bool sendDwg();                // true if this dwg answered the current message
     bool processDwgCmds();         // true if a touch on this dwg was fully handled
     void sendFullDrawing();        // whole drawing, sent on first load
@@ -1272,15 +1408,22 @@ Dwg_LedOn& get_dwg_LedOn() { return myLedOn; }
 
 `init()` chains **downward** and is virtual at this level: a drawing that
 embeds others (via `insertDwg`) calls their `init()` **through their own
-accessor** — `Dwg_LedOnOff::init()` calls `get_dwg_LedOn().init();
-get_dwg_LedOff().init();`, *not* `dwg_LedOn.init()` — so a subclassed child is
+accessor** — `Dwg_LedOnOff::init(primingParser)` calls
+`get_dwg_LedOn().init(primingParser); get_dwg_LedOff().init(primingParser);`,
+*not* `dwg_LedOn.init(...)` — so a subclassed child is
 initialised too, automatically. `pfodMainMenu::init()` calls the top-level
 drawing's `init()` the same indirect way. If you override `init()` yourself,
-**always chain to the base class's `init()` first**
-(`Dwg_LedOn::init();`) — it is what registers the drawing with the parser and
-allocates its `pfodDwgs`; skip it and the drawing is never sent and never
-receives touches (`pfodDrawing.h`'s own warning: *"using it before init()
-dereferences NULL"*).
+use the same signature, mark it `override`, and **always chain to the base
+class's `init()` first, passing the parser on**
+(`void init(pfodParser& primingParser) override;` …
+`Dwg_LedOn::init(primingParser);`). The base `init()` registers the drawing
+with the parser and primes it: it mutes `primingParser` with
+`setStream(NULL)`, sends the drawing once to fix its `pfodAutoIdx` values,
+restores the stream, and passes the same parser to every inserted drawing. No
+`init()` ever creates a `pfodParser` of its own. Skip the chain and the drawing
+is never sent and never receives touches. Chaining without the parser doesn't compile. All drawings share one `pfodDwgs` builder
+(`dwgsPtr`), set by `init()`; `parse()` points every drawing at the parser
+being answered before each message.
 
 `sendFullDrawing()` vs `sendIndexedItems()`/`sendUpdate()` — **the split that
 matters most when you override a drawing's live content** (unedited generated
@@ -1382,8 +1525,8 @@ give it a positive size.
 `idxVar`/`cmdVar` above are the `pfodAutoIdx`/`pfodAutoCmd` **member
 variables** named after the JSON `idxName`/`cmdName` (§3). **Never pass a
 literal number** to `.idx()`/`.cmd()` in hand-written code — always pass the
-member variable, exactly as the generated code does; the library mints the
-real wire value from it on first use (see §5.6).
+member variable, exactly as the generated code does; the library assigns the
+real wire value to it (see §5.6).
 
 ### 5.5 Colour constants
 
@@ -1405,15 +1548,22 @@ integer directly, e.g. `.color(200)`.
 ### 5.6 `pfodAutoCmd` / `pfodAutoIdx` — never hand-assign
 
 ```cpp
-class pfodAutoCmd : public Printable { public: char cmd[5] = ""; ... };  // mints "c1","c2",... on first use
-class pfodAutoIdx                    { public: uint16_t idx;   ... };    // mints 1,2,... on first use
+class pfodAutoCmd : public Printable { public: char cmd[5] = ""; ... };  // gets "c1","c2",... in its constructor
+class pfodAutoIdx                    { public: uint16_t idx;   ... };    // gets 1,2,... on first send
 ```
 
 These are the C++ side of the "write the name, not the wire value" rule in
-the dwg format doc (§5). A `pfodAutoCmd`/`pfodAutoIdx` member auto-assigns its
-real wire value the first time `.cmd(member)` / `.idx(member)` is sent; you
-address it everywhere else by the same C++ variable, never by a literal
-number/string.
+the dwg format doc (§5). You address each one everywhere by its C++ variable,
+never by a literal number or string.
+
+* A `pfodAutoCmd` gets its `cN` in its **constructor**, from a static counter,
+  so cmds follow static-initialisation order. The unused default
+  `Dwg_<Name>`/`mainMenu` instances also consume numbers.
+* A `pfodAutoIdx` is assigned the first time `.idx(member)` is **sent**. This
+  is why every drawing is *primed* at boot (§5.2, §5.3): sending each drawing
+  once through the muted priming parser, parent before child, fixes its
+  indices in a deterministic order instead of the order a client happens to
+  request things.
 
 ---
 
@@ -1600,9 +1750,9 @@ values:
 ```cpp
 void pfodMainMenu::sendMainMenuUpdate(pfodParser& parser) {
   parser.menuUpdate();                         // starts the update message
-  parser.onOffDisplay(datadisplay_A0_Cmd);     // addressed by cmd, not index
+  parser.onOffDisplay(sliderDisplay_Cmd);     // addressed by cmd, not index
   parser.print('`');
-  parser.print(datadisplay_A0_var);            // the current value
+  parser.print(sliderDisplay_var);            // the current value
   ...
 ```
 
@@ -1666,7 +1816,7 @@ So:
   fully handled.
 * Return **`false`** only if you have *not* replied, to let the message
   propagate up to `pfodMainMenu::handle()`'s fallback branch
-  (`parser.cmdEquals(dwgMenuItem_<Item>_Cmd)`, §5.2), which sends a generic
+  (`parser.cmdEquals(dwg_Cmd)`, §5.2), which sends a generic
   `sendMainMenuUpdate()`. pfod requires **every** message to get exactly one
   reply, or the app disconnects — the fallback exists for cases where no
   single drawing knows what to refresh.
@@ -1739,8 +1889,8 @@ for a plain menu item). Set that once, from your subclass's overridden
 `init()`:
 
 ```cpp
-void MyGauge::init() {
-  Dwg_Gauge::init();     // chain to the base first — see §7 rule 3
+void MyGauge::init(pfodParser& primingParser) {   // declared: void init(pfodParser& primingParser) override;
+  Dwg_Gauge::init(primingParser);   // chain to the base first, WITH the parser — see §7 rule 3
   dwgRefresh_ms = 1000;  // client re-requests this drawing every second
 }
 ```
@@ -1763,44 +1913,44 @@ current, ground-truth evidence for both *which hooks exist* and *how you
 reach them* (the same `get_pfodMainMenu()` subclass mechanism as §5.2).
 
 For a pin-bound item, generated code already does more than you'd expect —
-for `autoCmd: "onoff_LED_is_Cmd"` on pin D13 with `pulse: "high"`,
-`pulse_ms: 10000` in the JSON:
+for Menu_1's `onoff` item `"LED is"` on pin D13 with `pulse: "high"`,
+`pulse_ms: 10000` in the JSON (generated base name `onOffOut`, §3):
 
 ```cpp
 // generated in pfodMainMenu.cpp — pin wiring, already complete, needs no edit:
-const int onoff_LED_is_Cmd_pin = 13;
-int onoff_LED_is_var = 0;
-static unsigned long onoff_LED_is_Cmd_pulseStartTime = 0;
-static bool onoff_LED_is_Cmd_pulseRunning = false;
-static unsigned long onoff_LED_is_Cmd_PULSE_LENGTH = 10000;
-static void onoff_LED_is_Cmd_checkPulse();   // called every handle(), auto-reverts the pin after PULSE_LENGTH
+const int onOffOut_pin = 13;
+int onOffOut_var = 0;
+static unsigned long onOffOut_Cmd_pulseStartTime = 0;
+static bool onOffOut_Cmd_pulseRunning = false;
+static unsigned long onOffOut_Cmd_PULSE_LENGTH = 10000;
+static void onOffOut_Cmd_checkPulse();   // called every handle(), auto-reverts the pin after PULSE_LENGTH
 
-void pfodMainMenu::init(...) {
+void pfodMainMenu::init(pfodParser& primingParser) {
   ...
-  pinMode(onoff_LED_is_Cmd_pin, OUTPUT);
-  digitalWrite(onoff_LED_is_Cmd_pin, onoff_LED_is_var);
+  pinMode(onOffOut_pin, OUTPUT);
+  digitalWrite(onOffOut_pin, onOffOut_var);
 }
 
 // the ONE hook meant for your logic — a protected virtual, same as any Dwg_<Name> hook:
-void pfodMainMenu::onLedIsChanged(int value) {
-  digitalWrite(onoff_LED_is_Cmd_pin, value);   // the default already drives the pin correctly
-  if (value == 1) { onoff_LED_is_Cmd_pulseStartTime = millis(); onoff_LED_is_Cmd_pulseRunning = true; }
-  else             { onoff_LED_is_Cmd_pulseRunning = false; }
+void pfodMainMenu::onOffOut_Changed(int value) {
+  digitalWrite(onOffOut_pin, value);   // the default already drives the pin correctly
+  if (value == 1) { onOffOut_Cmd_pulseStartTime = millis(); onOffOut_Cmd_pulseRunning = true; }
+  else             { onOffOut_Cmd_pulseRunning = false; }
 }
 ```
 
 ...and the `handle()` branch that calls it is already correct, unedited:
 
 ```cpp
-} else if (parser.cmdEquals(onoff_LED_is_Cmd)) {
+} else if (parser.cmdEquals(onOffOut_Cmd)) {
   parser.parseLong(pfodFirstArg, &pfodLongRtn);
-  onoff_LED_is_var = (int)pfodLongRtn;
-  onLedIsChanged(onoff_LED_is_var);   // virtual hook
+  onOffOut_var = (int)pfodLongRtn;
+  onOffOut_Changed(onOffOut_var);   // virtual hook
   sendMainMenuUpdate(parser);
 }
 ```
 
-A `pwm` item follows the same shape (`onPwmSettingChanged(int value)` calling
+A `pwm` item follows the same shape (`sliderIO_Changed(int value)` calling
 `analogWrite(...)`). A `datadisplay`/`onoffdisplay` item polls its pin every
 `handle()` (or on its own timer, for an ADC) straight into its `_var`, no hook
 needed at all — there's nothing to decide, only a pin to read.
@@ -1817,21 +1967,22 @@ subclass** (§5.2), never edit the generated body in place:
 // in YOUR OWN file
 class MyMainMenu : public pfodMainMenu {
   protected:
-    virtual void onLedIsChanged(int value);
+    virtual void onOffOut_Changed(int value);
 };
-void MyMainMenu::onLedIsChanged(int value) {
-  pfodMainMenu::onLedIsChanged(value);   // keep the generated pin/pulse handling
+void MyMainMenu::onOffOut_Changed(int value) {
+  pfodMainMenu::onOffOut_Changed(value);   // keep the generated pin/pulse handling
   logRelayEvent(value);                  // then add whatever extra behaviour was asked for
 }
 ```
 
 **Always locate the actual generated hook name and pin/var identifiers in the
-file you were given before writing code** — they are stemmed from that item's
-`autoCmd` (`pfodMenu_json-format.md` §5.1: `<autoCmd>` → cmd variable,
-`<autoCmd minus _Cmd>_var` → value variable, `<autoCmd>_pin` → pin constant),
-so they are predictable, but the exact hook method name (`onLedIsChanged`,
-`onPwmSettingChanged`, ...) should be read from the generated header, not
-guessed.
+file you were given before writing code**. The generator names them from the
+item's *type* plus a per-type number (§3: `onOffOut`, `onOffOut_2`, …, then
+`<base>_Cmd`, `<base>_var`, `<base>_pin`, hook `<base>_Changed` /
+`<base>_Pressed`), not from `autoCmd` or the item text. Which item got which
+number depends on the design, so read the names (`onOffOut_Changed`,
+`sliderIO_Changed`, ...) from the generated header and `.cpp`; don't guess
+them.
 
 ### 6.3a `label`/`button`/sub-menu-button items and the menu prompt — runtime-updateable text
 
@@ -1841,13 +1992,12 @@ A `label`, a `button`, a sub-menu-opening button, and a menu's `promptText`
 there's nothing to decide, only text to print:
 
 ```cpp
-// generated in pfodMainMenu.cpp, next to the onoff/pwm _var block -- for
-// autoCmd "label_Status_Cmd" the var is named "label_Status_var", same
-// <autoCmd minus _Cmd>_var stem as any other item (§5.1). button and
-// submenu items get the identical treatment, e.g. button_Start_Cmd ->
-// button_Start_var:
-const char* label_Status_var = "some status text";
-const char* button_Start_var = "Start";
+// generated in pfodMainMenu.cpp, next to the onoff/pwm _var block -- the
+// first label in the design gets base name "label" (§3), so its var is
+// label_var (the second label's is label_2_var). button and submenu items
+// get the identical treatment, e.g. button_Cmd -> button_var:
+const char* label_var = "some status text";
+const char* button_var = "Start";
 // generated next to refresh_ms -- the menu's own prompt/title:
 const char* mainMenuPromptText_var = "Arduino Data";
 ```
@@ -1895,37 +2045,37 @@ This is the chart time-sync handshake — leave it as generated.
 
 For a `chart` menu item,
 sampling gets exactly one hook, again a protected virtual named from the
-chart's `text`, e.g. `chart_Voltage_Plot_readPlotData()` for a chart labelled
-"Voltage Plot":
+chart's generated base name (§3), e.g. `chart_readPlotData()` for Menu_1's
+first (and only) chart, labelled "Voltage Plot":
 
 ```cpp
 // generated — CSV framing, scaling and the send timer are already complete:
-void pfodMainMenu::chart_Voltage_Plot_sendData(pfodParser &parser) {
-  if (chart_Voltage_Plot_plotDataTimer.justFinished()) {
-    chart_Voltage_Plot_plotDataTimer.repeat();
-    chart_Voltage_Plot_readPlotData();   // virtual hook — assigns the plot_N_var's, nothing else
+void pfodMainMenu::chart_sendData(pfodParser &parser) {
+  if (chart_plotDataTimer.justFinished()) {
+    chart_plotDataTimer.repeat();
+    chart_readPlotData();   // virtual hook — assigns the plot_N_var's, nothing else
     parser.print(millis() - plot_msOffset);
-    parser.print(','); parser.print(((float)(chart_Voltage_Plot_plot_1_var - chart_Voltage_Plot_plot_1_varMin))
-                                     * chart_Voltage_Plot_plot_1_scaling + chart_Voltage_Plot_plot_1_varDisplayMin);
+    parser.print(','); parser.print(((float)(chart_plot_1_var - chart_plot_1_varMin))
+                                     * chart_plot_1_scaling + chart_plot_1_varDisplayMin);
     // ...one more parser.print(',') pair per active plot...
     parser.println();
   }
 }
 
 // the ONE hook meant for your logic:
-void pfodMainMenu::chart_Voltage_Plot_readPlotData() {
-  chart_Voltage_Plot_plot_1_var = analogRead(chart_Voltage_Plot_plot_1_pin);   // this plot HAD a pin in the JSON
-  chart_Voltage_Plot_plot_2_var = chart_Voltage_Plot_plot_2_varMin; //<<< replace this Min value with your actual data
-  chart_Voltage_Plot_plot_3_var = chart_Voltage_Plot_plot_3_varMin; //<<< replace this Min value with your actual data
+void pfodMainMenu::chart_readPlotData() {
+  chart_plot_1_var = analogRead(chart_plot_1_pin);   // this plot HAD a pin in the JSON
+  chart_plot_2_var = chart_plot_2_varMin; //<<< replace this Min value with your actual data
+  chart_plot_3_var = chart_plot_3_varMin; //<<< replace this Min value with your actual data
 }
 ```
 
 **This is the one place in the whole sketch that genuinely pushes data
-unprompted, and it's deliberate.** `chart_Voltage_Plot_sendData()` is *called*
+unprompted, and it's deliberate.** `chart_sendData()` is *called*
 every `handle()`, unconditionally — not from inside the `if (cmd != 0)` block,
 so it runs whether or not a message just arrived — but it only actually
 *writes* anything when its own `plotDataTimer.justFinished()` gate passes,
-i.e. once per `chart_Voltage_Plot_PLOT_DATA_INTERVAL` (1 second here), not
+i.e. once per `chart_PLOT_DATA_INTERVAL` (1 second here), not
 every `loop()`. What it writes, on that timer, is plain CSV text, not a
 `{...}` pfod message. That's a second, always-on channel specific to charts,
 separate from the request/response menu/dwg protocol described in §6.2; it's
@@ -1945,8 +2095,8 @@ of this same marker elsewhere — see §6.5 for the full list and consolidated
 advice on finding all of them.
 
 Override the hook the same way as any other (§5.2/§6.3) — subclass
-`pfodMainMenu`, override `chart_Voltage_Plot_readPlotData()`, define
-`get_pfodMainMenu()` — do not edit `chart_Voltage_Plot_sendData()`.
+`pfodMainMenu`, override `chart_readPlotData()`, define
+`get_pfodMainMenu()` — do not edit `chart_sendData()`.
 
 **Raw Data screen, and `~C`.** The designer does not generate this one; a
 sketch answers a button's cmd with it by hand. `{=<title>}` — the chart
@@ -1976,28 +2126,28 @@ A `submenu` item gets its own class, its own file pair, and its own
 weak-factory accessor — the exact same pattern as a `Dwg_<Name>`, just for a
 menu instead of a drawing. Evidence: `examples/pfodWeb/Menu_1/`'s `submenu`
 item, `text: "Submenu"`, containing one `button` item, `text: "Submenu Button"`,
-generates `SubMenu_Submenu.h`/`.cpp` (class name stemmed from the item text,
-same idea as a dwg's `name`):
+generates `SubMenu_submenu.h`/`.cpp` (class name from the item's generated
+base name, `submenu` — §3 — not its text):
 
 ```cpp
-class SubMenu_Submenu {
+class SubMenu_submenu {
   public:
-    SubMenu_Submenu();
-    virtual void init();
+    SubMenu_submenu();
+    virtual void init(pfodParser& primingParser);  // primed by the parent, like a dwg
     virtual void sendMenu(pfodParser &parser);         // fresh, on first open
     virtual void sendMenuUpdate(pfodParser &parser);   // cached refresh
     virtual bool handleCmd(pfodParser &parser, uint8_t cmd,
                             uint8_t *pfodFirstArg, long *pfodLongRtn);  // true = this sub-menu handled it
   protected:
-    virtual void onSubmenuButtonPressed(pfodParser &parser); // must send a pfod response
-    pfodAutoCmd button_Submenu_Button_Cmd; // button -- 'Submenu Button'
+    virtual void button_Pressed(pfodParser &parser); // must send a pfod response
+    pfodAutoCmd button_Cmd; // button -- 'Submenu Button'
   private:
     bool initialized;
 };
 
-// generated in SubMenu_Submenu.cpp:
-SubMenu_Submenu subMenu_Submenu;
-SubMenu_Submenu& __attribute__((weak)) get_subMenu_Submenu() { return subMenu_Submenu; }
+// generated in SubMenu_submenu.cpp:
+SubMenu_submenu subMenu_submenu;
+SubMenu_submenu& __attribute__((weak)) get_subMenu_submenu() { return subMenu_submenu; }
 ```
 
 The **parent** (`pfodMainMenu`, or another `SubMenu_<Name>` for a nested
@@ -2006,20 +2156,20 @@ points, all via the accessor, all in code you never touch — from
 `pfodMainMenu.cpp`, unedited:
 
 ```cpp
-void pfodMainMenu::init(pfodCloseConnectionPtr _closeConnectionFnPtr) {
+void pfodMainMenu::init(pfodParser& primingParser) {
   ...
-  get_subMenu_Submenu().init();   // 1. chained into the parent's own init(), like an inserted dwg
+  get_subMenu_submenu().init(primingParser);   // 1. chained into the parent's own init(), like an inserted dwg
 }
 
 void pfodMainMenu::handle(pfodParser& parser) {
   ...
-    } else if(parser.cmdEquals(submenu_Submenu_Cmd)) {   // 2. the button that opens it
+    } else if(parser.cmdEquals(submenu_Cmd)) {   // 2. the button that opens it
       if (!parser.isRefresh()) {
-        get_subMenu_Submenu().sendMenu(parser);
+        get_subMenu_submenu().sendMenu(parser);
       } else {
-        get_subMenu_Submenu().sendMenuUpdate(parser);
+        get_subMenu_submenu().sendMenuUpdate(parser);
       }
-    } else if (get_subMenu_Submenu().handleCmd(parser, cmd, pfodFirstArg, &pfodLongRtn)) {
+    } else if (get_subMenu_submenu().handleCmd(parser, cmd, pfodFirstArg, &pfodLongRtn)) {
       // 3. catch-all AFTER every one of the parent's own item branches —
       //    delegates to the sub-menu's own items
   ...
@@ -2039,12 +2189,12 @@ its own `handleCmd()` does the same kind of dispatch as the parent's
 generated code:
 
 ```cpp
-bool SubMenu_Submenu::handleCmd(pfodParser &parser, uint8_t cmd, uint8_t *pfodFirstArg, long *pfodLongRtn) {
+bool SubMenu_submenu::handleCmd(pfodParser &parser, uint8_t cmd, uint8_t *pfodFirstArg, long *pfodLongRtn) {
   (void)cmd;
   if (false) {
     // never taken -- keeps every real branch below in a uniform "} else if" shape
-  } else if(parser.cmdEquals(button_Submenu_Button_Cmd)) { // user pressed -- 'Submenu Button'
-    onSubmenuButtonPressed(parser); // virtual hook -- must send a pfod response
+  } else if(parser.cmdEquals(button_Cmd)) { // user pressed -- 'Submenu Button'
+    button_Pressed(parser); // virtual hook -- must send a pfod response
     return true;
   }
   return false;
@@ -2065,7 +2215,7 @@ changed value and returns `void` — there, the *generated* code sends
 touches `parser`. The generated default here, unedited:
 
 ```cpp
-void SubMenu_Submenu::onSubmenuButtonPressed(pfodParser &parser) {
+void SubMenu_submenu::button_Pressed(pfodParser &parser) {
   // << add your action code here for this button
   parser.print(F("{}")); // change this return as needed.
 }
@@ -2074,31 +2224,28 @@ void SubMenu_Submenu::onSubmenuButtonPressed(pfodParser &parser) {
 That default satisfies §7 rule 5 (every message needs exactly one reply) with
 a no-op `{}`, but does nothing else — a `button` press with no override is a
 correctly-behaved dead button. To wire in real behaviour, override the hook
-in your own subclass (§5.2/§5.3 mechanism, applied to `SubMenu_Submenu`) and
+in your own subclass (§5.2/§5.3 mechanism, applied to `SubMenu_submenu`) and
 **make sure your override still sends something**:
 
 ```cpp
-class MySubMenu_Submenu : public SubMenu_Submenu {
+class MySubMenu_submenu : public SubMenu_submenu {
   protected:
-    virtual void onSubmenuButtonPressed(pfodParser &parser);
+    virtual void button_Pressed(pfodParser &parser);
 };
-void MySubMenu_Submenu::onSubmenuButtonPressed(pfodParser &parser) {
+void MySubMenu_submenu::button_Pressed(pfodParser &parser) {
   doTheAction();
   parser.print(F("{}"));   // still required — this hook owns the reply, nothing else sends one
 }
-MySubMenu_Submenu mySubMenu_Submenu;
-SubMenu_Submenu& get_subMenu_Submenu() { return mySubMenu_Submenu; }
+MySubMenu_submenu mySubMenu_submenu;
+SubMenu_submenu& get_subMenu_submenu() { return mySubMenu_submenu; }
 ```
 
-The hook name follows a `on<ItemText>Pressed(pfodParser&)` pattern (button
-text `"Submenu Button"` → `onSubmenuButtonPressed`) — visibly different from
-`onoff`/`pwm`'s `on<ItemText>Changed(value)` (§6.3), since a button carries no
-value to pass, only the fact that it was pressed. This is evidenced here for
-a `button` *inside* a sub-menu; a top-level `button` item on `pfodMainMenu`
-itself would very likely follow the identical pattern (same generator, same
-per-item-type template), but that specific case isn't directly evidenced in
-this repo — read the actual generated header you're given rather than
-assuming the exact name.
+The hook name follows a `<base>_Pressed(pfodParser&)` pattern (this button's
+base name is `button` → `button_Pressed`, §3) — visibly different from
+`onoff`/`pwm`'s `<base>_Changed(value)` (§6.3), since a button carries no
+value to pass, only the fact that it was pressed. The same pattern applies to
+a top-level `button` on `pfodMainMenu` — read the actual generated header
+you're given for the exact name.
 
 Also note the `// <<` marker on the hook's placeholder line. Across this
 guide the same idea appears with a different exact run of `<` characters each
@@ -2109,10 +2256,10 @@ Don't match on one exact string — search for a run of two or more `<`
 characters in a comment.
 
 **Subclassing otherwise follows §5.2/§5.3 exactly** — subclass
-`SubMenu_Submenu`, override whichever hooks you need (`onSubmenuButtonPressed`
-here; a data-carrying item inside a sub-menu would presumably get an
-`on...Changed`-style hook the same way it does on `pfodMainMenu`, per §6.3),
-instantiate it, and replace `get_subMenu_Submenu()` in your own file.
+`SubMenu_submenu`, override whichever hooks you need (`button_Pressed`
+here; a data-carrying item inside a sub-menu gets a
+`<base>_Changed`-style hook the same way it does on `pfodMainMenu`, per §6.3),
+instantiate it, and replace `get_subMenu_submenu()` in your own file.
 
 ### 6.6 Setup/init ordering
 
@@ -2121,10 +2268,9 @@ Prefer doing hardware init inside your subclass's own overridden `init()`
 `MyMainMenu::init()` does, and it needs no `.ino` edit at all. If something
 truly has no natural class home, extension point 1 in the `.ino` (§5.1) still
 works, but it must still run **after** `init_pfodMainMenu(...)` — that call is
-what walks the drawing tree and allocates each `pfodDwgs`; a drawing used
-before its chain's `init()` has run has a null internal pointer
-(`pfodDrawing.h`'s own warning: *"using it before init() dereferences
-NULL"*).
+what walks the menu/drawing tree, registering each drawing with the parser
+and priming it (§5.2); a drawing used before its chain's `init()` has run is
+not registered, so requests for it are never answered by it.
 
 ---
 
@@ -2153,9 +2299,13 @@ NULL"*).
    combined file (`LedOnOffApp.cpp`) or one file per drawing (§4) are both
    fine; just don't define the same one's accessor in more than one of them.
 3. **An override must chain to its base class method first**, not skip it —
-   `pfodMainMenu::init(...)` / `Dwg_<Name>::init()` register the object with
-   the parser and allocate its `pfodDwgs`; a full re-implementation instead of
-   a call-through silently breaks that registration (§5.2/§5.3).
+   `pfodMainMenu::init(primingParser)` / `Dwg_<Name>::init(primingParser)`
+   register the object with the parser and prime it — chain **with** the
+   parser argument. Override `init` with the generated signature,
+   `init(pfodParser& primingParser)`,
+   marked `override` (plus `using pfodMainMenu::init;` on a main-menu
+   subclass); a full re-implementation instead of a call-through silently
+   breaks that registration (§5.2/§5.3).
 4. **Bump the `.ino`'s `version` string whenever you change what any
    `sendMainMenu()` / `sendFullDrawing()` transmits** (added/removed/reordered
    items, changed text/colour of anything not routed through
@@ -2180,8 +2330,8 @@ NULL"*).
    iteration for the connection to stay responsive; do timed/staged work with
    the library's own `pfodDelay` (`src/pfodDelay.h`), not raw `millis()`
    comparisons or `delay()`. This is what the generated code itself already
-   uses for exactly this — `datadisplay_A0_Cmd_adcTimer` in §6.3,
-   `chart_Voltage_Plot_plotDataTimer` in §6.4: `.start(ms)` once, then each
+   uses for exactly this — `sliderDisplay_adcTimer` in §6.3,
+   `chart_plotDataTimer` in §6.4: `.start(ms)` once, then each
    `loop()` check `.justFinished()` and call `.repeat()` inside it to restart
    without drift (`.restart()` restarts from *now* instead — use that only for
    a one-shot, non-repeating delay).
@@ -2208,10 +2358,26 @@ NULL"*).
     end of an oversized message doesn't error, it just never arrives. This
     matters most for `sendFullDrawing()` on a drawing with many indexed items
     or long label text, and for a `sendMainMenu()`/`sendMainMenuUpdate()` with
-    many items — keep an eye on total size as a design grows, especially
-    across several `insertDwg` levels. **Raw CSV chart data (§6.4) is exempt**
+    many items — keep an eye on total size as a design grows. For every dwg
+    you create, check both its full load and its update (with the longest
+    run-time values) against 1023 bytes. If either is over, split it into
+    inserted dwgs yourself until each one fits. Keep item order (the parent
+    keeps only the first run, then the `insertDwg`s), keep each touchZone
+    with its touchActions/touchActionInputs, keep every `idxName` or
+    touchZone `cmdName` reference with its target, and close any open `pushZero` with `popZero` before the
+    end of each drawing, reopening it in the next one (§3). Do not use the
+    deprecated `~m` multi-part load (§3). **Raw CSV chart data (§6.4) is exempt**
     — it's deliberately not sent as a `{...}` message, precisely so it isn't
     subject to either limit.
+12. **pfodParser is not thread safe.** The drawing list, every drawing
+    object, the one shared `pfodDwgs` builder and the menu's own data are
+    shared by every connection with no locking. Call the parser and every
+    menu/drawing send (`parse()`, `handle_mainMenu(parser)`, `sendUpdate()`, …)
+    from one task, the one running `loop()`. Do not use it with libraries that
+    call back from their own task or core, such as AsyncTCP, ESPAsyncTCP or
+    ESPAsyncWebServer; use `ESP_PicoW_pfodAppServer` /
+    `ESP_PicoW_pfodWebServer` instead, which serve their clients one at a time
+    from `loop()`.
 
 ---
 

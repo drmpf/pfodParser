@@ -609,6 +609,18 @@ Stream* pfodSecurity::getPfodAppStream() {
 }
 
 /**
+ * Replace this class's own io WITHOUT resetting any security or parser state.
+ * pfodSecurity declares its own io (hiding pfodParser's), so it must override
+ * pfodParser::setStream(). With io NULL, writeToPfodApp() returns before
+ * touching the output hash or output parser state, so priming output is
+ * discarded cleanly.
+ * @param io_arg the new stream, may be NULL
+ */
+void pfodSecurity::setStream(Stream* io_arg) {
+  io = io_arg;
+}
+
+/**
    Implement the methods need for print
 */
 size_t pfodSecurity::write(uint8_t b) {
@@ -1361,6 +1373,10 @@ byte pfodSecurity::parse() {
     if (cmd == '!') {
       //closeConnection(); called above
     } else { // process dwgs depends on ALL cmds menu items and dwg cmds and loadCmds being unique
+      // Point EVERY registered dwg at this parser before dispatching -- see pfodParser::parse()
+      for (pfodDrawing *p = pfodParser::listOfDrawings().getFirst(); p; p = pfodParser::listOfDrawings().getNext()) {
+        p->setParser(this);
+      }
       pfodDrawing *dwgPtr = pfodParser::listOfDrawings().getFirst();
       while (dwgPtr) {
         dwgPtr->setParser(this); // make this parser the output stream

@@ -50,13 +50,17 @@ class pfodMainMenuApp : public pfodMainMenu {
     /**
      * Configure the output pin, set it to the menu's initial value (Off),
      * then initialize the generated menu and its drawings.
-     * Called once from setup() via init_pfodMainMenu().
-     * @param _closeConnectionFnPtr passed on to pfodMainMenu::init()
+     * Called once from setup() via init_pfodMainMenu(closeConnection, parser),
+     * whose generated init(closeFn, parser) sets the close-connection callback
+     * and then calls this one-arg init().
+     * @param primingParser passed on to pfodMainMenu::init() so the menu and
+     *        its drawings are primed
      */
-    void init(pfodCloseConnectionPtr _closeConnectionFnPtr) override {
+    using pfodMainMenu::init; // keep init(closeFn, parser) visible
+    void init(pfodParser& primingParser) override {
       target_PinInit();
       setOutput(onOffOut_var);
-      pfodMainMenu::init(_closeConnectionFnPtr);
+      pfodMainMenu::init(primingParser);
     }
   protected:
     /**

@@ -113,6 +113,10 @@ class pfodParser: public Print {
     virtual void setIdleTimeout(unsigned long timeout_in_secs); // does set timeout in parser
     virtual Stream* getPfodAppStream(); // get the command response stream we are writing to
     // for pfodParser this is also the rawData stream
+    // setStream: replace the stream this parser reads from / writes to WITHOUT resetting any parser state
+    // (unlike connect(), which calls init() and clears the msg sequence numbers).
+    // setStream(NULL) makes all output a no-op -- used to prime menus/dwgs at init and then restore.
+    virtual void setStream(Stream* ioPtr);
 
     // this is returned if pfodDevice should drop the connection
     // only returned by pfodParser in read() returns -1
@@ -154,7 +158,7 @@ class pfodParser: public Print {
     const static int DOWN_UP = 256; // only for touchZone filter send, never recieved by parser
     const static int DOWN_DRAG_UP = 256; // alias for DOWN_UP only for touchZone filter send, never recieved by parser
     const static int TOUCH_DISABLED = 512; // only for touchZone filter send, never recieved by parser
-    // construct-on-first-use accessor for the global list of drawings — see pfodParser.cpp
+    // construct-on-first-use accessor for the global list of drawings -- see pfodParser.cpp
     // for why this must be a function-local static and not a static data member
     static pfodLinkedList<pfodDrawing>& listOfDrawings();
 

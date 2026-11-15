@@ -113,6 +113,10 @@ class pfodParser: public pfodPrint {
     virtual void setIdleTimeout(unsigned long timeout_in_secs); // does set timeout in parser
     virtual pfodStream* getPfodAppStream(); // get the command response stream we are writing to
     // for pfodParser this is also the rawData stream
+    // setStream: replace the stream this parser reads from / writes to WITHOUT resetting any parser state
+    // (unlike connect(), which calls init() and clears the msg sequence numbers).
+    // setStream(NULL) makes all output a no-op -- used to prime menus/dwgs at init and then restore.
+    virtual void setStream(pfodStream* ioPtr);
 
     // this is returned if pfodDevice should drop the connection
     // only returned by pfodParser in read() returns -1

@@ -4,8 +4,8 @@
   "name": "Menu_1",
   "connection": "serial",
   "boardName": "Arduino UNO",
-  "savedAt": "2026-08-28T05:40:46.182Z",
-  "js_ver": "V4.1.7-- 23th August 2026",
+  "savedAt": "2026-11-14T06:18:43.794Z",
+  "js_ver": "V4.1.20-- 14th Nov 2026",
   "rootMenu": {
     "refresh_ms": 1000,
     "promptText": "Arduino Data",
@@ -47,7 +47,8 @@
           "name": "A0",
           "type": "analog_input",
           "codeName": "A0"
-        }
+        },
+        "codeVarNo": 1
       },
       {
         "type": "label",
@@ -63,7 +64,8 @@
           "disabled": false,
           "fontColour": null,
           "bgColour": null
-        }
+        },
+        "codeVarNo": 1
       },
       {
         "type": "onoffdisplay",
@@ -89,7 +91,8 @@
           "name": "D4",
           "type": "digital_input",
           "codeName": "4"
-        }
+        },
+        "codeVarNo": 1
       },
       {
         "type": "label",
@@ -105,7 +108,8 @@
           "disabled": false,
           "fontColour": null,
           "bgColour": null
-        }
+        },
+        "codeVarNo": 2
       },
       {
         "type": "pwm",
@@ -133,15 +137,16 @@
           "name": "D5",
           "type": "pwm_output",
           "codeName": "5"
-        }
+        },
+        "codeVarNo": 1
       },
       {
         "type": "onoff",
         "autoCmd": "onoff_LED_is_Cmd",
         "text": "LED is ",
         "trailingText": "",
-        "lowText": "Off",
-        "highText": "On",
+        "lowText": "Off\n",
+        "highText": "On\n<-3>Turns off after 10sec",
         "current": 0,
         "pulse": "high",
         "pulse_ms": 10000,
@@ -155,14 +160,15 @@
           "sound": false,
           "disabled": false,
           "fontColour": null,
-          "bgColour": "s"
+          "bgColour": "t"
         },
         "pin": {
           "name": "D13",
           "type": "digital_output",
           "invertOutput": false,
           "codeName": "13"
-        }
+        },
+        "codeVarNo": 1
       },
       {
         "type": "chart",
@@ -219,7 +225,8 @@
             "displayMax": "5.0",
             "displayMin": "0"
           }
-        ]
+        ],
+        "codeVarNo": 1
       },
       {
         "type": "submenu",
@@ -265,10 +272,12 @@
                 "disabled": false,
                 "fontColour": "m",
                 "bgColour": "w"
-              }
+              },
+              "codeVarNo": 1
             }
           ]
-        }
+        },
+        "codeVarNo": 1
       }
     ]
   }

@@ -32,6 +32,21 @@ See  **pfodParser/pfodParserCPP/examples** for examples for micros that don't us
 See **pfodParser/pfodParserC/examples** for small micro examples, e.g. ATtiny84 and  PIC16/PIC18.
 
 
+## Thread safety -- pfodParser is NOT thread safe
+
+Call the parser (`parse()`, the generated `handle_mainMenu(parser)`) and every menu/drawing
+send from **one task only**, normally the one running `loop()`. The list of drawings, each
+drawing object, the generated menu object and its variables are shared by every connection
+and have no locking.
+
+**Do not use pfodParser with libraries that call back from their own task or core, such as
+AsyncTCP, ESPAsyncTCP or ESPAsyncWebServer (Async Web Server).** Their callbacks run
+concurrently with `loop()` and corrupt that shared state. Use the library's own
+`ESP_PicoW_pfodAppServer` (TCP) and `ESP_PicoW_pfodWebServer` (HTTP), which serve clients
+one at a time from `loop()`, or the Serial/BLE connections. Likewise don't send menus or
+drawings from a second FreeRTOS task, an ESP32's other core, an RP2040's core 1, or an
+interrupt. See pfodWeb/docs/pfodAI-guide.md §7 rule 12.
+
 ## Using pfodParsers/pfodWeb with an AI assistant
 
  In the pfodParser library under ***pfodParser/pfodWeb/docs*** are
@@ -95,7 +110,8 @@ This code may be freely used for both private and commercial use
 Provide this copyright is maintained. See pfodWeb/docs/pfodWeb_pfodProxy_License.html for the inherited licenses. 
 
 # Revisions 
-Version 5.1.13  added pfodParserCPP library, pfodWeb V4.1.19, pfodCircularLineBuffer: pfodReadCursor is now a struct (pos + totalBytesWritten)   
+Version 5.1.14 reduced memory footprint with pfodWeb V4.1.20   
+Version 5.1.13 added pfodParserCPP library, pfodWeb V4.1.19, pfodCircularLineBuffer: pfodReadCursor is now a struct (pos + totalBytesWritten)   
 Version 5.1.12 ESP_PicoW_pfodWebServer: fixed raw data (getRawDataWriter()) being lost/split arbitrarily between multiple simultaneously-polling pfodWeb clients  
 Version 5.1.11 pfodCircularLineBuffer: added getReadCursor()/setReadCursor() for exact resumable reads across long-lived buffers  
 Version 5.1.8 added pfodParserAI-guide.md for pfodDelay usage  

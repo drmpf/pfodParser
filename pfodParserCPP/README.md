@@ -40,6 +40,20 @@ The **examples/** directory has examples for the following micros, each with a `
 The [pfodApp Android client](https://play.google.com/store/apps/details?id=au.com.forward.pfodApp) supports WiFi, BLE, Bluetooth and SMS connections.   
  
 
+# Thread safety -- pfodParser is NOT thread safe
+
+Call the parser (`parse()`, the generated `handle_mainMenu(parser)`) and every menu/drawing
+send from **one task only**, normally the one running `loop()`. The list of drawings, each
+drawing object, the generated menu object and its variables are shared by every connection
+and have no locking.
+
+**Do not drive pfodParser from asynchronous networking libraries whose callbacks run in
+their own task or on another core, such as AsyncTCP or an async web server.** Those
+callbacks run concurrently with `loop()` and corrupt that shared state. Read the connection
+in `loop()` and call the parser from there, one connection at a time. Likewise don't send
+menus or drawings from a second RTOS task, another core, or an interrupt.
+See pfodWeb/docs/pfodAI-guide.md §7 rule 12.
+
 # Quick Start
 
 * Choose one of the examples and compile and upload it to your micro

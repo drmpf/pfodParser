@@ -120,6 +120,7 @@ class pfodSecurity : public pfodParser { //Stream {
     void connect(pfod_Base* _pfodBase,  const __FlashStringHelper *hexKeyPgr, int eepromAddress = 0);
 
     Stream* getPfodAppStream();
+    void setStream(Stream* io_arg); // sets this class's own io, see pfodParser::setStream()
 
     void closeConnection(); // called when connection closed or DisconnectNow returned from parser
     //static const byte DisconnectNow = '!'; // this is returned if pfodDevice should drop the connection

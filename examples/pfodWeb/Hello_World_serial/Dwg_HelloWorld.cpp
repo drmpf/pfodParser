@@ -12,7 +12,7 @@
 #include <pfodDebugPtr.h>
 
 //#define DEBUG
-static Print* debugPtr = NULL;  // local to this file
+static pfodPrint* debugPtr = NULL;  // local to this file
 
 Dwg_HelloWorld dwg_HelloWorld;
 // weak: defining this function in any other .cpp replaces it, which is
@@ -25,7 +25,7 @@ Dwg_HelloWorld::Dwg_HelloWorld() {
   dwgRefresh_ms = 0;
 }
 
-void Dwg_HelloWorld::init() {
+void Dwg_HelloWorld::init(pfodParser& primingParser) {
   if (initialized) {
     return;
   }
@@ -35,13 +35,13 @@ void Dwg_HelloWorld::init() {
   debugPtr = getDebugPtr();
 #endif
   pfodDrawing::init();
-  // Forces this dwg's own pfodAutoIdx to a fixed, deterministic value at
-  // boot instead of leaving it lazily assigned by client request order --
-  // sent to a local discard sink (default-constructed pfodParser leaves
-  // io=NULL, so its write()s silently no-op), never a real client.
-  pfodParser primingSink;
-  setParser(&primingSink);
+  // Primes this dwg's pfodAutoIdx values by sending it once to primingParser,
+  // muted with setStream(NULL) so nothing reaches a client, then the stream is restored.
+  pfodStream* savedStream = primingParser.getPfodAppStream();
+  primingParser.setStream(NULL);  // priming output is discarded
+  setParser(&primingParser);
   sendFullDrawing();
+  primingParser.setStream(savedStream);
 }
 
 // return true if handled else false

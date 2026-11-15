@@ -125,16 +125,24 @@ Dwg_LedOff& get_dwg_LedOff() { return myLedOff; }
 // leaves the .ino exactly as generated -- init_pfodMainMenu(), which the
 // .ino calls from setup(), goes through get_pfodMainMenu(), so this runs.
 //
-// The base init() must still run: it is what registers the drawing with the
-// parser.
+// The base init() must still run, chained WITH the priming parser: it is
+// what registers the drawing with the parser and primes it (fixes its
+// indices).
+//
+// Override only the one-arg init(pfodParser&): the generated
+// init(closeFn, parser) sets the close-connection callback and then calls
+// it. `override` turns a stale signature into a compile error instead of an
+// override that is silently never called, and the using-declaration keeps
+// the base's init(closeFn, parser) overload visible.
 
 class MyMainMenu : public pfodMainMenu {
   public:
-    virtual void init(pfodCloseConnectionPtr _closeConnectionFnPtr = NULL);
+    using pfodMainMenu::init; // keep init(closeFn, parser) visible
+    void init(pfodParser& primingParser) override;
 };
 
-void MyMainMenu::init(pfodCloseConnectionPtr _closeConnectionFnPtr) {
-  pfodMainMenu::init(_closeConnectionFnPtr);
+void MyMainMenu::init(pfodParser& primingParser) {
+  pfodMainMenu::init(primingParser);
   pinMode(ledPin, OUTPUT);
   turnLedOff(); // start from a known state, matching the label's default
 }

@@ -16,7 +16,12 @@
 class Dwg_LedOn : public pfodDrawing {
   public:
     Dwg_LedOn();
-    virtual void init();
+    // init() primes this dwg (fixes its pfodAutoIdx values) by sending it once to
+    // primingParser, muted with setStream(NULL) for the duration and then restored,
+    // and passes the same parser to its inserted dwgs.
+    // Subclasses overriding init() must use this same signature (mark it override)
+    // and chain with Dwg_LedOn::init(primingParser).
+    virtual void init(pfodParser& primingParser);
     bool sendDwg(); // returns true if dwg sent else false i.e. not this dwg's loadCmd
     bool processDwgCmds(); // return true if handled else false
     void sendFullDrawing();
@@ -42,7 +47,7 @@ class Dwg_LedOn : public pfodDrawing {
 //     MyLedOn myLedOn;
 //     Dwg_LedOn& get_dwg_LedOn() { return myLedOn; }
 // The unused default instance then never has init() called on it, so it
-// never registers with the parser and never allocates its pfodDwgs.
+// never registers with the parser.
 Dwg_LedOn& get_dwg_LedOn();
 extern Dwg_LedOn dwg_LedOn; // the default instance
 #endif
